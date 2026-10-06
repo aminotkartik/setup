@@ -31,7 +31,7 @@ in Postgres (RLS policies, `has_permission()` and `SECURITY DEFINER` functions).
 │ lib/auth, lib/permissions, lib/validation, lib/giphy, lib/search,            │
 │ lib/notifications, lib/blocks, lib/mentions, lib/ratelimit, lib/errors       │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Supabase: Postgres (+RLS, RPCs, triggers), Auth (email OTP), Realtime         │
+│ Supabase: Postgres (+RLS, RPCs, triggers), Auth (Google OAuth), Realtime      │
 │           (private broadcast only)                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```

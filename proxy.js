@@ -15,9 +15,27 @@
 
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { originFromHeaders } from '@/lib/auth/oauth';
 
 /** Routes that must be reachable without a session. */
 const PUBLIC_PATHS = ['/login', '/login/verify', '/auth', '/setup'];
+
+/**
+ * The one-time-code step (and its route) was replaced by Google sign-in.
+ *
+ * Old links — emails, bookmarks, cached redirects — must land on the sign-in
+ * screen, so this answers them with a real HTTP redirect before any session
+ * work happens. (`app/login/verify/page.js` keeps a redirect of its own as a
+ * fallback, but a Server Component redirect is delivered to the browser as a
+ * streaming instruction, not as a status code; the proxy can send the 307.)
+ */
+function legacyCodeStep(request) {
+  if (request.nextUrl.pathname !== '/login/verify') return null;
+  const origin = originFromHeaders(request.headers, request.nextUrl.origin);
+  const target = new URL('/login', origin);
+  target.searchParams.set('notice', 'google');
+  return NextResponse.redirect(target);
+}
 
 function isPublic(pathname) {
   if (pathname === '/') return true;
@@ -28,6 +46,9 @@ function isPublic(pathname) {
  * @param {import('next/server').NextRequest} request
  */
 export async function proxy(request) {
+  const legacy = legacyCodeStep(request);
+  if (legacy) return legacy;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -75,7 +96,7 @@ export async function proxy(request) {
     return NextResponse.redirect(target);
   }
 
-  if (signedIn && (pathname === '/login' || pathname === '/login/verify')) {
+  if (signedIn && pathname === '/login') {
     return NextResponse.redirect(new URL('/home', request.url));
   }
 

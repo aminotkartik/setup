@@ -9,8 +9,8 @@ export const metadata = { title: 'Set up your profile' };
 /**
  * First login (spec §8): pick a username and fill in the public profile.
  *
- * Only fields the schema actually stores are asked for. No PRN, no password,
- * no email confirmation (the code already proved the address).
+ * Only fields the schema actually stores are asked for. No PRN and no password,
+ * and no email to confirm — Google already proved the address.
  */
 export default async function OnboardingPage() {
   if (!isSupabaseConfigured()) redirect('/setup');

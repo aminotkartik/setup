@@ -7,8 +7,8 @@ noise: no photo posts, no file uploads, no algorithms, no presence dots, no ads,
 no tracking, and no AI anywhere.
 
 > Campus+ is not an official PCCOE product and is not affiliated with the
-> college. Sign-in is restricted to institutional email addresses
-> (`@pccoepune.org` by default) and every account is verified by a one-time code.
+> college. Sign-in is restricted to institutional Google accounts
+> (`@pccoepune.org` by default) — there are no passwords and no codes to type.
 
 ---
 
@@ -48,8 +48,9 @@ npm run seed:dev -- --confirm
    [`supabase/bundle/campus-plus-schema.sql`](supabase/bundle/campus-plus-schema.sql)
    into **SQL Editor → New query → Run** (one script, ends with an install
    report). With the CLI? `supabase link --project-ref <ref> && supabase db push`.
-3. **Auth** — enable Email, turn off "Confirm email", and (for production)
-   configure SMTP. See `docs/DEPLOYMENT.md` §4.
+3. **Auth** — enable the Google provider with your Google OAuth client ID
+   and secret, then allow `<your-origin>/auth/callback`. See
+   `docs/DEPLOYMENT.md` §4.
 4. **First Super Admin** — sign in once, then
    `npm run role:grant -- --email you@pccoepune.org --role super_admin`.
 5. **GIPHY (optional)** — add `GIPHY_API_KEY` to enable GIF search.

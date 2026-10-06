@@ -16,7 +16,7 @@ and after every deployment.
 | Moderation evidence | deletion by the reported student | soft delete only (`status` column); `delete_own_content()` never removes moderation rows |
 | Audit trail | tampering, forgery | `notifications` and `audit_logs` have no client INSERT policy; audit rows are written only from inside `SECURITY DEFINER` functions |
 | Service credentials | leakage into the browser bundle | only two `NEXT_PUBLIC_*` values exist (Supabase URL + publishable key); secrets are behind `import 'server-only'` |
-| Abuse (spam, flooding) | scripted posting/DMs/OTP | database-side rate limiting via `consume_rate_limit()` with named buckets |
+| Abuse (spam, flooding) | scripted posting/DMs | database-side rate limiting via `consume_rate_limit()` with named buckets |
 | Cross-site scripting | stored HTML/JS in posts, bios, messages | React text rendering only, `no dangerouslySetInnerHTML` (lint + test), external URLs restricted to `http(s)` |
 | Privilege escalation | a student granting themselves a role | `user_roles`/`roles`/`role_permissions` UPDATE revoked from client roles; `grant_role`/`revoke_role` are `SECURITY DEFINER` with `assign_roles` checks and audit |
 
@@ -24,16 +24,25 @@ and after every deployment.
 
 ## 2. Authentication
 
-* **Email one-time code only.** No passwords are stored anywhere, and no PRN or
-  roll number is used as an identifier.
-* The institutional domain is enforced **server-side twice**: in the login action
-  (`lib/auth/domains.js`) and in the database (`enforce_institutional_domain`
-  trigger, `allowed_email_domain()`, `colleges.email_domains`, plus
-  `platform_settings.allowed_email_domains`).
+* **Google OAuth only (`@pccoepune.org`).** No passwords and no one-time codes
+  are stored, sent or typed anywhere, and no PRN or roll number is used as an
+  identifier.
+* Sessions are created in exactly one place: `app/auth/callback/route.js`, after
+  a server-side PKCE code exchange (`exchangeCodeForSession`). The browser only
+  starts the round trip; it can never mint a session of its own.
+* The institutional domain is enforced **server-side three times**: the callback
+  re-checks the Google-verified address (`lib/auth/domains.js`), the database
+  rejects other domains at signup (`enforce_institutional_domain` trigger,
+  `allowed_email_domain()`, `colleges.email_domains`, plus
+  `platform_settings.allowed_email_domains`), and Supabase Auth's provider
+  configuration is the third layer. A callback whose address fails the check is
+  signed out again before the browser is sent anywhere.
 * A missing `CAMPUS_ALLOWED_EMAIL_DOMAINS` falls back to the seeded `pccoepune.org`;
   an empty allow-list never means "allow everyone".
-* Rate limiting applies to code requests (`consume_rate_limit('otp_request')`),
-  so the endpoint cannot be used as an open email relay.
+* Sign-in needs no app-side rate limit: it sends no mail and issues no code (so
+  it can be neither an email relay nor a guessable secret), and Supabase Auth
+  and Google rate-limit the authorization endpoint themselves. The old
+  `otp_request` / `otp_verify` buckets were removed with the one-time-code flow.
 * Account states — `pending`, `active`, `suspended`, `banned`, `deactivated`,
   `deleted` — are enforced by `is_active_profile()` in RLS and re-checked by
   `can()` in the UI. A suspended student sees `/account-status`, not the app.
@@ -99,7 +108,6 @@ so they cannot be bypassed by calling the API directly:
 
 | Bucket | Applies to |
 | --- | --- |
-| `otp_request` | one-time code requests |
 | `post_create`, `comment_create`, `reaction_toggle` | feed activity |
 | `message_send` | direct messages and Random messages |
 | `listing_create`, `community_create`, `project_create` | creation surfaces |
@@ -108,6 +116,8 @@ so they cannot be bypassed by calling the API directly:
 | `username_change` | username changes (plus the cooldown setting) |
 | `gif_search` | the GIPHY proxy, protecting the shared provider quota |
 | `admin_action` | administrative mutations |
+
+Sign-in itself has no bucket — see §2 for why Google OAuth does not need one.
 
 ## 7. Secrets
 

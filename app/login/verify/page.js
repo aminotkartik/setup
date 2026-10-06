@@ -1,34 +1,21 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { isSupabaseConfigured } from '@/lib/config';
-import { Icon } from '@/components/ui/icons';
-import { VerifyForm } from '@/components/auth/VerifyForm';
 
-export const metadata = { title: 'Enter your code' };
+export const metadata = { title: 'Sign in' };
 
-/** Step 2 of sign-in: the six-digit code. */
-export default async function VerifyPage({ searchParams }) {
-  if (!isSupabaseConfigured()) redirect('/setup');
-  const params = await searchParams;
-  const email = typeof params?.email === 'string' ? params.email.toLowerCase() : '';
+// The redirect must be a real HTTP response, not a step baked into a
+// prerendered page: old links to this route can be opened by anything.
+export const dynamic = 'force-dynamic';
 
-  if (!email) redirect('/login');
-
-  return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-12">
-      <Link href="/login" className="mb-6 inline-flex items-center gap-1 text-2xs text-muted hover:text-ink">
-        <Icon name="chevronLeft" size={13} />
-        Use a different address
-      </Link>
-
-      <h1 className="text-xl font-semibold tracking-tight">Enter your code</h1>
-      <p className="mt-2 text-[0.9375rem] text-muted">
-        We sent a six-digit code to <span className="break-anywhere text-ink">{email}</span>.
-      </p>
-
-      <div className="card mt-6 p-5">
-        <VerifyForm email={email} />
-      </div>
-    </div>
-  );
+/**
+ * Legacy step 2 of the one-time-code flow.
+ *
+ * The six-digit code was replaced by Google OAuth, so there is nothing to
+ * verify on this route any more. It is kept — it is still part of the
+ * documented route surface, and links in old emails and bookmarks point here —
+ * and forwards to /login, which explains the new flow.
+ *
+ * No session logic lives here: sessions are created only in /auth/callback.
+ */
+export default function VerifyPage() {
+  redirect('/login?notice=google');
 }

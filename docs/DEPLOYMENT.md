@@ -106,23 +106,30 @@ npm run audit:db      # 54 static assertions: RLS, policies, grants, columns
 
 Supabase dashboard → **Authentication**:
 
-1. **Providers → Email**: enable Email and keep password sign-in off — Campus+
-   has no passwords. *Recommended:* disable "Confirm email" so a first-time code
-   returns a session immediately. If you leave it enabled, sign-in still works:
-   the app verifies the same code as a signup token for first-time students.
-2. **Email templates → Magic Link**: the code is what students type, so keep
-   `{{ .Token }}` in the template (the default template is fine).
-3. **Auth → URL configuration**: set *Site URL* to the production origin and add
-   `https://<your-domain>/login/verify` (and `http://localhost:3000/login/verify`
-   for local work) to *Redirect URLs*.
-4. **SMTP (production)**: Authentication → Emails → SMTP settings. The default
-   Supabase sender is fine for a pilot but is rate-limited and often lands in
-   spam; configure the college SMTP relay for real use.
+1. **Providers → Google**: enable the provider and paste the **Client ID** and
+   **Client secret** from Google Cloud Console → *APIs & Services* →
+   *Credentials* → *Create credentials* → *OAuth client ID* (type *Web
+   application*). Add `https://<project-ref>.supabase.co/auth/v1/callback` as an
+   *Authorized redirect URI* on the Google side — that hop belongs to Supabase,
+   not to Campus+.
+2. **Providers → Email**: turn Email **off**. Campus+ has no passwords and no
+   one-time codes, so Google should be the only way in.
+3. **URL configuration**: set *Site URL* to the production origin and add
+   `https://<your-domain>/auth/callback` (plus
+   `http://localhost:3000/auth/callback` for local work) to *Redirect URLs*.
+   Sign-in returns to `/login` with an explanation if `/auth/callback` is
+   missing here.
+4. **Google Cloud consent screen (optional but recommended)**: keep the app
+   *Internal* to the college Workspace tenant, so personal Google accounts never
+   reach the provider at all.
+
+No SMTP configuration is needed: Campus+ never sends email.
 
 Domain enforcement is server-side and lives in the database
 (`colleges.email_domains`, `platform_settings.allowed_email_domains`,
 `enforce_institutional_domain`) plus `CAMPUS_ALLOWED_EMAIL_DOMAINS` as the
-deployment default. Adding a second domain is a row update — see §8.
+deployment default; `app/auth/callback/route.js` re-checks the Google-verified
+address before the session is used. Adding a second domain is a row update — see §8.
 
 ## 5. GIPHY (optional)
 
@@ -264,9 +271,10 @@ sample or invented content.
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | `/` shows `/setup` | Supabase environment variables missing or still placeholders | set them in `.env.local` **and** Vercel |
-| Login says "email domain not allowed" | address outside the allow-list | check `CAMPUS_ALLOWED_EMAIL_DOMAINS` and `platform_settings.allowed_email_domains` |
-| No code email arrives | SMTP not configured or rate limit hit | configure SMTP (§4) and check Supabase Auth logs |
-| First sign-in says "could not send the code" | "Confirm email" enabled with the default Supabase mailer | configure SMTP, or disable "Confirm email" (§4) |
+| Login says "not a PCCOE address" | the Google account is outside the allow-list | sign in with the institutional account; check `CAMPUS_ALLOWED_EMAIL_DOMAINS` and `platform_settings.allowed_email_domains` |
+| Google shows "redirect_uri_mismatch" | Supabase's callback is not an authorized redirect URI in the Google OAuth client | add `https://<project-ref>.supabase.co/auth/v1/callback` (§4) |
+| Sign-in returns to /login with "could not complete the sign-in" | `/auth/callback` is missing from the Supabase *Redirect URLs*, or the PKCE verifier cookie was lost | add both callback URLs (§4) and start again from /login |
+| "Continue with Google" says sign-in is not configured | the Google provider is not enabled in Supabase | add the client ID and secret (§4) |
 | GIF search says "not configured" | `GIPHY_API_KEY` missing | optional — add the key to enable GIFs |
 | Moderator page shows the lock notice | the account holds no moderation permission | `npm run role:grant -- --username <name> --role moderator` |
 | Admin action returns "you do not have permission" | UI gate passed but the database disagreed | expected: the database is authoritative. Check the role's permission mapping (§8a) |

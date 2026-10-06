@@ -217,7 +217,8 @@ still has to:
 1. Create the Supabase project and set the environment variables (local +
    Vercel).
 2. Apply the 19 migrations (`supabase db push`).
-3. Configure Auth email OTP, the site/redirect URLs and production SMTP.
+3. Configure the Supabase Google provider (client ID + secret), the
+   site/redirect URLs (including `/auth/callback`) and the institutional domain.
 4. Create the first Super Admin (`npm run role:grant -- --email … --role super_admin`)
    and, optionally, moderator accounts and dev seed accounts.
 5. Register a GIPHY key if GIFs are wanted.
