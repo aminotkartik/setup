@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, showsRoleBadge, toActor } from '@/lib/permissions/authorization';
-import { getProfileCounts, getOwnProfile } from '@/lib/data/profiles';
+import { getProfileCounts } from '@/lib/data/profiles';
 import { getPostsByAuthor } from '@/lib/data/feed';
 import { ROUTES } from '@/lib/constants';
 import { PageHeader, LinkButton, EmptyState, Badge, Card, StaffDot, Notice } from '@/components/ui';
@@ -22,7 +22,8 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const supabase = await getServerClient();
   const actor = toActor(user);
-  const profile = (await getOwnProfile(supabase, user.profile.id)) || user.profile;
+  // The session load already read this row (see lib/auth/session.js) — no second read.
+  const profile = user.profile;
 
   const [posts, counts] = await Promise.all([
     getPostsByAuthor(supabase, profile.id, { limit: 20, currentProfileId: user.profile.id }),

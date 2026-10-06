@@ -136,6 +136,41 @@ select public.test_assert_denied(
 );
 
 -- ---------------------------------------------------------------------------
+-- 2b. The inbox read model (`conversation_inbox`) obeys the same rules.
+-- ---------------------------------------------------------------------------
+-- It is a security-invoker function, so a member sees exactly their own
+-- conversation with the newest message and an unread count that ignores their
+-- own messages, and a non-member sees nothing at all.
+select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-a000-000000000002', false);
+
+do $$
+declare
+  v_rows integer;
+  v_unread integer;
+  v_preview text;
+begin
+  select count(*) into v_rows from public.conversation_inbox(30);
+  perform public.test_assert(v_rows = 1, 'a member must see exactly their own conversation in the inbox');
+
+  select unread, last_message_body into v_unread, v_preview
+  from public.conversation_inbox(30);
+  perform public.test_assert(v_unread = 1, 'the inbox unread count must ignore the reader''s own messages');
+  perform public.test_assert(v_preview = 'Yes, I will be there.', 'the inbox preview must be the newest message');
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-a000-000000000003', false);
+
+do $$
+declare
+  v_rows integer;
+begin
+  select count(*) into v_rows from public.conversation_inbox(30);
+  perform public.test_assert(v_rows = 0, 'a non-member must not see anyone else''s conversations through the inbox read model');
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 3. Blocking stops the conversation, in both directions.
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-a000-000000000003', false);

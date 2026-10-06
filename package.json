@@ -25,6 +25,9 @@
     "db:bundle": "node scripts/build-sql-bundle.mjs",
     "verify:db": "node scripts/dev/validate-migrations.mjs",
     "audit:db": "node scripts/dev/audit.mjs",
+    "perf:serve": "node scripts/dev/perf/serve.mjs",
+    "perf:measure": "node scripts/dev/perf/measure.mjs",
+    "perf:smoke": "node scripts/dev/perf/smoke.mjs",
     "verify": "npm run lint && npm run verify:db && npm run audit:db && npm run test",
     "verify:security": "node scripts/verify-security.mjs"
   },

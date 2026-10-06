@@ -34,31 +34,36 @@ export default async function MarketPage({ searchParams }) {
   const q = typeof params?.q === 'string' && params.q.trim().length >= 2 ? params.q.trim() : null;
   const categoryId = typeof params?.category === 'string' && params.category ? params.category : null;
 
-  const [categories, summary] = await Promise.all([listCategories(supabase), getMarketSummary(supabase)]);
-
-  const listings =
+  // The tab's own list, the category list and the summary counts are
+  // independent: one fan-out instead of a serial warm-up followed by the list.
+  const [categories, summary, listings, gigs, deals] = await Promise.all([
+    listCategories(supabase),
+    getMarketSummary(supabase),
     tab === 'gigs' || tab === 'deals'
-      ? { items: [], unavailable: false }
-      : await listListings(supabase, { free: tab === 'free' ? true : null, categoryId, q, limit: 24 });
-  const gigs = tab === 'gigs' ? await listGigs(supabase, { q, limit: 24 }) : { items: [], unavailable: false };
-  const deals = tab === 'deals' ? await listDeals(supabase, { limit: 24 }) : { items: [], unavailable: false };
+      ? Promise.resolve({ items: [], unavailable: false })
+      : listListings(supabase, { free: tab === 'free' ? true : null, categoryId, q, limit: 24 }),
+    tab === 'gigs' ? listGigs(supabase, { q, limit: 24 }) : Promise.resolve({ items: [], unavailable: false }),
+    tab === 'deals' ? listDeals(supabase, { limit: 24 }) : Promise.resolve({ items: [], unavailable: false }),
+  ]);
 
   const canSell = can(actor, 'create_marketplace_listing');
   const canGig = can(actor, 'create_gigs');
 
-  const sellers = await (async () => {
-    const ids = [...new Set(listings.items.map((listing) => listing.seller_id))];
-    if (!ids.length) return new Map();
-    const { data } = await supabase.from('public_profiles').select('id, username, display_name, is_staff').in('id', ids);
-    return new Map((data || []).map((person) => [person.id, person]));
-  })();
-
-  const gigCreators = await (async () => {
-    const ids = [...new Set(gigs.items.map((gig) => gig.creator_id))];
-    if (!ids.length) return new Map();
-    const { data } = await supabase.from('public_profiles').select('id, username, display_name').in('id', ids);
-    return new Map((data || []).map((person) => [person.id, person]));
-  })();
+  // Seller/creator identities for whichever list the tab loaded — in parallel.
+  const [sellers, gigCreators] = await Promise.all([
+    (async () => {
+      const ids = [...new Set(listings.items.map((listing) => listing.seller_id))];
+      if (!ids.length) return new Map();
+      const { data } = await supabase.from('public_profiles').select('id, username, display_name, is_staff').in('id', ids);
+      return new Map((data || []).map((person) => [person.id, person]));
+    })(),
+    (async () => {
+      const ids = [...new Set(gigs.items.map((gig) => gig.creator_id))];
+      if (!ids.length) return new Map();
+      const { data } = await supabase.from('public_profiles').select('id, username, display_name').in('id', ids);
+      return new Map((data || []).map((person) => [person.id, person]));
+    })(),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">

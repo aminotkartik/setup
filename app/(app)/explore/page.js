@@ -41,6 +41,17 @@ export default async function ExplorePage({ searchParams }) {
   const supabase = await getServerClient();
   const actor = toActor(user);
 
+  // Trending and discussion hydration are independent of the module queries, so
+  // they join the same fan-out instead of waiting for it (they used to run
+  // strictly after the whole batch, adding two serial round trips).
+  const discussionQuery = supabase
+    .from('posts')
+    .select('id, author_id, kind, title, body, gif, community_id, visibility, status, is_official, comment_count, reaction_count, created_at')
+    .eq('kind', 'discussion')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(4);
+
   const [
     { data: communities },
     { data: clubs },
@@ -48,7 +59,8 @@ export default async function ExplorePage({ searchParams }) {
     { data: opportunities },
     { data: projects },
     { data: lostFound },
-    { data: discussions },
+    { data: trending },
+    hydratedDiscussions,
   ] = await Promise.all([
     supabase.from('communities').select('id, name, slug, description, member_count, kind, is_official').eq('status', 'published').eq('kind', 'community').order('member_count', { ascending: false }).limit(5),
     supabase.from('communities').select('id, name, slug, description, member_count, is_official').eq('status', 'published').eq('kind', 'club').order('member_count', { ascending: false }).limit(5),
@@ -56,11 +68,12 @@ export default async function ExplorePage({ searchParams }) {
     supabase.from('opportunities').select('id, title, organization, deadline, source, mode').eq('status', 'published').order('created_at', { ascending: false }).limit(5),
     supabase.from('projects').select('id, title, technologies, reaction_count').eq('status', 'published').order('created_at', { ascending: false }).limit(5),
     supabase.from('lost_found').select('id, title, kind, location, occurred_on').eq('status', 'published').order('created_at', { ascending: false }).limit(5),
-    supabase.from('posts').select('id, author_id, kind, title, body, gif, community_id, visibility, status, is_official, comment_count, reaction_count, created_at').eq('kind', 'discussion').eq('status', 'published').order('created_at', { ascending: false }).limit(4),
+    supabase.rpc('trending_posts', { p_limit: 5, p_hours: 72 }),
+    (async () => {
+      const { data: discussions } = await discussionQuery;
+      return hydratePosts(supabase, discussions || [], { currentProfileId: user.profile.id });
+    })(),
   ]);
-
-  const hydratedDiscussions = await hydratePosts(supabase, discussions || [], { currentProfileId: user.profile.id });
-  const { data: trending } = await supabase.rpc('trending_posts', { p_limit: 5, p_hours: 72 });
 
   return (
     <div className="flex flex-col gap-6">
