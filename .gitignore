@@ -17,14 +17,16 @@ next-env.d.ts
 .env.development
 .env.production
 
+# NOTE: supabase/bundle/ is deliberately NOT ignored. It is a generated file,
+# but it is tracked on purpose so a deployment can be done entirely from the
+# Supabase Dashboard SQL Editor with no local tooling. `npm test` fails if it
+# drifts from supabase/migrations/ (see tests/bundle.test.js).
+
 # Supabase CLI local state
 supabase/.branches/
 supabase/.temp/
 supabase/.env
 supabase/.env.*
-
-# Generated SQL bundle (derived from supabase/migrations — never edited by hand)
-supabase/bundle/
 
 # Testing / coverage
 coverage/

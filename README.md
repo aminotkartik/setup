@@ -44,8 +44,10 @@ npm run seed:dev -- --confirm
 ## First-time setup
 
 1. **Supabase project** — create one and copy the Project URL and publishable key.
-2. **Migrations** — `supabase link --project-ref <ref> && supabase db push`
-   (or paste `supabase/migrations/*.sql` into the SQL editor in order).
+2. **Schema** — Dashboard only? Paste
+   [`supabase/bundle/campus-plus-schema.sql`](supabase/bundle/campus-plus-schema.sql)
+   into **SQL Editor → New query → Run** (one script, ends with an install
+   report). With the CLI? `supabase link --project-ref <ref> && supabase db push`.
 3. **Auth** — enable Email, turn off "Confirm email", and (for production)
    configure SMTP. See `docs/DEPLOYMENT.md` §4.
 4. **First Super Admin** — sign in once, then
@@ -70,7 +72,7 @@ The full walkthrough, including Vercel and the operator-only configuration, is i
 | `npm run seed:dev -- --confirm` | development-only sample content |
 | `npm run role:grant` / `role:list` | grant roles, inspect roles/permissions/settings |
 | `npm run db:migrate` / `db:reset` / `db:test` | Supabase CLI passthroughs |
-| `npm run db:bundle` | build `supabase/bundle/campus-plus-schema.sql` — the whole schema as one script for the Supabase SQL editor |
+| `npm run db:bundle` | regenerate `supabase/bundle/campus-plus-schema.sql` (tracked; `-- --check` fails if stale) |
 
 ## Project layout
 
@@ -91,6 +93,9 @@ lib/
   auth/ permissions/ validation/ giphy/ search/ notifications/ blocks/
   mentions/ ratelimit/ errors.js config.js config.server.js constants.js
 supabase/migrations/  19 ordered migrations (schema, RLS, RPCs, seed data)
+supabase/bundle/      campus-plus-schema.sql — the same 19 migrations as ONE
+                      script, for deploying from the Supabase SQL Editor with
+                      no CLI (generated + staleness-tested; not hand-edited)
 database/tests/       8 SQL test suites run by npm run verify:db
 tests/                Vitest suites (including the architecture guards)
 scripts/              operator tooling (env check, seeding, roles, security probe)

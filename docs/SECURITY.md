@@ -42,7 +42,7 @@ and after every deployment.
 
 ## 3. Authorization
 
-* Four roles (Student, Moderator, Admin, Super Admin) and ~47 permissions are
+* Four roles (Student, Moderator, Admin, Super Admin) and 53 permissions are
   **database rows**, never hardcoded email lists.
 * Two enforcement points, always both:
   1. `can(actor, permission)` in the server action/page — the *offer*;
