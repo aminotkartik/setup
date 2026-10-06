@@ -70,6 +70,7 @@ The full walkthrough, including Vercel and the operator-only configuration, is i
 | `npm run seed:dev -- --confirm` | development-only sample content |
 | `npm run role:grant` / `role:list` | grant roles, inspect roles/permissions/settings |
 | `npm run db:migrate` / `db:reset` / `db:test` | Supabase CLI passthroughs |
+| `npm run db:bundle` | build `supabase/bundle/campus-plus-schema.sql` — the whole schema as one script for the Supabase SQL editor |
 
 ## Project layout
 

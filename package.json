@@ -22,6 +22,7 @@
     "db:migrate": "supabase db push",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
+    "db:bundle": "node scripts/build-sql-bundle.mjs",
     "verify:db": "node scripts/dev/validate-migrations.mjs",
     "audit:db": "node scripts/dev/audit.mjs",
     "verify": "npm run lint && npm run verify:db && npm run audit:db && npm run test",

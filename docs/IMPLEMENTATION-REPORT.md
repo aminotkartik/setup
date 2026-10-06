@@ -13,8 +13,10 @@ repository; nothing here is a plan.
 | `npm run verify:db` | ✅ 19 migrations applied; 8 database suites passed |
 | `npm run audit:db` | ✅ **54 passed, 0 warnings, 0 failures** |
 | `npm run verify` | ✅ end-to-end (lint + migrations + audit + tests) |
-| `npm run verify:security` | ⏳ requires a live Supabase project (operator) |
-| `npm run check:env` | ⏳ requires real keys (operator) |
+| `npm run check:env` | ✅ passed against the operator's real project credentials |
+| `npm run verify:security` | ⏳ runs after the schema is applied (needs tables) |
+| Live project probe | ✅ `auth/v1/settings` reachable; `roles` not yet present (`PGRST205` → migrations not applied) |
+| SQL bundle path | ✅ `npm run db:bundle` applied as one script to a fresh PostgreSQL: 8/8 suites pass |
 
 ---
 

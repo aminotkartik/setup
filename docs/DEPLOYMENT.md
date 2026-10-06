@@ -59,10 +59,23 @@ supabase link --project-ref <your-project-ref>
 supabase db push
 ```
 
-**Option B — SQL editor**
+**Option B — SQL editor (one script)**
+
+```bash
+npm run db:bundle     # writes supabase/bundle/campus-plus-schema.sql
+```
+
+Open Supabase → **SQL Editor → New query**, paste that single file, press Run.
+It is generated from the migration history (never hand-edited) and verified by
+`npm test` tooling: applying it as one script to a fresh PostgreSQL instance
+produces the same schema, and all 8 database suites pass against it. Use it once,
+on an empty project.
+
+**Option C — SQL editor, file by file**
 
 Paste each file from `supabase/migrations/` into the SQL editor in filename order
-and run it. Do not rename or reorder the files.
+and run it. Do not rename or reorder the files. Equivalent to Option B, useful if
+you prefer to watch each step.
 
 Reference data included in the migrations, ready to use:
 
@@ -83,9 +96,10 @@ npm run audit:db      # 54 static assertions: RLS, policies, grants, columns
 
 Supabase dashboard → **Authentication**:
 
-1. **Providers → Email**: enable Email, *disable* "Confirm email" (Campus+ uses
-   one-time codes), and keep password sign-in off. There are no passwords in
-   Campus+.
+1. **Providers → Email**: enable Email and keep password sign-in off — Campus+
+   has no passwords. *Recommended:* disable "Confirm email" so a first-time code
+   returns a session immediately. If you leave it enabled, sign-in still works:
+   the app verifies the same code as a signup token for first-time students.
 2. **Email templates → Magic Link**: the code is what students type, so keep
    `{{ .Token }}` in the template (the default template is fine).
 3. **Auth → URL configuration**: set *Site URL* to the production origin and add
@@ -242,6 +256,7 @@ sample or invented content.
 | `/` shows `/setup` | Supabase environment variables missing or still placeholders | set them in `.env.local` **and** Vercel |
 | Login says "email domain not allowed" | address outside the allow-list | check `CAMPUS_ALLOWED_EMAIL_DOMAINS` and `platform_settings.allowed_email_domains` |
 | No code email arrives | SMTP not configured or rate limit hit | configure SMTP (§4) and check Supabase Auth logs |
+| First sign-in says "could not send the code" | "Confirm email" enabled with the default Supabase mailer | configure SMTP, or disable "Confirm email" (§4) |
 | GIF search says "not configured" | `GIPHY_API_KEY` missing | optional — add the key to enable GIFs |
 | Moderator page shows the lock notice | the account holds no moderation permission | `npm run role:grant -- --username <name> --role moderator` |
 | Admin action returns "you do not have permission" | UI gate passed but the database disagreed | expected: the database is authoritative. Check the role's permission mapping (§8a) |
