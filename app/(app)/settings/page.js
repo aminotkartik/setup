@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { listBlockedUsers } from '@/lib/blocks';
-import { getOwnProfile } from '@/lib/data/profiles';
 import { ROUTES, BRANCHES, YEARS, DIVISIONS, LIMITS, DEFAULT_PLATFORM_SETTINGS } from '@/lib/constants';
 import { PageHeader, Card, Notice, Badge, LinkButton, EmptyState } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
@@ -38,7 +37,8 @@ export default async function SettingsPage({ searchParams }) {
   const params = await searchParams;
   const tab = TABS.some((item) => item.key === params?.tab) ? params.tab : 'profile';
 
-  const profile = (await getOwnProfile(supabase, user.profile.id)) || user.profile;
+  // The session load already read this row (see lib/auth/session.js) — no second read.
+  const profile = user.profile;
   const blocked =
     tab === 'blocked' ? await listBlockedUsers(supabase, user.profile.id, { limit: 100 }) : [];
 

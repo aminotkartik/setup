@@ -21,9 +21,11 @@ import { formatDate } from '@/lib/utils';
  */
 export async function generateMetadata({ params }) {
   const { username } = await params;
-  if (!USERNAME_REGEX.test(String(username || '').toLowerCase())) return { title: 'Profile' };
+  const handle = String(username || '').toLowerCase();
+  if (!USERNAME_REGEX.test(handle)) return { title: 'Profile' };
   const supabase = await getServerClient();
-  const profile = await getPublicProfile(supabase, username);
+  // Same argument as the page body — React `cache` shares the read.
+  const profile = await getPublicProfile(supabase, handle);
   return { title: profile ? `${profile.display_name || `@${profile.username}`} (@${profile.username})` : 'Profile not found' };
 }
 
