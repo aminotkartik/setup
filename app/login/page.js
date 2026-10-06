@@ -2,15 +2,21 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
 import { isSupabaseConfigured } from '@/lib/config';
+import { describeAuthError, safeNextPath } from '@/lib/auth/oauth';
 import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
+import { Notice } from '@/components/ui';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 export const metadata = { title: 'Sign in' };
 
 /**
- * Sign-in (spec §7). Passwordless: an institutional address and a one-time
- * code. The screen explains the domain rule up front; the database enforces it.
+ * Sign-in (spec §7). Google OAuth only: the student picks their institutional
+ * Google account, and the domain rule is enforced server-side after the
+ * callback — never by anything typed on this screen.
+ *
+ * `/auth/callback` sends failures back here as `?error=<code>`; old one-time
+ * code links arrive as `?notice=google` (see /login/verify).
  */
 export default async function LoginPage({ searchParams }) {
   if (!isSupabaseConfigured()) redirect('/setup');
@@ -20,7 +26,12 @@ export default async function LoginPage({ searchParams }) {
   if (user && user.needsProfileSetup) redirect('/onboarding');
 
   const params = await searchParams;
-  const next = typeof params?.next === 'string' ? params.next : null;
+  const next = safeNextPath(params?.next);
+  const callbackError = describeAuthError(params?.error);
+  const notice =
+    params?.notice === 'google'
+      ? 'Campus+ now signs in with Google. Use the button below with your @pccoepune.org account.'
+      : null;
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-12">
@@ -28,18 +39,28 @@ export default async function LoginPage({ searchParams }) {
         <p className="text-2xs uppercase tracking-widest text-muted">Unofficial student project</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">Campus+</h1>
         <p className="mt-2 text-[0.9375rem] text-muted">
-          Sign in with your PCCOE email address. We send a one-time code — there is no password.
+          Sign in with your PCCOE Google account. There is no password and no code to remember.
         </p>
       </div>
 
-      <div className="card p-5">
+      <div className="card flex flex-col gap-4 p-5">
+        {callbackError ? (
+          <Notice tone="danger" icon="flag">
+            {callbackError}
+          </Notice>
+        ) : null}
+        {notice ? (
+          <Notice tone="accent" icon="sparkle">
+            {notice}
+          </Notice>
+        ) : null}
         <LoginForm next={next} />
       </div>
 
       <ul className="mt-6 flex flex-col gap-2 text-[0.8125rem] text-muted">
         <li className="flex items-start gap-2">
           <Icon name="mail" size={16} className="mt-0.5 shrink-0" />
-          Only <span className="text-ink">@pccoepune.org</span> addresses can sign in.
+          Only <span className="text-ink">@pccoepune.org</span> accounts can sign in.
         </li>
         <li className="flex items-start gap-2">
           <Icon name="lock" size={16} className="mt-0.5 shrink-0" />

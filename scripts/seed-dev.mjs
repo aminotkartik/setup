@@ -43,8 +43,10 @@ const DEV_USERS = [
 
 banner('Campus+ development seed');
 
-// 1. Accounts. Sign-in is passwordless OTP, so the seeder creates confirmed
+// 1. Accounts. Sign-in is Google OAuth, so the seeder creates confirmed
 // accounts through the admin API; the provisioning trigger builds the profile.
+// (Seeded addresses are fixtures and do not belong to real Google accounts —
+// use them as data, not as a way to sign in.)
 const ids = {};
 for (const user of DEV_USERS) {
   const { data: existing } = await supabase.auth.admin.listUsers({ page: 1, perPage: 200 });

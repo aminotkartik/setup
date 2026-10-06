@@ -1,0 +1,282 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/**
+ * Google OAuth sign-in (spec §7, §8).
+ *
+ * These tests pin the rules that replaced the one-time-code flow:
+ *
+ *   - sign-in only ever starts a Google round trip (the action returns a URL,
+ *     it never redirects and never creates a session),
+ *   - the session is created only in `/auth/callback`, from a server-side code
+ *     exchange,
+ *   - the Google-verified address is re-checked against the institutional
+ *     allow-list, and a disallowed session is signed out again,
+ *   - `next` can only be a path on this site (no open redirect),
+ *   - every failure lands on /login with a reason the screen can explain.
+ */
+
+const state = vi.hoisted(() => ({
+  supabase: null,
+  checkResult: null,
+  signOutCalls: 0,
+  oauthOptions: null,
+  oauthResult: null,
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  getServerClient: async () => state.supabase,
+}));
+
+vi.mock('@/lib/auth/domains', () => ({
+  checkInstitutionalEmail: async (email) =>
+    state.checkResult ? state.checkResult(email) : { ok: true, email, domain: 'pccoepune.org' },
+}));
+
+vi.mock('@/lib/auth/session', () => ({
+  getCurrentUser: async () => null,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers({ host: 'campus.test', 'x-forwarded-proto': 'https' }),
+}));
+
+vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
+
+import { startGoogleSignIn } from '@/lib/actions/auth';
+import { GET } from '@/app/auth/callback/route';
+import {
+  buildCallbackUrl,
+  describeAuthError,
+  loginErrorPath,
+  normalizeOrigin,
+  originFromHeaders,
+  originFromHost,
+  safeNextPath,
+} from '@/lib/auth/oauth';
+
+const ALLOWED_EMAIL = 'aditi@pccoepune.org';
+
+function makeClient({ user = { id: 'auth-1', email: ALLOWED_EMAIL }, exchange = null } = {}) {
+  return {
+    auth: {
+      exchangeCodeForSession: async (code) =>
+        exchange ? exchange(code) : { data: { user, session: { access_token: 'token' } }, error: null },
+      signInWithOAuth: async (options) => {
+        state.oauthOptions = options;
+        return (
+          state.oauthResult ?? {
+            data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=x' },
+            error: null,
+          }
+        );
+      },
+      signOut: async () => {
+        state.signOutCalls += 1;
+        return { error: null };
+      },
+    },
+  };
+}
+
+const callback = (query = '') =>
+  new Request(`https://campus.test/auth/callback${query}`, { headers: { host: 'campus.test' } });
+
+const locationOf = (response) => response.headers.get('location');
+
+const formData = (values = {}) => {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(values)) data.set(key, value);
+  return data;
+};
+
+beforeEach(() => {
+  state.supabase = null;
+  state.checkResult = null;
+  state.signOutCalls = 0;
+  state.oauthOptions = null;
+  state.oauthResult = null;
+  // Expected failures log server-side; keep the test output readable.
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('safeNextPath()', () => {
+  it('accepts only paths on this site', () => {
+    expect(safeNextPath('/market?tab=gigs')).toBe('/market?tab=gigs');
+    expect(safeNextPath('/chat/42')).toBe('/chat/42');
+    expect(safeNextPath('  /home  ')).toBe('/home');
+  });
+
+  it('refuses other origins and schemes', () => {
+    for (const value of [
+      'https://evil.example/login',
+      '//evil.example/login',
+      '/\\evil.example',
+      'http://campus.test/home',
+      'javascript:alert(1)',
+      '/home\u0000',
+      '',
+      null,
+      42,
+    ]) {
+      expect(safeNextPath(value)).toBeNull();
+    }
+  });
+});
+
+describe('buildCallbackUrl()', () => {
+  it('points at /auth/callback on the deployment origin', () => {
+    expect(buildCallbackUrl('https://campus.test')).toBe('https://campus.test/auth/callback');
+    expect(buildCallbackUrl('https://campus.test/')).toBe('https://campus.test/auth/callback');
+  });
+
+  it('carries a safe next path and drops an unsafe one', () => {
+    expect(buildCallbackUrl('https://campus.test', '/market')).toBe(
+      'https://campus.test/auth/callback?next=%2Fmarket',
+    );
+    expect(buildCallbackUrl('https://campus.test', '//evil.example')).toBe(
+      'https://campus.test/auth/callback',
+    );
+  });
+
+  it('requires a usable HTTPS origin', () => {
+    expect(() => buildCallbackUrl('http://campus.test')).toThrow(/HTTPS origin/);
+    expect(() => buildCallbackUrl('not a url')).toThrow(/HTTPS origin/);
+    expect(normalizeOrigin('http://localhost:3000')).toBe('http://localhost:3000');
+    expect(normalizeOrigin('https://campus.test')).toBe('https://campus.test');
+    expect(normalizeOrigin('http://campus.test')).toBeNull();
+  });
+});
+
+describe('originFromHost()', () => {
+  it('uses the proxied host and protocol when a proxy supplies them', () => {
+    expect(originFromHost('campus.test', 'https')).toBe('https://campus.test');
+    expect(originFromHost('campus.test, internal:3000', 'https')).toBe('https://campus.test');
+  });
+
+  it('defaults to HTTPS in production and HTTP only for local development', () => {
+    expect(originFromHost('campus.test')).toBe('https://campus.test');
+    expect(originFromHost('localhost:3000')).toBe('http://localhost:3000');
+    expect(originFromHost('127.0.0.1:3000')).toBe('http://127.0.0.1:3000');
+    expect(originFromHost('')).toBeNull();
+  });
+
+  it('reads a Headers-like object and keeps the fallback', () => {
+    expect(originFromHeaders(new Headers({ host: 'campus.test' }))).toBe('https://campus.test');
+    expect(originFromHeaders(null, 'https://fallback.test')).toBe('https://fallback.test');
+  });
+});
+
+describe('describeAuthError()', () => {
+  it('explains every code the callback can send', () => {
+    for (const code of ['cancelled', 'domain', 'exchange', 'missing_code', 'not_configured', 'provider']) {
+      expect(describeAuthError(code)).toBeTruthy();
+    }
+    expect(describeAuthError('domain')).toMatch(/pccoepune\.org/);
+    expect(describeAuthError('something-else')).toMatch(/could not complete/i);
+    expect(describeAuthError(undefined)).toBeNull();
+    expect(loginErrorPath('domain')).toBe('/login?error=domain');
+  });
+});
+
+describe('startGoogleSignIn()', () => {
+  it('returns the Supabase Google URL and never redirects or creates a session', async () => {
+    state.supabase = makeClient();
+
+    const result = await startGoogleSignIn(formData());
+
+    expect(result.ok).toBe(true);
+    expect(result.url).toContain('accounts.google.com');
+    expect(state.oauthOptions.provider).toBe('google');
+    expect(state.oauthOptions.options.skipBrowserRedirect).toBe(true);
+    expect(state.oauthOptions.options.redirectTo).toBe('https://campus.test/auth/callback');
+  });
+
+  it('passes a safe next destination through and drops an unsafe one', async () => {
+    state.supabase = makeClient();
+
+    await startGoogleSignIn(formData({ next: '/market?tab=gigs' }));
+    expect(state.oauthOptions.options.redirectTo).toBe(
+      'https://campus.test/auth/callback?next=%2Fmarket%3Ftab%3Dgigs',
+    );
+
+    await startGoogleSignIn(formData({ next: '//evil.example' }));
+    expect(state.oauthOptions.options.redirectTo).toBe('https://campus.test/auth/callback');
+  });
+
+  it('reports configuration and provider failures as action errors', async () => {
+    const unconfigured = await startGoogleSignIn(formData());
+    expect(unconfigured.ok).toBe(false);
+    expect(unconfigured.code).toBe('configuration');
+
+    state.supabase = makeClient();
+    state.oauthResult = { data: { provider: 'google', url: null }, error: { message: 'provider down' } };
+    const failed = await startGoogleSignIn(formData());
+    expect(failed.ok).toBe(false);
+    expect(failed.url).toBeUndefined();
+  });
+});
+
+describe('GET /auth/callback', () => {
+  it('sends a cancelled or failed Google round trip back to /login', async () => {
+    expect(locationOf(await GET(callback()))).toBe('https://campus.test/login?error=missing_code');
+    expect(locationOf(await GET(callback('?error=access_denied')))).toBe(
+      'https://campus.test/login?error=cancelled',
+    );
+    expect(locationOf(await GET(callback('?error=server_error')))).toBe(
+      'https://campus.test/login?error=provider',
+    );
+  });
+
+  it('does not exchange a code without a configured Supabase client', async () => {
+    expect(locationOf(await GET(callback('?code=abc')))).toBe(
+      'https://campus.test/login?error=not_configured',
+    );
+  });
+
+  it('reports a failed exchange without signing anyone in', async () => {
+    state.supabase = makeClient({
+      exchange: () => ({ data: { user: null, session: null }, error: { message: 'invalid grant' } }),
+    });
+
+    expect(locationOf(await GET(callback('?code=abc')))).toBe('https://campus.test/login?error=exchange');
+    expect(state.signOutCalls).toBe(0);
+  });
+
+  it('creates the session server-side and lands on the requested page', async () => {
+    state.supabase = makeClient();
+
+    expect(locationOf(await GET(callback('?code=good')))).toBe('https://campus.test/home');
+    expect(locationOf(await GET(callback('?code=good&next=%2Fmarket%2Flisting%2F7')))).toBe(
+      'https://campus.test/market/listing/7',
+    );
+    // An off-site destination is ignored, never followed.
+    expect(locationOf(await GET(callback('?code=good&next=%2F%2Fevil.example')))).toBe(
+      'https://campus.test/home',
+    );
+  });
+
+  it('signs a non-institutional address straight back out', async () => {
+    state.supabase = makeClient({ user: { id: 'auth-2', email: 'someone@gmail.com' } });
+    state.checkResult = () => ({ ok: false, error: 'That address is not allowed.' });
+
+    expect(locationOf(await GET(callback('?code=good')))).toBe('https://campus.test/login?error=domain');
+    expect(state.signOutCalls).toBe(1);
+  });
+
+  it('re-checks the Google-verified address, not something from the URL', async () => {
+    state.supabase = makeClient();
+    const seen = [];
+    state.checkResult = (email) => {
+      seen.push(email);
+      return { ok: true, email };
+    };
+
+    await GET(callback(`?code=good&email=attacker@evil.example`));
+
+    expect(seen).toEqual([ALLOWED_EMAIL]);
+  });
+});

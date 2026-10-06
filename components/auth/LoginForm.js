@@ -1,16 +1,30 @@
 'use client';
 
 import { useFormAction } from '@/lib/forms';
-import { sendLoginCode } from '@/lib/actions/auth';
-import { Button, Field, Input, Notice } from '@/components/ui';
+import { startGoogleSignIn } from '@/lib/actions/auth';
+import { Button, Notice } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 
 /**
- * Step 1 of sign-in: institutional email → one-time code.
- * The domain rule is enforced server-side; the hint is only a hint.
+ * Sign-in (spec §7): a single "Continue with Google" button.
+ *
+ * There is no email field and no code to type any more — the institutional
+ * domain rule is enforced after Google authenticates the student, on the
+ * server, in `/auth/callback`.
+ *
+ * The action returns the Google authorization URL and this component navigates
+ * to it. That is what fixes the old NEXT_REDIRECT problem: the previous
+ * one-time-code action called `redirect()` inside its own `try/catch`, so the
+ * `NEXT_REDIRECT` control-flow error was caught and reported as a failure. Now
+ * no server action redirects at all — success is a plain return value.
  */
 export function LoginForm({ next = null }) {
-  const { run, pending, error, fieldErrors } = useFormAction(sendLoginCode);
+  const { run, pending, error } = useFormAction(startGoogleSignIn, {
+    onSuccess: ({ url }) => {
+      // A full browser hop, exactly like clicking a link to Google.
+      if (typeof url === 'string' && url) window.location.assign(url);
+    },
+  });
 
   return (
     <form
@@ -23,40 +37,24 @@ export function LoginForm({ next = null }) {
         run(data);
       }}
     >
-      <Field
-        label="Institutional email"
-        htmlFor="email"
-        required
-        error={fieldErrors?.email}
-        hint="For example: yourname@pccoepune.org"
-      >
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          placeholder="yourname@pccoepune.org"
-          required
-          autoFocus
-          aria-invalid={fieldErrors?.email ? 'true' : undefined}
-        />
-      </Field>
-
       {error ? (
         <Notice tone="danger" icon="flag">
           {error}
         </Notice>
       ) : null}
 
-      <Button type="submit" disabled={pending} className="w-full">
-        {pending ? 'Sending code…' : 'Send one-time code'}
-        {!pending ? <Icon name="chevronRight" size={16} /> : null}
+      <Button type="submit" disabled={pending} className="w-full" icon="chevronRight">
+        {pending ? 'Taking you to Google…' : 'Continue with Google'}
       </Button>
 
       <p className="text-2xs text-muted">
-        The code is valid for a short time and can only be used once. If you do not see the email,
-        check your spam folder before requesting another.
+        You will be sent to Google to choose your account. Campus+ never sees your Google password and
+        never posts anything on your behalf.
+      </p>
+
+      <p className="flex items-center gap-1.5 text-2xs text-muted">
+        <Icon name="lock" size={13} className="shrink-0" />
+        Sessions are created on the server, only after Google confirms your address.
       </p>
     </form>
   );
