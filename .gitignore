@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# Environment — NEVER commit real values
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# NOTE: supabase/bundle/ is deliberately NOT ignored. It is a generated file,
+# but it is tracked on purpose so a deployment can be done entirely from the
+# Supabase Dashboard SQL Editor with no local tooling. `npm test` fails if it
+# drifts from supabase/migrations/ (see tests/bundle.test.js).
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+
+# Testing / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.tsbuildinfo
+.eslintcache
