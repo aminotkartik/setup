@@ -1,0 +1,89 @@
+/**
+ * Campus+ — Next.js proxy (formerly `middleware.ts`).
+ *
+ * Next 16 renamed middleware to `proxy`: the file must export `proxy`, runs on
+ * the Node.js runtime, and keeping both `middleware.ts` and `proxy.ts` is a
+ * build error. This file does exactly two things:
+ *
+ *   1. refresh the Supabase session so the auth cookie never expires mid-visit,
+ *   2. send signed-out visitors to /login and signed-in visitors away from it.
+ *
+ * It is deliberately *not* the authorization layer: every page, server action
+ * and RLS policy checks permissions again (spec §106, §107). A path the matcher
+ * misses is still safe — it just skips the cookie refresh.
+ */
+
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+
+/** Routes that must be reachable without a session. */
+const PUBLIC_PATHS = ['/login', '/login/verify', '/auth', '/setup'];
+
+function isPublic(pathname) {
+  if (pathname === '/') return true;
+  return PUBLIC_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+/**
+ * @param {import('next/server').NextRequest} request
+ */
+export async function proxy(request) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // Without configuration the app must still boot and explain what is missing
+  // (spec §92) — never 500 the whole site because an env var is absent.
+  if (!url || !key || /^YOUR_/.test(key)) {
+    return NextResponse.next({ request });
+  }
+
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        for (const { name, value } of cookiesToSet) {
+          request.cookies.set(name, value);
+        }
+        response = NextResponse.next({ request });
+        for (const { name, value, options } of cookiesToSet) {
+          response.cookies.set(name, value, options);
+        }
+      },
+    },
+  });
+
+  // getClaims() verifies the JWT locally when possible and falls back to the
+  // auth server only when the token must be refreshed. A failure here means the
+  // session is gone, not that the request should fail.
+  let signedIn = false;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    signedIn = Boolean(data?.claims?.sub);
+  } catch {
+    signedIn = false;
+  }
+
+  const { pathname, search } = request.nextUrl;
+
+  if (!signedIn && !isPublic(pathname)) {
+    const target = new URL('/login', request.url);
+    if (pathname !== '/') target.searchParams.set('next', `${pathname}${search}`);
+    return NextResponse.redirect(target);
+  }
+
+  if (signedIn && (pathname === '/login' || pathname === '/login/verify')) {
+    return NextResponse.redirect(new URL('/home', request.url));
+  }
+
+  return response;
+}
+
+export const config = {
+  // Everything except static assets, image optimisation, the favicon and API
+  // route handlers (which authenticate themselves and return JSON, not HTML).
+  matcher: ['/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|manifest.webmanifest).*)'],
+};

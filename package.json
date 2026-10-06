@@ -1,0 +1,45 @@
+{
+  "name": "campus-plus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Campus+ \u2014 an unofficial, text-first digital layer for campus life (PCCOE).",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:env": "node scripts/check-env.mjs",
+    "seed:dev": "node scripts/seed-dev.mjs",
+    "role:grant": "node scripts/grant-role.mjs",
+    "role:list": "node scripts/list-roles.mjs",
+    "db:migrate": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "verify:db": "node scripts/dev/validate-migrations.mjs",
+    "audit:db": "node scripts/dev/audit.mjs",
+    "verify": "npm run lint && npm run verify:db && npm run audit:db && npm run test",
+    "verify:security": "node scripts/verify-security.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "next": "^16.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "^16.3.8",
+    "tailwindcss": "^4.3.3",
+    "vitest": "^5.0.3"
+  }
+}

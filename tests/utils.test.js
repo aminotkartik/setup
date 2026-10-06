@@ -1,0 +1,129 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  isSafeExternalUrl,
+  normalizeUsername,
+  initials,
+  handle,
+  formatPrice,
+  relativeTime,
+  formatDateRange,
+  slugify,
+  compactNumber,
+  pluralize,
+} from '@/lib/utils';
+import { extractMentionUsernames, mentionUrl, segmentMentions } from '@/lib/mentions';
+import { gifRefValidator, GIPHY_HOSTS } from '@/lib/validation/schemas';
+
+/**
+ * Shared helpers. These run against the same functions the application uses, so
+ * a regression here is a regression in the product.
+ */
+
+describe('username handling', () => {
+  it('lowercases and trims', () => {
+    expect(normalizeUsername('  Asha.E2E  ')).toBe('asha.e2e');
+  });
+
+  it('renders a handle with the @ prefix exactly once', () => {
+    expect(handle('asha_e2e')).toBe('@asha_e2e');
+    expect(handle('@asha_e2e')).toBe('@asha_e2e');
+  });
+
+  it('derives initials from the display name, falling back to the username', () => {
+    expect(initials('Asha Kulkarni', 'asha_e2e')).toBe('AK');
+    expect(initials(null, 'asha_e2e')).toBe('AS');
+    expect(initials('', '')).toBe('?');
+  });
+
+  it('builds url-safe slugs', () => {
+    expect(slugify('Second Year — Study Group!')).toBe('second-year-study-group');
+  });
+});
+
+describe('external url safety', () => {
+  it('accepts http and https only', () => {
+    expect(isSafeExternalUrl('https://pccoepune.org/notice.pdf')).toBe(true);
+    expect(isSafeExternalUrl('http://example.com')).toBe(true);
+  });
+
+  it('rejects javascript:, data: and protocol-relative urls', () => {
+    expect(isSafeExternalUrl('javascript:alert(1)')).toBe(false);
+    expect(isSafeExternalUrl('data:text/html,<script>')).toBe(false);
+    expect(isSafeExternalUrl('//evil.example.com')).toBe(false);
+    expect(isSafeExternalUrl('not a url')).toBe(false);
+    expect(isSafeExternalUrl(null)).toBe(false);
+  });
+});
+
+describe('formatting', () => {
+  it('formats prices and free items', () => {
+    expect(formatPrice(0)).toBe('Free');
+    expect(formatPrice(null)).toBe('Free');
+    expect(formatPrice(1250)).toContain('1,250');
+  });
+
+  it('formats relative and range dates without inventing values', () => {
+    const now = Date.now();
+    expect(relativeTime(new Date(now - 60_000).toISOString())).toMatch(/^1m ago$/);
+    expect(relativeTime(new Date(now - 5_000).toISOString())).toBe('just now');
+    expect(relativeTime('not-a-date')).toBe('');
+    expect(formatDateRange('2026-10-05', '2026-10-07')).toContain('2026');
+    expect(formatDateRange('2026-10-05', '2026-10-05')).not.toContain('–');
+    expect(formatDateRange('2026-10-05', null)).toBe(formatDateRange('2026-10-05', null));
+  });
+
+  it('pluralises counts and compacts large numbers', () => {
+    expect(pluralize(1, 'reply', 'replies')).toBe('1 reply');
+    expect(pluralize(2, 'reply', 'replies')).toBe('2 replies');
+    expect(compactNumber(1250)).toMatch(/K|k/);
+  });
+});
+
+describe('mentions', () => {
+  it('extracts unique usernames in lower case, capped at ten', () => {
+    expect(extractMentionUsernames('hey @Asha_E2E and @asha_e2e and @rahul')).toEqual(['asha_e2e', 'rahul']);
+    const many = Array.from({ length: 14 }, (_, index) => `@user${index}`).join(' ');
+    expect(extractMentionUsernames(many)).toHaveLength(10);
+  });
+
+  it('ignores mention-shaped text inside other words or without a body', () => {
+    expect(extractMentionUsernames('mail me at a@b.com')).toEqual([]);
+    expect(extractMentionUsernames('@')).toEqual([]);
+  });
+
+  it('segments text so mentions render as links and never as raw html', () => {
+    const segments = segmentMentions('hi @asha_e2e, see you');
+    expect(segments).toEqual([
+      { type: 'text', value: 'hi ' },
+      { type: 'mention', value: 'asha_e2e' },
+      { type: 'text', value: ', see you' },
+    ]);
+    expect(mentionUrl('asha_e2e')).toBe('/user/asha_e2e');
+  });
+});
+
+describe('gif references (the only media Campus+ accepts)', () => {
+  it('accepts a provider reference with an id and a GIPHY-hosted url', () => {
+    const result = gifRefValidator({
+      id: 'abc123',
+      url: 'https://media.giphy.com/media/abc123/giphy.gif',
+      preview_url: 'https://media.giphy.com/media/abc123/giphy_s.gif',
+      width: 200,
+      height: 200,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it('rejects arbitrary hosts, javascript urls and inline data', () => {
+    expect(gifRefValidator({ id: 'x', url: 'https://evil.example.com/x.gif' }).ok).toBe(false);
+    expect(gifRefValidator({ id: 'x', url: 'javascript:alert(1)' }).ok).toBe(false);
+    expect(gifRefValidator({ id: 'x', url: 'data:image/gif;base64,AAAA' }).ok).toBe(false);
+    expect(gifRefValidator({ id: '', url: GIPHY_HOSTS[0] }).ok).toBe(false);
+  });
+
+  it('treats an absent gif as "no gif" rather than an error', () => {
+    expect(gifRefValidator(undefined).ok).toBe(true);
+    expect(gifRefValidator('').ok).toBe(true);
+  });
+});
