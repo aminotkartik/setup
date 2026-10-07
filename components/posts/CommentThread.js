@@ -11,7 +11,7 @@ import { ReportDialog } from '@/components/social/ReportDialog';
 import { renderTextWithMentions } from '@/components/posts/richText';
 
 /**
- * Comments (spec §14): flat reading with one level of replies.
+ * Comments: flat reading with one level of replies.
  *
  * Each comment shows who, what, when, and only the actions the viewer actually
  * has: react, reply, report, and delete when the comment is theirs.
@@ -29,7 +29,7 @@ export function CommentThread({
 
   return (
     <section id="comments" className="flex flex-col gap-3" aria-label="Comments">
-      <h2 className="text-sm font-semibold">
+      <h2 className="t-section">
         {total === 0 ? 'No comments yet' : `${total} comment${total === 1 ? '' : 's'}`}
       </h2>
 
@@ -45,7 +45,7 @@ export function CommentThread({
             <li key={comment.id} className="flex flex-col gap-2">
               <CommentItem comment={comment} postId={postId} currentUserId={currentUserId} />
               {repliesOf(comment.id).length ? (
-                <ul className="ml-6 flex flex-col gap-2 border-l border-line pl-3">
+                <ul className="ml-5 flex flex-col gap-2 border-l border-line pl-3">
                   {repliesOf(comment.id).map((reply) => (
                     <li key={reply.id}>
                       <CommentItem comment={reply} postId={postId} currentUserId={currentUserId} isReply />
@@ -67,7 +67,7 @@ function CommentItem({ comment, postId, currentUserId, isReply = false }) {
   const deleted = comment.status === 'deleted';
 
   return (
-    <article className="card p-3">
+    <article className="card p-3" id={`comment-${comment.id}`}>
       <div className="flex items-start justify-between gap-3">
         <IdentityLine
           username={comment.author_username}
@@ -76,7 +76,7 @@ function CommentItem({ comment, postId, currentUserId, isReply = false }) {
           size="sm"
           timestamp={comment.created_at}
         />
-        {removed ? <Badge tone="danger">Removed by a moderator</Badge> : null}
+        {removed ? <Badge tone="danger">Removed</Badge> : null}
       </div>
 
       {deleted ? (
@@ -93,7 +93,7 @@ function CommentItem({ comment, postId, currentUserId, isReply = false }) {
       )}
 
       {!deleted ? (
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2.5">
           <ReactionBar
             targetType="comment"
             targetId={comment.id}
@@ -102,9 +102,7 @@ function CommentItem({ comment, postId, currentUserId, isReply = false }) {
             canReact={Boolean(currentUserId)}
           />
           <div className="flex items-center gap-2">
-            {!isReply ? (
-              <CommentComposer postId={postId} parentId={comment.id} compact label="Reply" />
-            ) : null}
+            {!isReply ? <CommentComposer postId={postId} parentId={comment.id} compact label="Reply" /> : null}
             {isOwner ? (
               <CommentActions commentId={comment.id} postId={postId} />
             ) : (
@@ -112,8 +110,7 @@ function CommentItem({ comment, postId, currentUserId, isReply = false }) {
             )}
             <Link
               href={`${ROUTES.post(postId)}#comment-${comment.id}`}
-              className="text-2xs text-muted hover:text-ink"
-              id={`comment-${comment.id}`}
+              className="text-2xs text-muted-soft transition-colors hover:text-ink"
             >
               {relativeTime(comment.created_at)}
             </Link>

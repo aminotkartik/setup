@@ -11,7 +11,7 @@
  */
 
 import { useState } from 'react';
-import { Button, Checkbox, Field, Input, Notice, Select, Textarea } from '@/components/ui';
+import { Button, Field, Input, Notice, Select, Switch, Textarea } from '@/components/ui';
 import { useFormAction } from '@/lib/forms';
 import { grantRole, revokeRole, setAccountStatus, setPlatformSetting, setFeatureFlag } from '@/lib/actions/admin';
 import { ACCOUNT_STATUS } from '@/lib/constants';
@@ -70,8 +70,8 @@ export function RevokeRoleForm({ userId, role, label }) {
         revoke.run(formData);
       }}
     >
-      <Button type="submit" size="sm" variant="ghost" disabled={revoke.pending} aria-label={`Revoke ${label || role}`}>
-        {revoke.pending ? '…' : `Revoke ${label || role}`}
+      <Button type="submit" size="sm" variant="danger" icon="close" disabled={revoke.pending} aria-label={`Revoke ${label || role}`}>
+        {revoke.pending ? 'Revoking…' : `Revoke ${label || role}`}
       </Button>
       {revoke.error ? <Notice tone="danger">{revoke.error}</Notice> : null}
     </form>
@@ -191,11 +191,12 @@ export function FeatureFlagToggle({ flagKey, enabled }) {
         save.run(formData);
       }}
     >
-      <Checkbox
+      <Switch
         id={`flag-${flagKey}`}
         checked={on}
         onChange={(event) => setOn(event.target.checked)}
         label={on ? 'Enabled' : 'Disabled'}
+        note="Applies to every student immediately."
       />
       <Button type="submit" size="sm" variant="secondary" disabled={save.pending}>
         {save.pending ? 'Saving…' : 'Apply'}

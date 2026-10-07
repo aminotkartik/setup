@@ -25,7 +25,7 @@ export function renderTextWithMentions(text) {
     const start = match.index + prefix.length;
     if (start > lastIndex) nodes.push(source.slice(lastIndex, start));
     nodes.push(
-      <Link key={`${username}-${start}`} href={ROUTES.user(username)} className="text-ink underline decoration-line">
+      <Link key={`${username}-${start}`} href={ROUTES.user(username)} className="mention">
         @{username}
       </Link>,
     );
@@ -45,7 +45,7 @@ export function TextList({ items, className = '' }) {
   return (
     <ul className={`flex flex-wrap gap-1.5 ${className}`}>
       {list.map((item) => (
-        <li key={item} className="rounded-full border border-line px-2 py-0.5 text-2xs text-muted">
+        <li key={item} className="chip chip-static">
           {item}
         </li>
       ))}

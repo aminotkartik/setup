@@ -12,7 +12,7 @@ import {
   moderatorTargetUrl,
 } from '@/lib/data/moderation';
 import { ROUTES, UUID_REGEX, PAGE_SIZE } from '@/lib/constants';
-import { PageHeader, Card, Notice, Badge, EmptyState, LinkButton } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
 import { ModerationActions, ResolveReportForm, MarketplaceReviewActions, RandomReportActions } from '@/components/moderation/ModerationPanels';
 import { formatDateTime, relativeTime } from '@/lib/utils';
 
@@ -74,7 +74,7 @@ export default async function ModeratorPage({ searchParams }) {
   ]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="page-grid">
       <PageHeader
         title="Moderation"
         description="Reports, marketplace review, Random reports and the audit trail."
@@ -85,9 +85,8 @@ export default async function ModeratorPage({ searchParams }) {
           <Link
             key={tab.key}
             href={`${ROUTES.moderator}?tab=${tab.key}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              activeTab === tab.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-            }`}
+            className="chip"
+            data-active={activeTab === tab.key}
           >
             {tab.label}
           </Link>
@@ -252,9 +251,9 @@ export default async function ModeratorPage({ searchParams }) {
             <h2 className="text-sm font-semibold">Jump to a target</h2>
             <form method="get" action={ROUTES.moderator} className="flex flex-wrap items-end gap-2">
               <input type="hidden" name="tab" value="content" />
-              <label className="flex flex-col gap-1 text-2xs text-muted">
-                Type
-                <select name="target" className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink">
+              <label className="flex flex-col gap-1.5">
+                <span className="field-label">Type</span>
+                <select name="target" className="control control-input h-9">
                   {['post', 'comment', 'marketplace_listing', 'gig', 'community', 'club', 'project', 'lost_found', 'housing_post', 'ride_post'].map((value) => (
                     <option key={value} value={value}>
                       {value.replace(/_/g, ' ')}
@@ -262,18 +261,18 @@ export default async function ModeratorPage({ searchParams }) {
                   ))}
                 </select>
               </label>
-              <label className="flex flex-1 flex-col gap-1 text-2xs text-muted">
-                Id
+              <label className="flex flex-1 flex-col gap-1.5">
+                <span className="field-label">Id</span>
                 <input
                   name="id"
                   required
                   placeholder="00000000-0000-0000-0000-000000000000"
-                  className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink"
+                  className="control control-input h-9"
                 />
               </label>
-              <button type="submit" className="h-9 rounded-lg border border-line bg-white px-3 text-[0.8125rem] hover:bg-canvas">
+              <Button type="submit" size="sm" variant="secondary">
                 Open
-              </button>
+              </Button>
             </form>
           </Card>
         </section>

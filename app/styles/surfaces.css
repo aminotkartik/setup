@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Surfaces — cards, glass material, badges, notices
+   --------------------------------------------------------------------------
+   "Digital interface with physical material": paper-quiet cards with a hairline
+   edge and a soft shadow, plus a small number of glass accents (navigation,
+   sheets, composer, floating controls). Content is never glass.
+   ========================================================================== */
+
+@layer components {
+  /* ---------------------------------------------------------------- cards */
+
+  .card {
+    position: relative;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  a.card,
+  button.card,
+  .card-interactive {
+    transition:
+      transform 0.18s var(--ease-out-soft),
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      background-color 0.18s ease;
+  }
+
+  a.card:hover,
+  button.card:hover,
+  .card-interactive:hover {
+    border-color: var(--c-line-strong);
+    box-shadow: var(--shadow-raised);
+    transform: translateY(-1px);
+  }
+
+  a.card:active,
+  button.card:active,
+  .card-interactive:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* A card that reads as an inset well (timelines, nested rows). */
+  .card-flush {
+    background-color: var(--c-surface-2);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-md);
+    box-shadow: none;
+  }
+
+  /* Feature surface: quiet warm tint, used for a single highlighted item. */
+  .card-feature {
+    background-image: linear-gradient(180deg, var(--c-accent-tint), transparent 65%);
+    border-color: color-mix(in oklab, var(--c-accent) 22%, var(--c-line));
+  }
+
+  /* Elevated: for the one card in a column that should sit above the rest. */
+  .card-elevated {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised);
+  }
+
+  /* Glass card: reserved for featured/special content, never body copy. */
+  .card-glass {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised), var(--shadow-inset-top);
+  }
+
+  .hairline {
+    border-bottom: 1px solid var(--c-line);
+  }
+
+  /* ---------------------------------------------------------- glass material */
+
+  .glass {
+    background-color: var(--c-glass-bg);
+    /* The faint blue cast that keeps the material from reading as plain grey
+       transparency — the "liquid" in the liquid glass. */
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 62%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--shadow-raised), var(--shadow-inset-top);
+  }
+
+  .glass-soft {
+    background-color: color-mix(in oklab, var(--c-surface) 86%, transparent);
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 70%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--c-glass-border);
+  }
+
+  .glass-strong {
+    background-color: color-mix(in oklab, var(--c-surface) 92%, transparent);
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 58%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    backdrop-filter: blur(26px) saturate(160%);
+    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--shadow-float), var(--shadow-inset-top);
+  }
+
+  .glass-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* One soft specular highlight — the "liquid" in liquid glass. */
+  .glass-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, color-mix(in oklab, var(--c-highlight) 45%, transparent) 0%, transparent 42%);
+    opacity: 0.5;
+    border-radius: inherit;
+  }
+
+  /* ------------------------------------------------------------- notices */
+
+  .notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--c-line);
+    background-color: var(--c-surface-2);
+    padding: 0.6875rem 0.8125rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  /* -------------------------------------------------------------- divider */
+
+  .rule {
+    height: 1px;
+    background: var(--c-line);
+    border: 0;
+  }
+
+  /* -------------------------------------------------------- section header */
+
+  .section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  /* --------------------------------------------------------- list rows */
+
+  .row-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    transition: background-color 0.15s ease;
+  }
+
+  .row-link:hover {
+    background-color: var(--c-surface-2);
+    text-decoration: none;
+  }
+
+  /* ------------------------------------------------------------ avatars */
+
+  .identity-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-line);
+    background-image: linear-gradient(150deg, var(--c-surface-3), var(--c-surface));
+    color: var(--c-muted);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: var(--shadow-inset-top);
+  }
+
+  .identity-mark-accent {
+    border-color: color-mix(in oklab, var(--c-accent) 30%, var(--c-line));
+    background-image: linear-gradient(150deg, var(--c-accent-soft), var(--c-surface));
+    color: var(--c-accent-ink);
+  }
+
+  /* ------------------------------------------------------------- badges */
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--c-line);
+    background-color: var(--c-surface-2);
+    color: var(--c-muted);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  .badge-accent {
+    border-color: color-mix(in oklab, var(--c-accent) 30%, transparent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-accent-ink);
+  }
+
+  .badge-danger {
+    border-color: color-mix(in oklab, var(--c-danger) 32%, transparent);
+    background-color: var(--c-danger-soft);
+    color: var(--c-danger);
+  }
+
+  .badge-warning {
+    border-color: color-mix(in oklab, var(--c-warning) 32%, transparent);
+    background-color: var(--c-warning-soft);
+    color: var(--c-warning);
+  }
+
+  .badge-success {
+    border-color: color-mix(in oklab, var(--c-success) 32%, transparent);
+    background-color: var(--c-success-soft);
+    color: var(--c-success);
+  }
+
+  .badge-info {
+    border-color: color-mix(in oklab, var(--c-info) 32%, transparent);
+    background-color: var(--c-info-soft);
+    color: var(--c-info);
+  }
+
+  /* Unread/priority marker: a claim, never decoration. */
+  .badge-live {
+    border-color: color-mix(in oklab, var(--c-unread) 38%, transparent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-accent-ink);
+  }
+
+  .unread-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 999px;
+    background-color: var(--c-unread);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-unread) 18%, transparent);
+    flex-shrink: 0;
+  }
+
+  /* ------------------------------------------------------------ chips */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    border: 1px solid var(--c-line);
+    background-color: var(--c-surface);
+    color: var(--c-muted);
+    padding: 0.3125rem 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  /* Read-only chips (technologies, subjects): identical material, no
+     affordance — they are labels, not controls. */
+  .chip-static {
+    padding: 0.1875rem 0.625rem;
+    color: var(--c-muted);
+    pointer-events: none;
+  }
+
+  .chip:hover {
+    color: var(--c-ink);
+    border-color: var(--c-line-strong);
+    text-decoration: none;
+  }
+
+  .chip:active {
+    transform: translateY(1px);
+  }
+
+  /* A toggle chip is bigger-touch and slightly bolder than a filter chip. */
+  .chip-toggle {
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.12s ease;
+  }
+
+  .chip-toggle:active {
+    transform: scale(0.96);
+  }
+
+  /* Segmented control (the composer's kind switch): no chrome until chosen. */
+  .chip-plain {
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  .chip-plain:hover {
+    border-color: transparent;
+    background-color: color-mix(in oklab, var(--c-ink) 5%, transparent);
+  }
+
+  .chip[aria-current='page'],
+  .chip[data-active='true'],
+  .chip[aria-selected='true'],
+  .chip[aria-pressed='true'] {
+    border-color: color-mix(in oklab, var(--c-accent) 34%, transparent);
+    background-color: var(--c-accent-soft);
+    color: var(--c-accent-ink);
+    box-shadow: var(--shadow-inset-top);
+  }
+}

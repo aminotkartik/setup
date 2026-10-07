@@ -4,6 +4,7 @@ import { getCurrentUser, BLOCKED_STATUSES } from '@/lib/auth/session';
 import { isSupabaseConfigured } from '@/lib/config';
 import { formatDateTime } from '@/lib/utils';
 import { Notice } from '@/components/ui';
+import { PublicShell } from '@/components/layout/PublicShell';
 import { Icon } from '@/components/ui/icons';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 
@@ -29,11 +30,12 @@ export default async function AccountStatusPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-14">
-      <h1 className="text-xl font-semibold tracking-tight">{copy[user.accountStatus] || 'Account unavailable'}</h1>
-      <p className="mt-2 text-[0.9375rem] text-muted">
-        You can still see this message, but Campus+ is read-only or unavailable for this account.
-      </p>
+    <PublicShell
+      eyebrow="Account unavailable"
+      title={copy[user.accountStatus] || 'Account unavailable'}
+      description="You can still see this message, but Campus+ is read-only or unavailable for this account."
+      width="sm"
+    >
 
       {user.profile?.status_reason ? (
         <Notice tone="warning" className="mt-5" icon="shield">
@@ -64,6 +66,6 @@ export default async function AccountStatusPage() {
       <div className="mt-8">
         <SignOutButton />
       </div>
-    </div>
+    </PublicShell>
   );
 }

@@ -7,7 +7,7 @@ import { cn, compactNumber } from '@/lib/utils';
 import { Icon } from '@/components/ui/icons';
 
 /**
- * One reaction control (spec §15). Optimistic count, then the database's trigger
+ * One reaction control. Optimistic count, then the database's trigger
  * recomputes the stored counter — the number shown is never client-invented.
  */
 export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = false, canReact = true, className = '' }) {
@@ -20,11 +20,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
       disabled={!canReact || pending}
       aria-pressed={state.reacted}
       aria-label={state.reacted ? 'Remove reaction' : 'React to this'}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs transition-colors',
-        state.reacted ? 'border-accent/40 bg-accent-soft text-accent-ink' : 'border-line text-muted hover:text-ink',
-        className,
-      )}
+      className={cn('chip chip-toggle', !canReact ? 'cursor-default opacity-70' : null, className)}
       onClick={() => {
         const next = { count: state.count + (state.reacted ? -1 : 1), reacted: !state.reacted };
         setState(next);
@@ -34,7 +30,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
         run(data);
       }}
     >
-      <Icon name="heart" size={13} />
+      <Icon name="heart" size={13} className={cn('transition-transform', state.reacted ? 'scale-110' : null)} />
       {state.count > 0 ? compactNumber(state.count) : 'Like'}
     </button>
   );

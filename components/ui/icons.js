@@ -1,8 +1,8 @@
 /**
  * Inline icon set.
  *
- * Campus+ ships no icon package and no decorative imagery (spec §4). These are
- * minimal 1.5px stroke glyphs on a 24×24 grid, drawn inline so they inherit
+ * Campus+ ships no icon package and no decorative imagery. These are minimal
+ * 1.5px stroke glyphs on a 24×24 grid, drawn inline so they inherit
  * `currentColor`, cost no network request and stay accessible.
  */
 
@@ -24,14 +24,17 @@ const PATHS = {
   flag: 'M6 20V4m0 0 5 1 4-1 3 1v8l-3-1-4 1-5-1',
   plus: 'M12 5v14M5 12h14',
   check: 'm5 13 4 4L19 7',
+  checkCircle: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-3 8.2 2.4 2.4L15.5 10',
   close: 'M6 6l12 12M18 6 6 18',
   chevronRight: 'm9 5 7 7-7 7',
   chevronLeft: 'm15 5-7 7 7 7',
+  chevronDown: 'm5 9 7 7 7-7',
   lock: 'M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5v-9Zm7 3.5v2',
   mail: 'M4 6h16v12H4V6Zm0 1 8 6 8-6',
   logout: 'M15 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h9M18 12H9m9 0-3-3m3 3-3 3',
   settings:
     'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8-3-1.8-.6.5-1.8-1.6-1.6-1.8.5L14.7 7 14 4h-4l-.7 3-1.6 1.5-1.8-.5-1.6 1.6.5 1.8L4 12l.8.6-.5 1.8 1.6 1.6 1.8-.5L9.3 17l.7 3h4l.7-3 1.6-1.5 1.8.5 1.6-1.6-.5-1.8L20 12Z',
+  sliders: 'M5 8h9m3 0h2M5 16h3m3 0h8M14 5.5v5M8 13.5v5',
   eye: 'M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12Zm9.5 2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
   eyeOff: 'M4 4l16 16M9.9 5.2A9.9 9.9 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.7M6.4 7.3C4.2 8.9 2.5 12 2.5 12s3.5 7 9.5 7c1.2 0 2.3-.2 3.2-.6',
   dots: 'M6 12h.01M12 12h.01M18 12h.01',
@@ -50,6 +53,20 @@ const PATHS = {
   star: 'm12 4 2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8L12 4Z',
   filter: 'M4 6h16l-6 7v5l-4 2v-7L4 6Z',
   image: 'M4 5h16v14H4V5Zm0 10 4-4 5 5m-1-2 3-3 5 5',
+  file: 'M7 3h7l4 4v14H7V3Zm7 0v4h4',
+  history: 'M12 5a7 7 0 1 1-6.5 4.4M12 5v0M4 5v5h5M12 8v4.5l3 1.8',
+  trend: 'M4 17 10 11l3.5 3.5L20 8M20 8h-5m5 0v5',
+  inbox: 'M4 13V6h16v7h-5l-1 2h-4l-1-2H4Zm0 0v5h16v-5',
+  grid: 'M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z',
+  mapPin: 'M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Zm0-9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
+  arrowUpRight: 'M7 17 17 7M17 7H9m8 0v8',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-5v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4',
+  moon: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z',
+  monitor: 'M4 5h16v11H4V5Zm5 15h6m-3-4v4',
+  alert: 'M12 4 3 20h18L12 4Zm0 6v4m0 3h.01',
+  info: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 4h.01M11 12h1v4h1',
+  trash: 'M5 7h14M9.5 7V4.8h5V7m-7.5 0 .9 12.2h8.2L17 7M10.5 11v5.5m3-5.5v5.5',
+  copy: 'M9 9h10v11H9V9Zm-4 6V4h10v2',
 };
 
 const FILLED = new Set(['heart', 'star']);
@@ -67,7 +84,7 @@ export function Icon({ name, size = 20, className = '', title = null }) {
       height={size}
       fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
-      strokeWidth={filled ? 0 : 1.5}
+      strokeWidth={filled ? 0 : 1.6}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -82,3 +99,53 @@ export function Icon({ name, size = 20, className = '', title = null }) {
 }
 
 export const ICON_NAMES = Object.keys(PATHS);
+
+/**
+ * The SVG filter stack the redesign draws on: the unopaq mattes that turn the
+ * primary button's rotating gradients into light, and the two "sketchy"
+ * displacement filters from the supplied appearance control, which give its
+ * dial and clouds a hand-drawn edge.
+ *
+ * Rendered once, in the root layout, so every instance shares one definition
+ * instead of inlining a filter per component.
+ */
+export function CampusFilters() {
+  return (
+    <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true" focusable="false">
+      <defs>
+        <filter width="300%" x="-100%" height="300%" y="-100%" id="campus-unopaq">
+          <feColorMatrix
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 9 0"
+          />
+        </filter>
+        <filter width="300%" x="-100%" height="300%" y="-100%" id="campus-unopaq-2">
+          <feColorMatrix
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 3 0"
+          />
+        </filter>
+        <filter width="300%" x="-100%" height="300%" y="-100%" id="campus-unopaq-3">
+          <feColorMatrix
+            values="1 0 0 0.2 0
+                    0 1 0 0.2 0
+                    0 0 1 0.2 0
+                    0 0 0 2 0"
+          />
+        </filter>
+        <filter id="campus-sketchy" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="turbulence" baseFrequency="0.035 0.042" numOctaves="4" result="noise" seed="42" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <filter id="campus-sketchy-sm" x="-18%" y="-18%" width="136%" height="136%">
+          <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="3" result="noise" seed="7" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}

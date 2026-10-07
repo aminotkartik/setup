@@ -1,11 +1,10 @@
-import { SkeletonList } from '@/components/ui';
+import { LoadingPanel } from '@/components/ui';
 
-export default function PostLoading() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="h-6 w-24 animate-pulse rounded bg-white" />
-      <SkeletonList rows={2} />
-      <SkeletonList rows={3} />
-    </div>
-  );
+/**
+ * Route loading state: the same skeleton language as every other page — a title
+ * placeholder, the word loader and the list that is about to arrive — so waiting
+ * never looks like a different product.
+ */
+export default function PostIdLoading() {
+  return <LoadingPanel words={['post', 'comments', 'replies', 'reactions']} rows={4} />;
 }

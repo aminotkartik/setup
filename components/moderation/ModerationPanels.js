@@ -8,7 +8,7 @@
  * decides which verbs are allowed.
  */
 
-import { Select, Textarea, Button, Field, Notice } from '@/components/ui';
+import { Button, Field, Input, Notice, Select, Textarea } from '@/components/ui';
 import { useFormAction } from '@/lib/forms';
 import { moderateContent, resolveReport, moderateListing, reviewRandomReport } from '@/lib/actions/moderation';
 
@@ -125,12 +125,7 @@ export function MarketplaceReviewActions({ listingId, currentStatus }) {
           </option>
         ))}
       </Select>
-      <input
-        name="reason"
-        maxLength={500}
-        placeholder="Reason (optional)"
-        className="min-w-[10rem] flex-1 rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem]"
-      />
+      <Input name="reason" maxLength={500} placeholder="Reason (optional)" className="min-w-[10rem] flex-1" aria-label="Reason" />
       <Button type="submit" size="sm" disabled={review.pending}>
         {review.pending ? 'Applying…' : 'Apply'}
       </Button>
@@ -154,12 +149,7 @@ export function RandomReportActions({ reportId }) {
         <option value="resolved">Resolved</option>
         <option value="dismissed">Dismissed</option>
       </Select>
-      <input
-        name="resolution"
-        maxLength={1000}
-        placeholder="Resolution note"
-        className="min-w-[10rem] flex-1 rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem]"
-      />
+      <Input name="resolution" maxLength={1000} placeholder="Resolution note" className="min-w-[10rem] flex-1" aria-label="Resolution" />
       <Button type="submit" size="sm" disabled={review.pending}>
         {review.pending ? 'Saving…' : 'Save'}
       </Button>

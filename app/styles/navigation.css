@@ -1,0 +1,275 @@
+/* ==========================================================================
+   Navigation — sidebar items, header, tabs
+   ========================================================================== */
+
+@layer components {
+  .nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    color: var(--c-muted);
+    transition:
+      background-color 0.16s ease,
+      color 0.16s ease,
+      transform 0.16s var(--ease-out-soft);
+  }
+
+  .nav-item:hover {
+    background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
+    color: var(--c-ink);
+    text-decoration: none;
+  }
+
+  .nav-item:active {
+    transform: scale(0.99);
+  }
+
+  .nav-item[aria-current='page'] {
+    background-color: color-mix(in oklab, var(--c-accent) 13%, transparent);
+    color: var(--c-ink);
+    font-weight: 620;
+    box-shadow: var(--shadow-inset-top);
+  }
+
+  .nav-item[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: -0.3125rem;
+    top: 50%;
+    translate: 0 -50%;
+    width: 0.1875rem;
+    height: 1.125rem;
+    border-radius: 999px;
+    background-color: var(--c-accent);
+    box-shadow: 0 0 10px color-mix(in oklab, var(--c-accent) 65%, transparent);
+  }
+
+  .nav-item .nav-icon {
+    color: var(--c-muted-soft);
+    transition: color 0.16s ease;
+  }
+
+  .nav-item:hover .nav-icon {
+    color: var(--c-ink-soft);
+  }
+
+  .nav-item[aria-current='page'] .nav-icon {
+    color: var(--c-accent);
+  }
+
+  .nav-count {
+    margin-left: auto;
+    min-width: 1.25rem;
+    border-radius: 999px;
+    background-color: var(--c-accent);
+    color: var(--c-on-accent);
+    padding: 0.0625rem 0.375rem;
+    text-align: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Mobile tab bar */
+  .tab-item {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1875rem;
+    padding: 0.5rem 0.25rem 0.4375rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--c-muted);
+    transition: color 0.16s ease;
+  }
+
+  .tab-item:hover {
+    color: var(--c-ink-soft);
+    text-decoration: none;
+  }
+
+  .tab-item[aria-current='page'] {
+    color: var(--c-accent);
+  }
+
+  .tab-item[aria-current='page'] .tab-icon {
+    transform: translateY(-1px);
+  }
+
+  .tab-item[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 1.25rem;
+    height: 0.125rem;
+    border-radius: 999px;
+    background-color: var(--c-accent);
+    box-shadow: 0 0 12px color-mix(in oklab, var(--c-accent) 70%, transparent);
+  }
+
+  .tab-icon {
+    transition: transform 0.18s var(--ease-spring);
+  }
+
+  /* Brand */
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .brand:hover {
+    text-decoration: none;
+  }
+
+  /* Three responsive sizes; the mark keeps its aspect ratio at each one. */
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: var(--radius-md);
+    background-image: linear-gradient(145deg, color-mix(in oklab, var(--c-accent) 92%, #fff), var(--c-accent-press));
+    color: var(--c-on-accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 6px 14px -8px color-mix(in oklab, var(--c-accent) 80%, transparent);
+  }
+
+  .brand-mark[data-size='sm'] {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .brand-mark[data-size='lg'] {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Real logo mode: no plate behind the asset, proportions untouched. */
+  .brand-mark-img {
+    background-image: none;
+    box-shadow: none;
+  }
+
+  .brand-mark-img img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* A mark that carries its own opaque background gets a plate: necessary for
+     contrast in the dark theme, and it keeps the asset's own proportions. */
+  .brand-mark-img[data-plate='true'] {
+    padding: 0.125rem;
+    background-color: #fff;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+      0 4px 12px -6px color-mix(in oklab, var(--c-ink) 45%, transparent);
+  }
+
+  /* The sign-in front door: a soft blue halo behind the mark, and the small
+     icon chips beside the three facts. Both are brand-area helpers, so they
+     live with the brand rather than in a page-local stylesheet. */
+  .login-halo {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .login-halo::before {
+    content: '';
+    position: absolute;
+    inset: -2rem -1.25rem;
+    z-index: -1;
+    border-radius: 999px;
+    /* A soft bloom around the mark rather than a halo around the whole row. */
+    background: radial-gradient(26% 92% at 21% 50%, color-mix(in oklab, var(--c-accent) 26%, transparent), transparent 72%);
+    pointer-events: none;
+  }
+
+  .login-fact {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: -0.0625rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in oklab, var(--c-accent) 22%, transparent);
+    background-color: var(--c-accent-tint);
+    color: var(--c-accent-ink);
+  }
+
+  /* The crest sits on a soft white disc: the artwork carries its own opaque
+     background, so a plate keeps it legible on the dark theme and preserves
+     the circle's proportions. */
+  .brand-crest {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--crest-size, 1.75rem);
+    height: var(--crest-size, 1.75rem);
+    border-radius: 999px;
+    background-color: #fff;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.07),
+      0 2px 8px -4px color-mix(in oklab, var(--c-ink) 40%, transparent);
+    overflow: hidden;
+  }
+
+  /* The artwork's content is 297x264 inside a 300x300 canvas (the motto
+     ribbon is wider than the circle), so the image is inset a little: the
+     disc clips its corners, and the ribbon tips stay whole. */
+  .brand-crest img {
+    display: block;
+    width: 96%;
+    height: 96%;
+    object-fit: contain;
+  }
+
+  .brand-word {
+    font-size: 1rem;
+    font-weight: 680;
+    letter-spacing: -0.028em;
+    color: var(--c-ink);
+  }
+
+  .brand-sub {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-muted-soft);
+  }
+
+  /* Skip link */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 90;
+  }
+
+  .skip-link:focus {
+    left: 0.75rem;
+    top: 0.75rem;
+    border-radius: var(--radius-md);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    box-shadow: var(--shadow-float);
+  }
+}

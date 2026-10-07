@@ -4,9 +4,9 @@ import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { listListings, listGigs, listDeals, listCategories, getMarketSummary } from '@/lib/data/marketplace';
 import { ROUTES } from '@/lib/constants';
-import { PageHeader, EmptyState, LinkButton, Notice, Card } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader, SectionHeader, TiltCard } from '@/components/ui';
 import { ContentCard } from '@/components/content/ContentCard';
-import { formatPrice, formatDate } from '@/lib/utils';
+import { formatDate, formatPrice } from '@/lib/utils';
 
 export const metadata = { title: 'Market' };
 
@@ -84,9 +84,8 @@ export default async function MarketPage({ searchParams }) {
             <Link
               key={item.key}
               href={item.key === 'all' ? ROUTES.market : `${ROUTES.market}?tab=${item.key}`}
-              className={`rounded-full border px-3 py-1 text-2xs ${
-                tab === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-              }`}
+              className="chip"
+              data-active={tab === item.key}
             >
               {item.label}
             </Link>
@@ -97,25 +96,15 @@ export default async function MarketPage({ searchParams }) {
         </p>
       </Card>
 
-      <form method="get" action={ROUTES.market} className="card flex flex-wrap items-end gap-2 p-3">
+      <form method="get" action={ROUTES.market} className="glass glass-sheen flex flex-wrap items-end gap-3 rounded-[var(--radius-lg)] p-3">
         <input type="hidden" name="tab" value={tab} />
-        <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-2xs text-muted">
-          Search
-          <input
-            name="q"
-            defaultValue={q || ''}
-            maxLength={80}
-            placeholder="Search listings and gigs"
-            className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink"
-          />
+        <label className="flex min-w-[12rem] flex-1 flex-col gap-1.5">
+          <span className="field-label">Search</span>
+          <input name="q" defaultValue={q || ''} maxLength={80} placeholder="Search listings and gigs" className="control control-input h-9" />
         </label>
-        <label className="flex flex-col gap-1 text-2xs text-muted">
-          Category
-          <select
-            name="category"
-            defaultValue={categoryId || ''}
-            className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink"
-          >
+        <label className="flex flex-col gap-1.5">
+          <span className="field-label">Category</span>
+          <select name="category" defaultValue={categoryId || ''} className="control control-select h-9 w-44 py-0">
             <option value="">All</option>
             {categories
               .filter((category) => category.scope === 'marketplace')
@@ -126,15 +115,42 @@ export default async function MarketPage({ searchParams }) {
               ))}
           </select>
         </label>
-        <button type="submit" className="h-9 rounded-lg border border-line bg-white px-3 text-[0.8125rem] hover:bg-canvas">
+        <Button type="submit" size="sm" variant="secondary" icon="filter">
           Apply
-        </button>
+        </Button>
       </form>
 
       {listings.unavailable || gigs.unavailable || deals.unavailable ? (
         <Notice tone="warning" icon="flag">
           Part of the marketplace could not be loaded. Refresh to try again.
         </Notice>
+      ) : null}
+
+      {tab === 'listings' && !q && !categoryId && featuredListing ? (
+        <section aria-label="Featured listing" className="flex flex-col gap-2">
+          <SectionHeader title="Just listed" description="The newest item on the campus marketplace." />
+          <TiltCard intensity="soft">
+            <div className="glass glass-sheen card-glass flex flex-wrap items-end justify-between gap-4 p-5">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone="accent">{featuredListing.is_free ? 'Free' : formatPrice(featuredListing.price)}</Badge>
+                  {featuredListing.condition && featuredListing.condition !== 'not_applicable' ? (
+                    <Badge>{featuredListing.condition.replace(/_/g, ' ')}</Badge>
+                  ) : null}
+                  {featuredListing.location ? <Badge>{featuredListing.location}</Badge> : null}
+                </div>
+                <h3 className="t-section mt-2">{featuredListing.title}</h3>
+                {featuredListing.description ? (
+                  <p className="t-secondary mt-1.5 max-w-xl">{featuredListing.description}</p>
+                ) : null}
+                {featuredSeller ? <p className="t-caption mt-2">Listed by @{featuredSeller.username}</p> : null}
+              </div>
+              <LinkButton href={ROUTES.listing(featuredListing.id)} variant="sheen" icon="arrowUpRight">
+                View listing
+              </LinkButton>
+            </div>
+          </TiltCard>
+        </section>
       ) : null}
 
       {!listings.unavailable && listings.items.length ? (

@@ -16,7 +16,7 @@ import {
 } from '@/lib/data/admin';
 import { listReports } from '@/lib/data/moderation';
 import { ROUTES, PAGE_SIZE, ROLE_ORDER } from '@/lib/constants';
-import { PageHeader, Card, Notice, Badge, EmptyState, LinkButton } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { saveNotice, saveEvent, saveCampusContent } from '@/lib/actions/campus';
 import {
@@ -153,7 +153,7 @@ export default async function AdminPage({ searchParams }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="page-grid">
       <PageHeader
         title="Administration"
         description="Accounts, roles, official content, platform configuration and the audit trail."
@@ -164,9 +164,8 @@ export default async function AdminPage({ searchParams }) {
           <Link
             key={tab.key}
             href={`${ROUTES.admin}?tab=${tab.key}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              activeTab === tab.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-            }`}
+            className="chip"
+            data-active={activeTab === tab.key}
           >
             {tab.label}
           </Link>
@@ -178,19 +177,19 @@ export default async function AdminPage({ searchParams }) {
         <section aria-label="Users" className="flex flex-col gap-3">
           <form method="get" action={ROUTES.admin} className="card flex flex-wrap items-end gap-2 p-3">
             <input type="hidden" name="tab" value="users" />
-            <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-2xs text-muted">
-              Username
+            <label className="flex min-w-[12rem] flex-1 flex-col gap-1.5">
+              <span className="field-label">Username</span>
               <input
                 name="q"
                 defaultValue={q || ''}
                 maxLength={80}
                 placeholder="Search usernames"
-                className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink"
+                className="control control-input h-9"
               />
             </label>
-            <button type="submit" className="h-9 rounded-lg border border-line bg-white px-3 text-[0.8125rem] hover:bg-canvas">
+            <Button type="submit" size="sm" variant="secondary" icon="search">
               Search
-            </button>
+            </Button>
           </form>
 
           {users.unavailable ? (
@@ -355,9 +354,8 @@ export default async function AdminPage({ searchParams }) {
               <Link
                 key={item.key}
                 href={`${ROUTES.admin}?tab=content&table=${item.key}`}
-                className={`rounded-full border px-3 py-1 text-2xs ${
-                  contentTable === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-                }`}
+                className="chip"
+                data-active={contentTable === item.key}
               >
                 {item.label}
               </Link>
@@ -636,14 +634,14 @@ export default async function AdminPage({ searchParams }) {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {Object.entries(counts.counts).map(([table, value]) => (
               <Card key={table} className="p-3">
-                <p className="text-2xs text-muted">{COUNT_LABELS[table] || table}</p>
-                <p className="text-lg font-semibold">{value}</p>
+                <p className="t-label">{COUNT_LABELS[table] || table}</p>
+                <p className="t-section t-numeric mt-1">{value}</p>
               </Card>
             ))}
           </div>
           {overview ? (
             <Card className="flex flex-col gap-2 p-4">
-              <h2 className="text-[0.875rem] font-semibold">Queue health</h2>
+              <h2 className="t-card">Queue health</h2>
               <p className="text-2xs text-muted">
                 {overview.pendingReports} pending reports · {overview.pendingListings} listings awaiting approval ·{' '}
                 {overview.suspended} suspended accounts · {overview.disabledFlags} disabled feature flags

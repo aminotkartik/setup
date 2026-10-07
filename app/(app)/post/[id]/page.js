@@ -6,6 +6,7 @@ import { can, toActor } from '@/lib/permissions/authorization';
 import { getPostDetail } from '@/lib/data/feed';
 import { ROUTES, UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Notice } from '@/components/ui';
+import { ShareButton } from '@/components/social/ShareButton';
 import { PostCard } from '@/components/posts/PostCard';
 import { CommentThread } from '@/components/posts/CommentThread';
 
@@ -50,6 +51,7 @@ export default async function PostDetailPage({ params }) {
       <PageHeader
         title={post.kind === 'discussion' ? 'Discussion' : post.kind === 'poll' ? 'Poll' : 'Post'}
         back={{ href: ROUTES.home, label: 'Home' }}
+        action={<ShareButton path={`/post/${post.id}`} title={post.title || 'A post on Campus+'} />}
       />
 
       {post.status === 'removed' || post.status === 'hidden' ? (

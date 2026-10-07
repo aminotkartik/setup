@@ -68,10 +68,13 @@ describe('no artificial intelligence anywhere (spec §2)', () => {
 });
 
 describe('text-first: no uploads, no images, no files (spec §3)', () => {
-  it('renders images in exactly one place: the GIF picker', () => {
+  it('renders images in exactly two places: the GIF picker and the brand asset', () => {
     const GIF_SURFACE = path.join('components', 'media', 'GifPicker.js');
+    // The brand mark is the one other <img> in the product, and only when the
+    // supplied logo asset is configured (LOGO_SRC); user content is never media.
+    const BRAND_SURFACE = path.join('components', 'brand', 'Brand.js');
     const imageUsers = grep([...appFiles, ...componentFiles], /<img[\s>]|from 'next\/image'|from "next\/image"/);
-    expect(imageUsers).toEqual([GIF_SURFACE]);
+    expect(imageUsers.sort()).toEqual([BRAND_SURFACE, GIF_SURFACE].sort());
     // That single surface must point at the validated provider hosts.
     const picker = read(GIF_SURFACE);
     expect(picker).toMatch(/giphy/i);
@@ -222,15 +225,85 @@ describe('route surface (spec §5, §6)', () => {
 });
 
 describe('design system (spec §4)', () => {
-  const css = read('app/globals.css');
+  const globals = read('app/globals.css');
+  const partials = ['surfaces', 'controls', 'feedback', 'theme-switch', 'interactive', 'navigation']
+    .map((name) => read(`app/styles/${name}.css`))
+    .join('\n');
 
-  it('defines the required palette', () => {
-    for (const token of ['#F8F7F4', '#171717', '#737373', '#E5E5E5', '#F97316']) {
-      expect(css.toUpperCase()).toContain(token.toUpperCase());
+  it('defines the semantic token set for light, dark and system', () => {
+    for (const token of [
+      '--c-canvas',
+      '--c-surface',
+      '--c-surface-2',
+      '--c-ink',
+      '--c-ink-soft',
+      '--c-muted',
+      '--c-line',
+      '--c-line-strong',
+      '--c-accent',
+      '--c-accent-hover',
+      '--c-accent-press',
+      '--c-accent-deep',
+      '--c-accent-soft',
+      '--c-accent-tint',
+      '--c-accent-pale',
+      '--c-accent-highlight',
+      '--c-accent-glass',
+      '--c-accent-ink',
+      '--c-on-accent',
+      '--c-danger',
+      '--c-success',
+      '--c-warning',
+      '--c-info',
+      '--c-unread',
+      '--c-glass-bg',
+      '--c-glass-tint',
+      '--c-glass-border',
+    ]) {
+      expect(globals).toContain(token);
     }
+    // Two intentional themes plus "follow the device".
+    expect(globals).toContain("[data-theme='dark']");
+    expect(globals).toContain("[data-theme='system']");
+    expect(globals).toContain('@media (prefers-color-scheme: dark)');
+    // The tokens are exposed to Tailwind as utilities.
+    expect(globals).toContain('@theme inline');
   });
 
-  it('contains no gradients, neon or glassmorphism', () => {
-    expect(css).not.toMatch(/linear-gradient|radial-gradient|backdrop-filter/);
+  it('keeps the warm neutrals, the blue identity and a designed dark theme', () => {
+    expect(globals).toContain('#f7f5f1'); // warm off-white canvas
+    expect(globals).toContain('#1c1b19'); // warm charcoal ink
+    expect(globals).toContain('#3566e8'); // Campus+ primary blue
+    expect(globals).toContain('#1d42a6'); // pressed blue
+    expect(globals).toContain('#121824'); // dark theme: deep blue-tinted ink, not black
+    expect(globals).toContain('#6f9bff'); // dark theme accent stays blue and luminous
+
+    // The old orange identity is gone for good.
+    expect(globals).not.toContain('#ef6a1c');
+    expect(globals).not.toMatch(/--c-accent:\s*#(f|e)[0-9a-f]{2}/i);
+  });
+
+  it('never hardcodes a colour in a page or component', () => {
+    // The only allowed literals are the two theme-color meta entries, which have
+    // to mirror the tokens for the browser chrome.
+    const offenders = allSource.filter((file) => {
+      if (file === path.join('app', 'layout.js')) return false;
+      return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps glass, motion and the interactive materials inside the design system', () => {
+    expect(partials).toContain('.glass {');
+    expect(partials).toContain('.glass-soft');
+    expect(partials).toContain('.glass-strong');
+    expect(partials).toMatch(/prefers-reduced-motion/);
+    expect(partials).toContain('.tilt__card');
+    expect(partials).toContain('.wheel__option');
+
+    // Glass is an accent: only a small, deliberate set of floating surfaces may
+    // opt into their own backdrop blur on top of the primitives.
+    const blurry = allSource.filter((file) => /backdrop-blur|backdrop-filter/.test(read(file)));
+    expect(blurry.length).toBeLessThanOrEqual(8);
   });
 });

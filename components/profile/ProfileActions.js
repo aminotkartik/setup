@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { Button, LinkButton } from '@/components/ui';
+import { Button, KeycapButton, LinkButton } from '@/components/ui';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { useFormAction } from '@/lib/forms';
 import { startConversation } from '@/lib/actions/messaging';
@@ -26,12 +26,13 @@ export function ProfileActions({
   canBlock = false,
   canReport = false,
 }) {
-  const [confirmUnblock, setConfirmUnblock] = useState(false);
+  // Confirming a *block* (the destructive direction); unblocking runs directly.
+  const [confirmBlock, setConfirmBlock] = useState(false);
 
   const message = useFormAction(startConversation, { redirectTo: (result) => result.href || ROUTES.chat });
   const block = useFormAction(blockProfile, { redirectTo: ROUTES.home });
   const unblock = useFormAction(unblockProfile, {
-    onSuccess: () => setConfirmUnblock(false),
+    onSuccess: () => setConfirmBlock(false),
   });
 
   if (isSelf) {
@@ -73,8 +74,8 @@ export function ProfileActions({
           </form>
         ) : null}
 
-        {canBlock && !isBlocked && !confirmUnblock ? (
-          <Button variant="secondary" size="sm" icon="lock" onClick={() => setConfirmUnblock(true)}>
+        {canBlock && !isBlocked && !confirmBlock ? (
+          <Button variant="secondary" size="sm" icon="lock" onClick={() => setConfirmBlock(true)}>
             Block
           </Button>
         ) : null}
@@ -82,24 +83,24 @@ export function ProfileActions({
         {canReport ? <ReportDialog targetType="user" targetRef={profileId} label={`@${username}`} /> : null}
       </div>
 
-      {canBlock && !isBlocked && confirmUnblock ? (
+      {canBlock && !isBlocked && confirmBlock ? (
         <form
           action={(formData) => {
             formData.set('profile_id', profileId);
             block.run(formData);
           }}
-          className="card max-w-xs p-3 text-left"
+          className="card max-w-xs p-3.5 text-left"
         >
-          <p className="text-[0.8125rem]">
+          <p className="text-[0.8125rem] leading-relaxed">
             Blocking hides @{username} from you and stops messages in both directions. They are not told.
           </p>
-          <div className="mt-2 flex items-center gap-2">
-            <Button type="submit" variant="danger" size="sm" disabled={block.pending}>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button type="submit" variant="danger" size="sm" loading={block.pending}>
               {block.pending ? 'Blocking…' : `Block @${username}`}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmUnblock(false)}>
-              Cancel
-            </Button>
+            <KeycapButton type="button" onClick={() => setConfirmBlock(false)} aria-label="Cancel blocking">
+              Esc
+            </KeycapButton>
           </div>
         </form>
       ) : null}

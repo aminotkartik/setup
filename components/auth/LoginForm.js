@@ -43,7 +43,7 @@ export function LoginForm({ next = null }) {
         </Notice>
       ) : null}
 
-      <Button type="submit" disabled={pending} className="w-full" icon="chevronRight">
+      <Button type="submit" tone="accent" size="lg" disabled={pending} className="w-full" icon="chevronRight">
         {pending ? 'Taking you to Google…' : 'Continue with Google'}
       </Button>
 

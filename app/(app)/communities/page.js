@@ -4,7 +4,7 @@ import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { listCommunities } from '@/lib/data/campus';
 import { ROUTES } from '@/lib/constants';
-import { PageHeader, EmptyState, LinkButton, Notice, Card } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader, SectionHeader, TiltCard } from '@/components/ui';
 import { ContentCard } from '@/components/content/ContentCard';
 
 export const metadata = { title: 'Communities' };
@@ -49,6 +49,11 @@ export default async function CommunitiesPage({ searchParams }) {
     };
   })();
 
+  const featured =
+    !q && items.length > 1
+      ? items.slice().sort((a, b) => (b.member_count || 0) - (a.member_count || 0))[0]
+      : null;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -69,9 +74,9 @@ export default async function CommunitiesPage({ searchParams }) {
             <Link
               key={item.key}
               href={item.key === 'all' ? ROUTES.communities : `${ROUTES.communities}?tab=${item.key}`}
-              className={`rounded-full border px-3 py-1 text-2xs ${
-                tab === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-              }`}
+              aria-current={tab === item.key ? 'page' : undefined}
+              className="chip"
+              data-active={tab === item.key}
             >
               {item.label}
             </Link>
@@ -82,19 +87,13 @@ export default async function CommunitiesPage({ searchParams }) {
         </p>
         <form method="get" action={ROUTES.communities} className="mt-2 flex items-end gap-2">
           <input type="hidden" name="tab" value={tab} />
-          <label className="flex flex-1 flex-col gap-1 text-2xs text-muted">
-            Search
-            <input
-              name="q"
-              defaultValue={q || ''}
-              maxLength={60}
-              placeholder="Search by name"
-              className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem] text-ink"
-            />
+          <label className="flex flex-1 flex-col gap-1.5">
+            <span className="field-label">Search</span>
+            <input name="q" defaultValue={q || ''} maxLength={60} placeholder="Search by name" className="control control-input h-9" />
           </label>
-          <button type="submit" className="h-9 rounded-lg border border-line bg-white px-3 text-[0.8125rem] hover:bg-canvas">
+          <Button type="submit" size="sm" variant="secondary" icon="search">
             Search
-          </button>
+          </Button>
         </form>
       </Card>
 
@@ -115,6 +114,31 @@ export default async function CommunitiesPage({ searchParams }) {
           }
           action={canCreate ? <LinkButton href="/communities/new" variant="primary" size="sm">Create a community</LinkButton> : null}
         />
+      ) : null}
+
+      {featured ? (
+        <section aria-label="Most members" className="flex flex-col gap-2">
+          <SectionHeader title="Biggest right now" description="The community with the most members on Campus+ today." />
+          <TiltCard>
+            <div className="glass glass-sheen card-glass flex flex-wrap items-center justify-between gap-4 p-5">
+              <div className="min-w-0">
+                <p className="t-label">{featured.kind === 'club' ? 'Club' : featured.kind === 'study_group' ? 'Study group' : 'Community'}</p>
+                <h3 className="t-section mt-1">{featured.name}</h3>
+                {featured.description ? (
+                  <p className="t-secondary mt-1.5 max-w-xl">{featured.description}</p>
+                ) : null}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge tone="accent">{featured.member_count} members</Badge>
+                  {featured.subject ? <Badge>{featured.subject}</Badge> : null}
+                  {featured.is_official ? <Badge tone="info">Official</Badge> : null}
+                </div>
+              </div>
+              <LinkButton href={ROUTES.community(featured.slug)} variant="sheen" icon="arrowUpRight">
+                Open
+              </LinkButton>
+            </div>
+          </TiltCard>
+        </section>
       ) : null}
 
       <section aria-label="Communities" className="flex flex-col gap-3">

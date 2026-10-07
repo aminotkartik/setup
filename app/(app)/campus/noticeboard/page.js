@@ -37,9 +37,8 @@ export default async function NoticeboardPage({ searchParams }) {
       <Card className="flex flex-wrap gap-1.5 p-3">
         <Link
           href="/campus/noticeboard"
-          className={`rounded-full border px-3 py-1 text-2xs ${
-            !category ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-          }`}
+          className="chip"
+          data-active={!category}
         >
           Everything
         </Link>
@@ -47,9 +46,8 @@ export default async function NoticeboardPage({ searchParams }) {
           <Link
             key={value}
             href={`/campus/noticeboard?category=${value}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              category === value ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-            }`}
+            className="chip"
+            data-active={category === value}
           >
             {value}
           </Link>

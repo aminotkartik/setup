@@ -5,7 +5,7 @@ import { can, showsRoleBadge, toActor } from '@/lib/permissions/authorization';
 import { getProfileCounts } from '@/lib/data/profiles';
 import { getPostsByAuthor } from '@/lib/data/feed';
 import { ROUTES } from '@/lib/constants';
-import { PageHeader, LinkButton, EmptyState, Badge, Card, StaffDot, Notice } from '@/components/ui';
+import { PageHeader, LinkButton, EmptyState, Badge, Card, IdentityMark, StaffDot, Notice, TiltCard } from '@/components/ui';
 import { PostCard } from '@/components/posts/PostCard';
 import { formatDate } from '@/lib/utils';
 
@@ -44,14 +44,12 @@ export default async function ProfilePage() {
         }
       />
 
-      <Card className="p-4">
+      {/* Your own card is one of the few surfaces that gets the interactive
+          depth — a single, featured object rather than a scrolling list. */}
+      <TiltCard intensity="soft">
+      <Card className="card-elevated p-4 sm:p-5">
         <div className="flex items-start gap-4">
-          <span
-            aria-hidden="true"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-base font-medium text-muted"
-          >
-            {(name || '?').trim().slice(0, 1).toUpperCase()}
-          </span>
+          <IdentityMark name={name} size={48} tone="accent" square={false} />
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-[1.0625rem] font-semibold">
               <span className="truncate">{name}</span>
@@ -68,8 +66,8 @@ export default async function ProfilePage() {
               <dd>{counts.posts} post{counts.posts === 1 ? '' : 's'}</dd>
               <dd>{counts.comments} comment{counts.comments === 1 ? '' : 's'}</dd>
             </dl>
-            <p className="mt-2 flex flex-wrap items-center gap-2">
-              <Link href={ROUTES.user(profile.username)} className="text-2xs text-muted underline hover:text-ink">
+            <p className="mt-3 flex flex-wrap items-center gap-2">
+              <Link href={ROUTES.user(profile.username)} className="text-2xs font-semibold text-muted underline hover:text-ink">
                 View my public profile
               </Link>
               {profile.show_branch_year === false ? <Badge>Branch &amp; year hidden</Badge> : null}
@@ -78,6 +76,7 @@ export default async function ProfilePage() {
           </div>
         </div>
       </Card>
+      </TiltCard>
 
       <Notice tone="neutral" icon="shield">
         Your institutional email and account details are private. Other students only ever see your

@@ -1,0 +1,522 @@
+/* ==========================================================================
+   Appearance control — the Campus+ sun/moon switch
+   --------------------------------------------------------------------------
+   Derived from the supplied Uiverse theme toggle: day sky with rotating sun
+   rays and drifting clouds, night sky with a crescent moon, twinkling stars, a
+   shooting star and a slow aurora. Rebuilt for Campus+ at a compact, premium
+   size: it is an appearance control, not an illustration.
+   ========================================================================== */
+
+@layer components {
+  .theme-switch {
+    --sw-w: 3.875rem;
+    --sw-h: 1.75rem;
+    --sw-disc: 1.3125rem;
+    --sw-pad: 0.1875rem;
+    /* The celestial palette is the control's own illustration, but the sky
+       tones are drawn from the Campus+ blue family so it sits in the theme. */
+    --sw-day-top: #9dc0f2;
+    --sw-day-bottom: #e3ecfb;
+    --sw-night-top: #121824;
+    --sw-night-bottom: #24304a;
+    --sw-sun: #f7c33f;
+    --sw-sun-edge: #c9922a;
+    --sw-moon: #e8e3d2;
+    --sw-moon-edge: #a5a08d;
+    --sw-cloud: #f6f4ef;
+    --sw-cloud-back: #c3d6f0;
+    --sw-transition: 0.55s cubic-bezier(0, -0.02, 0.4, 1.22);
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .theme-switch__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .theme-switch__input:focus-visible + .theme-switch__container {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 3px;
+  }
+
+  .theme-switch__container {
+    position: relative;
+    width: var(--sw-w);
+    height: var(--sw-h);
+    overflow: hidden;
+    border-radius: 0.55rem;
+    background-image: linear-gradient(to bottom, var(--sw-day-top), var(--sw-day-bottom));
+    /* The source's sticker treatment: a hard ring plus an offset drop, tilted
+       a fraction of a degree so it reads as placed by hand. The ring uses the
+       ink token at partial alpha so it holds up in both themes. */
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--c-ink) 82%, transparent),
+      0.125rem 0.1875rem 0 2px color-mix(in oklab, var(--c-ink) 18%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transform: rotate(-0.7deg);
+    filter: url(#campus-sketchy);
+    transition:
+      background-image var(--sw-transition),
+      border-color var(--sw-transition);
+  }
+
+  .theme-switch__container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      -55deg,
+      transparent 0 5px,
+      rgba(255, 255, 255, 0.07) 5px 6px
+    );
+  }
+
+  /* --- sun / moon disc ------------------------------------------------- */
+
+  .theme-switch__orb {
+    position: absolute;
+    top: var(--sw-pad);
+    left: var(--sw-pad);
+    z-index: 2;
+    width: var(--sw-disc);
+    height: var(--sw-disc);
+    border-radius: calc(var(--sw-disc) / 2);
+    background-color: var(--sw-sun);
+    box-shadow:
+      inset 0.06em 0.06em 0.06em rgba(255, 255, 240, 0.75),
+      inset 0 -0.06em 0.08em var(--sw-sun-edge),
+      0 1px 2px rgba(20, 12, 4, 0.35);
+    transition: var(--sw-transition);
+  }
+
+  .theme-switch__orb::before {
+    content: '';
+    position: absolute;
+    inset: -0.45rem;
+    border-radius: 50%;
+    background: conic-gradient(
+      transparent 0deg 8deg,
+      rgba(247, 195, 63, 0.5) 8deg 20deg,
+      transparent 20deg 53deg,
+      rgba(247, 195, 63, 0.5) 53deg 65deg,
+      transparent 65deg 98deg,
+      rgba(247, 195, 63, 0.5) 98deg 110deg,
+      transparent 110deg 143deg,
+      rgba(247, 195, 63, 0.5) 143deg 155deg,
+      transparent 155deg 188deg,
+      rgba(247, 195, 63, 0.5) 188deg 200deg,
+      transparent 200deg 233deg,
+      rgba(247, 195, 63, 0.5) 233deg 245deg,
+      transparent 245deg 278deg,
+      rgba(247, 195, 63, 0.5) 278deg 290deg,
+      transparent 290deg 323deg,
+      rgba(247, 195, 63, 0.5) 323deg 335deg,
+      transparent 335deg
+    );
+    opacity: 1;
+    transition: opacity var(--sw-transition);
+    animation: campus-sun-rays 18s linear infinite;
+    pointer-events: none;
+    filter: url(#campus-sketchy-sm);
+  }
+
+  .theme-switch__moon {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--sw-moon);
+    box-shadow:
+      inset 0.06em 0.06em 0.08em rgba(255, 255, 255, 0.7),
+      inset 0 -0.06em 0.08em var(--sw-moon-edge);
+    transform: translateX(-105%);
+    transition: transform var(--sw-transition);
+    overflow: hidden;
+  }
+
+  .theme-switch__spot {
+    position: absolute;
+    border-radius: 50%;
+    background-color: color-mix(in oklab, var(--sw-moon-edge) 75%, transparent);
+  }
+
+  .theme-switch__spot:nth-child(1) {
+    width: 0.3125rem;
+    height: 0.3125rem;
+    top: 0.25rem;
+    left: 0.25rem;
+  }
+
+  .theme-switch__spot:nth-child(2) {
+    width: 0.1875rem;
+    height: 0.1875rem;
+    top: 0.5625rem;
+    left: 0.5625rem;
+  }
+
+  .theme-switch__spot:nth-child(3) {
+    width: 0.125rem;
+    height: 0.125rem;
+    top: 0.3125rem;
+    left: 0.8125rem;
+  }
+
+  /* --- clouds ---------------------------------------------------------- */
+
+  .theme-switch__clouds {
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0.1875rem;
+    z-index: 1;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 999px;
+    background-color: var(--sw-cloud);
+    box-shadow:
+      0.5rem 0.125rem var(--sw-cloud),
+      0.9rem 0 var(--sw-cloud),
+      0.25rem -0.1875rem var(--sw-cloud-back),
+      1.15rem 0.1875rem var(--sw-cloud),
+      1.5rem -0.0625rem var(--sw-cloud),
+      0.75rem -0.25rem var(--sw-cloud-back),
+      1.9rem 0.0625rem var(--sw-cloud);
+    transition: transform var(--sw-transition), bottom var(--sw-transition);
+  }
+
+  /* --- night sky details ---------------------------------------------- */
+
+  .theme-switch__night {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity var(--sw-transition);
+    pointer-events: none;
+  }
+
+  .theme-switch__stars {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.375rem;
+    width: 0.125rem;
+    height: 0.125rem;
+    border-radius: 50%;
+    background: #fff8e1;
+    box-shadow:
+      0.5rem 0.3125rem 0 rgba(255, 248, 225, 0.9),
+      1.0625rem 0.125rem 0 rgba(255, 248, 225, 0.75),
+      1.5rem 0.5rem 0 rgba(255, 248, 225, 0.85),
+      2.0625rem 0.1875rem 0 rgba(255, 248, 225, 0.7),
+      2.5rem 0.5625rem 0 rgba(255, 248, 225, 0.8),
+      0.9375rem 0.6875rem 0 rgba(255, 248, 225, 0.6),
+      1.8125rem 0.8125rem 0 rgba(255, 248, 225, 0.65);
+    animation: campus-twinkle 3.4s ease-in-out infinite;
+  }
+
+  .theme-switch__shooting {
+    position: absolute;
+    top: 0.3125rem;
+    left: -1.5rem;
+    width: 1.25rem;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
+    transform: rotate(-30deg);
+    animation: campus-shoot 5.5s linear infinite 1.2s;
+  }
+
+  .theme-switch__aurora {
+    position: absolute;
+    inset-inline: -20%;
+    top: 0;
+    height: 0.7rem;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 255, 255, 0) 0%,
+      rgba(120, 255, 240, 0.35) 25%,
+      rgba(150, 120, 255, 0.32) 55%,
+      rgba(120, 255, 240, 0.3) 78%,
+      rgba(0, 255, 255, 0) 100%
+    );
+    filter: blur(4px);
+    transform: translateY(-120%);
+    animation: campus-aurora 9s ease-in-out infinite alternate;
+  }
+
+  /* --- the rest of the night sky --------------------------------------
+     The supplied control carries a full cast: two shooting stars, a meteor
+     that falls rather than streaks, a twinkling cluster, and two comets with
+     tails. They are kept, at this control's much smaller size, and they only
+     animate while the night side is showing. */
+
+  .theme-switch__shooting-2 {
+    top: 0.6875rem;
+    left: -1.25rem;
+    width: 0.875rem;
+    animation-duration: 7s;
+    animation-delay: 3.4s;
+  }
+
+  .theme-switch__meteor {
+    position: absolute;
+    top: -0.25rem;
+    left: 62%;
+    width: 0.1875rem;
+    height: 0.1875rem;
+    border-radius: 50%;
+    background-color: #ffd766;
+    filter: blur(1px);
+    opacity: 0;
+    animation: campus-meteor 6s linear infinite 2s;
+  }
+
+  .theme-switch__cluster {
+    position: absolute;
+    inset: 0;
+  }
+
+  .theme-switch__twinkle {
+    position: absolute;
+    width: 0.125rem;
+    height: 0.125rem;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.85);
+    animation: campus-twinkle 1.6s ease-in-out infinite;
+  }
+
+  .theme-switch__twinkle:nth-child(1) {
+    top: 20%;
+    left: 22%;
+  }
+
+  .theme-switch__twinkle:nth-child(2) {
+    top: 32%;
+    left: 55%;
+    animation-delay: 0.3s;
+  }
+
+  .theme-switch__twinkle:nth-child(3) {
+    top: 42%;
+    left: 78%;
+    animation-delay: 0.6s;
+  }
+
+  .theme-switch__twinkle:nth-child(4) {
+    top: 62%;
+    left: 32%;
+    animation-delay: 0.9s;
+  }
+
+  .theme-switch__twinkle:nth-child(5) {
+    top: 74%;
+    left: 64%;
+    animation-delay: 1.2s;
+  }
+
+  .theme-switch__comets {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .theme-switch__comet {
+    position: absolute;
+    width: 0.375rem;
+    height: 0.125rem;
+    border-radius: 50%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), transparent 90%);
+    filter: blur(0.5px);
+    opacity: 0;
+    animation: campus-comet 6s linear infinite;
+  }
+
+  .theme-switch__comet:nth-child(1) {
+    top: 30%;
+    left: -20%;
+  }
+
+  .theme-switch__comet:nth-child(2) {
+    top: 52%;
+    left: -20%;
+    animation-duration: 8s;
+    animation-delay: 3s;
+  }
+
+  /* --- checked (night) state ------------------------------------------ */
+
+  .theme-switch__input:checked + .theme-switch__container {
+    background-image: linear-gradient(to bottom, var(--sw-night-top), var(--sw-night-bottom));
+    border-color: color-mix(in oklab, #000 65%, transparent);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__orb {
+    left: calc(var(--sw-w) - var(--sw-disc) - var(--sw-pad) * 2 - 4px);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__orb::before {
+    opacity: 0;
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__moon {
+    transform: translateX(0);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__clouds {
+    transform: translateY(2.5rem);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__night {
+    opacity: 1;
+  }
+
+  /* Nothing in the night sky runs while the day side is showing — including the
+     twinkling star field and the aurora, which sit at zero opacity all day. The
+     switch lives in the header, so an animation running behind an invisible
+     layer would be a cost paid on every page of the app. */
+  .theme-switch__meteor,
+  .theme-switch__comet,
+  .theme-switch__shooting,
+  .theme-switch__twinkle,
+  .theme-switch__stars,
+  .theme-switch__aurora {
+    animation-play-state: paused;
+  }
+
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__meteor,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__comet,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__shooting,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__twinkle,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__stars,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__aurora {
+    animation-play-state: running;
+  }
+
+  /* And the sun's rays only turn while the day side is the one on screen, so
+     the displacement filter behind them is never animating off-screen. */
+  .theme-switch__orb::before {
+    animation-play-state: paused;
+  }
+
+  .theme-switch__input:not(:checked) + .theme-switch__container .theme-switch__orb::before {
+    animation-play-state: running;
+  }
+
+  .theme-switch__container:hover .theme-switch__clouds {
+    transform: translateX(0.3125rem);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container:hover .theme-switch__clouds {
+    transform: translateY(2.5rem) translateX(0.3125rem);
+  }
+
+  .theme-switch:hover .theme-switch__orb {
+    scale: 1.06;
+    rotate: 5deg;
+  }
+
+  /* The dial shifts fractionally under the cursor, like the source's. */
+  .theme-switch:hover .theme-switch__orb {
+    left: calc(var(--sw-pad) + 0.125rem);
+  }
+
+  .theme-switch__input:checked + .theme-switch__container:hover .theme-switch__orb {
+    left: calc(var(--sw-w) - var(--sw-disc) - var(--sw-pad) * 2 - 6px);
+  }
+
+  /* A wider, labelled presentation for Settings → Appearance. */
+  .theme-switch-lg {
+    --sw-w: 5.25rem;
+    --sw-h: 2.375rem;
+    --sw-disc: 1.75rem;
+    --sw-pad: 0.25rem;
+  }
+}
+
+@keyframes campus-meteor {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(2.25rem) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes campus-comet {
+  0% {
+    transform: translateX(0) translateY(0) rotate(-45deg) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(4.25rem) translateY(4.25rem) rotate(-45deg) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes campus-sun-rays {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes campus-twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes campus-shoot {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-30deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  22% {
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(5.5rem, 2.75rem, 0) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes campus-aurora {
+  from {
+    transform: translateY(-120%) translateX(-8%);
+  }
+  to {
+    transform: translateY(-90%) translateX(8%);
+  }
+}
