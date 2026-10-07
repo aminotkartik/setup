@@ -10,17 +10,15 @@ import { cn } from '@/lib/utils';
  * renders through this module, so the Campus+ identity is defined once and the
  * mark never drifts between screens.
  *
- * ── Dropping in the official logo ─────────────────────────────────────────
- * Put the supplied asset in `public/brand/` (SVG preferred; PNG/WEBP with a
- * transparent background otherwise) and point `LOGO_SRC` at it. Every
- * placement follows automatically, at three responsive sizes, with the
- * original proportions preserved (`object-fit: contain`). Until the asset
- * exists, the plus-tile below stands in — it is never shown alongside a real
- * logo, because `LOGO_SRC` is the single switch.
+ * ── Identity vs context ───────────────────────────────────────────────────
+ * The product mark is Campus+ (the plus tile below) — it is the app identity
+ * and the app icon. The college crest is a separate slot with its own rules
+ * (see `CollegeCrest`): it says who the product is *for*, never what it is.
  *
- * `LOGO_PLATE` is for a raster mark that ships on its own opaque background
- * (a crest on white, for example): the mark then sits on a soft white plate so
- * it stays legible on the dark theme instead of floating as a white square.
+ * Swapping the mark: put the asset in `public/brand/`, point `LOGO_SRC` at it
+ * and every placement follows, at three responsive sizes, with the original
+ * proportions preserved (`object-fit: contain`). `LOGO_PLATE` renders a raster
+ * mark on a soft white plate when the artwork ships on its own background.
  */
 
 export const LOGO_SRC = null;
@@ -36,12 +34,21 @@ export const LOGO_PLATE = false;
  * "unofficial student project" / "not affiliated with PCCOE" — so it reads as
  * context rather than endorsement.
  *
- * Drop the crest in `public/brand/` and point CREST_SRC at it. Until then it
- * renders nothing at all: no empty plate, no placeholder.
+ * The supplied crest is `public/brand/pccoe-crest.webp` (300x300, opaque
+ * white background), which is why it renders on a plate with the corners
+ * clipped to the disc. Clearing `CREST_SRC` hides the crest everywhere —
+ * no empty plate, no placeholder.
+ *
+ * `MIN_SIZE` is a legibility floor, not a style preference: the artwork
+ * carries a torch, an open book, a motto ribbon, five lines of type and a
+ * "Since 1999" line, and rendered at 28px it is an unreadable smudge. Below
+ * roughly 44px the crest stops being an identity cue and becomes noise, so it
+ * is only placed where it can be shown at or above that size.
  */
-export const CREST_SRC = null;
+export const CREST_SRC = '/brand/pccoe-crest.webp';
+export const MIN_SIZE = 44;
 
-export function CollegeCrest({ size = 28, className = '', label = 'PCCOE crest' }) {
+export function CollegeCrest({ size = MIN_SIZE, className = '', label = 'PCCOE crest' }) {
   if (!CREST_SRC) return null;
 
   return (

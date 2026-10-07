@@ -86,8 +86,8 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
             Sign in
           </Link>
         )}
-        <div className="flex items-start gap-2 px-2 pt-2.5">
-          <CollegeCrest size={22} />
+        <div className="flex items-start gap-3 px-2 pt-3">
+          <CollegeCrest size={44} />
           <p className="text-2xs leading-relaxed text-muted-soft">
             Unofficial student project. Not affiliated with PCCOE.
           </p>
