@@ -87,11 +87,10 @@ export function AppearancePanel({ theme = 'light' }) {
         </div>
 
         <WheelSelector
-          key={current}
           name="appearance"
           legend="Appearance preference"
           options={OPTIONS}
-          defaultValue={current}
+          value={current}
           onChange={choose}
         />
 

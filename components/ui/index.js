@@ -27,6 +27,7 @@ export {
 } from '@/components/ui/surfaces';
 export {
   WordLoader,
+  CascadeLoader,
   OrbLoader,
   Spinner,
   LoadingPanel,

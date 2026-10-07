@@ -37,6 +37,30 @@ export function WordLoader({ words = ['campus', 'posts', 'communities', 'convers
   );
 }
 
+/**
+ * The supplied fan loader: nine bars with nine runners cascading down them.
+ * Reserved for states that have no layout to skeleton — it is the honest
+ * answer to "something is loading and we cannot draw its shape yet".
+ */
+export function CascadeLoader({ className = '', label = 'Loading' }) {
+  return (
+    <span className={cn('cascade', className)} role="status" aria-label={label}>
+      <span className="cascade__fan" aria-hidden="true">
+        {Array.from({ length: 9 }, (_, index) => (
+          <span className="cascade__bar" key={`bar-${index}`} />
+        ))}
+      </span>
+      <span className="cascade__runners" aria-hidden="true">
+        {Array.from({ length: 9 }, (_, index) => (
+          <span className="cascade__runner" key={`runner-${index}`}>
+            <span className="cascade__ball" />
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
 /** Compact orbital loader for async actions and inline waiting states. */
 export function OrbLoader({ size = 'sm', className = '', label = 'Loading' }) {
   return (
@@ -66,7 +90,13 @@ export function LoadingPanel({ words, rows = 0, className = '' }) {
         <div className="skeleton skeleton-title" />
         <WordLoader words={words} size="lg" />
       </div>
-      {rows > 0 ? <SkeletonList rows={rows} /> : null}
+      {rows > 0 ? (
+        <SkeletonList rows={rows} />
+      ) : (
+        <div className="flex justify-center py-5">
+          <CascadeLoader label="Loading this page" />
+        </div>
+      )}
     </div>
   );
 }

@@ -101,9 +101,13 @@ export function Icon({ name, size = 20, className = '', title = null }) {
 export const ICON_NAMES = Object.keys(PATHS);
 
 /**
- * The SVG filter stack the primary button uses to turn its rotating gradient
- * into a light. Rendered once, in the root layout, so dozens of buttons can
- * share it.
+ * The SVG filter stack the redesign draws on: the unopaq mattes that turn the
+ * primary button's rotating gradients into light, and the two "sketchy"
+ * displacement filters from the supplied appearance control, which give its
+ * dial and clouds a hand-drawn edge.
+ *
+ * Rendered once, in the root layout, so every instance shares one definition
+ * instead of inlining a filter per component.
  */
 export function CampusFilters() {
   return (
@@ -132,6 +136,14 @@ export function CampusFilters() {
                     0 0 1 0.2 0
                     0 0 0 2 0"
           />
+        </filter>
+        <filter id="campus-sketchy" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="turbulence" baseFrequency="0.035 0.042" numOctaves="4" result="noise" seed="42" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <filter id="campus-sketchy-sm" x="-18%" y="-18%" width="136%" height="136%">
+          <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="3" result="noise" seed="7" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
     </svg>

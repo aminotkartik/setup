@@ -67,7 +67,9 @@
 
   .word-loader__track {
     display: block;
-    animation: campus-words 7.2s cubic-bezier(0.72, 0, 0.28, 1) infinite;
+    /* The source runs this on a 4s cycle with a 2% overshoot on every stop,
+       which is what keeps the words from stuttering into place. */
+    animation: campus-words 4s infinite;
   }
 
   .word-loader__word {
@@ -89,6 +91,165 @@
 
   .word-loader-lg .word-loader__word {
     height: 1.5em;
+  }
+
+  /* ======================================================= cascade loader
+     The supplied "fan" loader: nine bars on 20deg increments with nine balls
+     falling down them, each runner a fifth of a second behind the last, on a
+     3.63s ease-in-out bounce. Used where a screen has no layout to skeleton —
+     it says "working" without pretending to know what is coming. */
+
+  .cascade {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 5.5rem;
+  }
+
+  .cascade__fan,
+  .cascade__runners {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .cascade__bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 5rem;
+    margin: -2.5rem 0 0 -0.25rem;
+    border-radius: 999px;
+    background-color: var(--c-surface-3);
+  }
+
+  /* The two caps that make each bar read as a tube: one lit at the top, one
+     lit at the bottom, both fading into the middle. */
+  .cascade__bar::before,
+  .cascade__bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.75rem;
+    border-radius: 999px;
+    background-color: var(--c-surface-3);
+    border: 1px solid var(--c-line);
+    box-shadow:
+      inset 2px 2px 6px color-mix(in oklab, var(--c-ink) 12%, transparent),
+      inset -2px -2px 6px color-mix(in oklab, var(--c-highlight) 40%, transparent);
+  }
+
+  .cascade__bar::before {
+    top: 0;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.25rem), transparent 100%);
+  }
+
+  .cascade__bar::after {
+    bottom: 0;
+    mask-image: linear-gradient(to top, #000 calc(100% - 1.25rem), transparent 100%);
+  }
+
+  .cascade__runner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 5rem;
+    margin: -2.5rem 0 0 -0.25rem;
+  }
+
+  .cascade__ball {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--c-accent);
+    animation: campus-cascade 3.63s ease-in-out infinite;
+    box-shadow:
+      inset 0 -3px 3px 0 rgba(0, 0, 0, 0.22),
+      inset 0 -5px 5px 0 rgba(0, 0, 0, 0.16),
+      0 2px 1px rgba(0, 0, 0, 0.06),
+      0 8px 8px -4px rgba(0, 0, 0, 0.14);
+  }
+
+  /* The fan: each bar and runner pair turns 20deg further than the last. */
+  .cascade__bar:nth-child(2),
+  .cascade__runner:nth-child(2) {
+    transform: rotate(20deg);
+  }
+
+  .cascade__bar:nth-child(3),
+  .cascade__runner:nth-child(3) {
+    transform: rotate(40deg);
+  }
+
+  .cascade__bar:nth-child(4),
+  .cascade__runner:nth-child(4) {
+    transform: rotate(60deg);
+  }
+
+  .cascade__bar:nth-child(5),
+  .cascade__runner:nth-child(5) {
+    transform: rotate(80deg);
+  }
+
+  .cascade__bar:nth-child(6),
+  .cascade__runner:nth-child(6) {
+    transform: rotate(100deg);
+  }
+
+  .cascade__bar:nth-child(7),
+  .cascade__runner:nth-child(7) {
+    transform: rotate(120deg);
+  }
+
+  .cascade__bar:nth-child(8),
+  .cascade__runner:nth-child(8) {
+    transform: rotate(140deg);
+  }
+
+  .cascade__bar:nth-child(9),
+  .cascade__runner:nth-child(9) {
+    transform: rotate(160deg);
+  }
+
+  .cascade__runner:nth-child(1) .cascade__ball {
+    animation-delay: 0s;
+  }
+
+  .cascade__runner:nth-child(2) .cascade__ball {
+    animation-delay: 0.2s;
+  }
+
+  .cascade__runner:nth-child(3) .cascade__ball {
+    animation-delay: 0.4s;
+  }
+
+  .cascade__runner:nth-child(4) .cascade__ball {
+    animation-delay: 0.6s;
+  }
+
+  .cascade__runner:nth-child(5) .cascade__ball {
+    animation-delay: 0.8s;
+  }
+
+  .cascade__runner:nth-child(6) .cascade__ball {
+    animation-delay: 1s;
+  }
+
+  .cascade__runner:nth-child(7) .cascade__ball {
+    animation-delay: 1.2s;
+  }
+
+  .cascade__runner:nth-child(8) .cascade__ball {
+    animation-delay: 1.4s;
+  }
+
+  .cascade__runner:nth-child(9) .cascade__ball {
+    animation-delay: 1.6s;
   }
 
   /* ======================================================= orbital loader */
@@ -315,30 +476,42 @@
   }
 }
 
-@keyframes campus-words {
-  0%,
-  12% {
+@keyframes campus-cascade {
+  0% {
     transform: translateY(0);
   }
-  16.7%,
-  28.7% {
-    transform: translateY(-1.35em);
+  50% {
+    transform: translateY(4.5rem);
   }
-  33.4%,
-  45.4% {
-    transform: translateY(-2.7em);
-  }
-  50%,
-  62% {
-    transform: translateY(-4.05em);
-  }
-  66.7%,
-  78.7% {
-    transform: translateY(-5.4em);
-  }
-  83.4%,
   100% {
-    transform: translateY(-6.75em);
+    transform: translateY(0);
+  }
+}
+
+@keyframes campus-words {
+  10% {
+    transform: translateY(-102%);
+  }
+  25% {
+    transform: translateY(-100%);
+  }
+  35% {
+    transform: translateY(-202%);
+  }
+  50% {
+    transform: translateY(-200%);
+  }
+  60% {
+    transform: translateY(-302%);
+  }
+  75% {
+    transform: translateY(-300%);
+  }
+  85% {
+    transform: translateY(-402%);
+  }
+  100% {
+    transform: translateY(-400%);
   }
 }
 

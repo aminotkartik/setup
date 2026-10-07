@@ -56,12 +56,25 @@ export function ThemeSwitch({ theme = 'light', size = 'sm', label = 'Dark mode',
         onChange={toggle}
       />
       <span className="theme-switch__container" aria-hidden="true">
+        <span className="theme-switch__clouds" />
         <span className="theme-switch__night">
           <span className="theme-switch__stars" />
           <span className="theme-switch__shooting" />
+          <span className="theme-switch__shooting theme-switch__shooting-2" />
+          <span className="theme-switch__meteor" />
+          <span className="theme-switch__cluster">
+            <span className="theme-switch__twinkle" />
+            <span className="theme-switch__twinkle" />
+            <span className="theme-switch__twinkle" />
+            <span className="theme-switch__twinkle" />
+            <span className="theme-switch__twinkle" />
+          </span>
+          <span className="theme-switch__comets">
+            <span className="theme-switch__comet" />
+            <span className="theme-switch__comet" />
+          </span>
           <span className="theme-switch__aurora" />
         </span>
-        <span className="theme-switch__clouds" />
         <span className="theme-switch__orb">
           <span className="theme-switch__moon">
             <span className="theme-switch__spot" />

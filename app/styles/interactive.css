@@ -1,12 +1,37 @@
 /* ==========================================================================
    Interactive surfaces — 3D tilt card and wheel selector
    --------------------------------------------------------------------------
-   Both are derived from the supplied Uiverse components and are used sparingly:
-   the tilt only on featured, non-scrolling surfaces; the wheel only where a
-   small, meaningful choice benefits from a premium control.
+   Reconciled against the two components in the supplied Uiverse bundle.
 
-   Both are pure CSS. Nothing here runs JavaScript on pointer move, so a feed
-   of cards stays smooth.
+   Kept, because it is what makes each one feel like itself:
+     · the tilt is a 5x5 grid of invisible trackers — the pointer's cell picks
+       the rotation, so the card reads as a physical object being pushed and
+       costs no JavaScript at all on pointer move;
+     · perspective 800px and the source's 125ms step: the card tracks the
+       pointer instead of easing slowly behind it;
+     · the stepped ladder (full / half / straight), which is why the movement
+       reads as a grid rather than as a wobble;
+     · the wheel's arc geometry: options sit at --angle on a radius, and the
+       whole arc rotates so the chosen slot travels to the marker, driven by
+       :has(:checked) so a keyboard or screen-reader selection animates exactly
+       like a click;
+     · a specular glare that sweeps across the card.
+
+   Adapted on purpose, following the brief's restraint rules:
+     · the source's 20deg twist is damped to a shallow 8-10deg — these are
+       content cards, not showpieces;
+     · the neon glow, particle field, cyber-lines, corner brackets and scan-line
+       are not carried over: they fight the calm, readable surfaces the app
+       needs;
+     · the wheel's fixed 280px origin becomes --wheel-r so the arc fits a
+       settings card, and its labels still carry 44px tap targets;
+     · everything degrades: pointer-less devices get no tracker grid at all, and
+       reduced motion removes the movement instead of replaying it faster.
+
+   Pointer contract for the tilt: the tracker grid sits *under* the card so its
+   hover cells stay reachable, and the card itself is pointer-transparent with
+   its real links and buttons switched back on. Without that the invisible grid
+   would swallow the featured card's own call to action.
    ========================================================================== */
 
 @layer components {
@@ -14,7 +39,7 @@
 
   .tilt {
     position: relative;
-    perspective: 900px;
+    perspective: 800px;
     --tilt-x: 8deg;
     --tilt-y: 10deg;
   }
@@ -28,14 +53,37 @@
     grid-template-rows: repeat(5, 1fr);
   }
 
+  .tilt__canvas > * {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: default;
+  }
+
   .tilt__card {
     position: relative;
+    z-index: 4;
     width: 100%;
     border-radius: var(--radius-lg);
     transform-style: preserve-3d;
-    transition: transform 0.22s var(--ease-out-soft), box-shadow 0.25s ease, filter 0.25s ease;
+    transition: transform 125ms ease-out, box-shadow 0.25s ease, filter 0.2s ease;
     box-shadow: var(--shadow-card);
-    will-change: transform;
+    pointer-events: none;
+  }
+
+  /* The real controls inside a featured card are the only things that take the
+     pointer; everything else falls through to the tracker grid. */
+  .tilt__card a,
+  .tilt__card button,
+  .tilt__card [role='button'],
+  .tilt__card input,
+  .tilt__card select,
+  .tilt__card textarea,
+  .tilt__card summary,
+  .tilt__card label {
+    pointer-events: auto;
   }
 
   .tilt-glass {
@@ -53,150 +101,68 @@
       rgba(255, 255, 255, 0) 100%
     );
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translate3d(-6%, -6%, 0);
+    transition: opacity 0.3s ease, transform 0.5s var(--ease-out-soft);
   }
 
-  .tilt:hover .tilt-glass {
+  /* Pointer and keyboard get the same light. */
+  .tilt:hover .tilt-glass,
+  .tilt:focus-within .tilt-glass {
     opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 
-  .tilt__canvas > button {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  /* The tracker grid sits above the card, so real links and buttons inside a
-     featured card are lifted above it — the tilt stays decorative, never a
-     click-trap. */
-  .tilt__card a,
-  .tilt__card button,
-  .tilt__card [role='button'] {
-    position: relative;
-    z-index: 5;
-  }
-
-  .tilt__canvas > button:focus-visible {
-    outline: 2px solid var(--c-accent);
-    outline-offset: -3px;
-    border-radius: var(--radius-sm);
-    z-index: 4;
+  .tilt:hover .tilt__card,
+  .tilt:focus-within .tilt__card {
+    filter: brightness(1.015);
   }
 
   /* Cursor-dependent rotation: the tracker the pointer sits on moves the card.
      Angles stay shallow so text on top of it never becomes uncomfortable. */
-  .tilt__canvas > button:nth-child(1):hover ~ .tilt__card,
-  .tilt__canvas > button:nth-child(1):focus-visible ~ .tilt__card {
-    transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(2):hover ~ .tilt__card {
-    transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(3):hover ~ .tilt__card {
-    transform: rotateX(var(--tilt-x));
-  }
-
-  .tilt__canvas > button:nth-child(4):hover ~ .tilt__card {
-    transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(5):hover ~ .tilt__card {
-    transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-  }
-
-  .tilt__canvas > button:nth-child(6):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(7):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(8):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(9):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(10):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(var(--tilt-y));
-  }
-
-  .tilt__canvas > button:nth-child(11):hover ~ .tilt__card {
-    transform: rotateY(calc(var(--tilt-y) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(12):hover ~ .tilt__card {
-    transform: rotateY(calc(var(--tilt-y) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(13):hover ~ .tilt__card {
-    transform: none;
-  }
-
-  .tilt__canvas > button:nth-child(14):hover ~ .tilt__card {
-    transform: rotateY(calc(var(--tilt-y) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(15):hover ~ .tilt__card {
-    transform: rotateY(var(--tilt-y));
-  }
-
-  .tilt__canvas > button:nth-child(16):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(17):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(18):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(19):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(20):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(var(--tilt-y));
-  }
-
-  .tilt__canvas > button:nth-child(21):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(22):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * -0.5));
-  }
-
-  .tilt__canvas > button:nth-child(23):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -1));
-  }
-
-  .tilt__canvas > button:nth-child(24):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * 0.5));
-  }
-
-  .tilt__canvas > button:nth-child(25):hover ~ .tilt__card {
-    transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(var(--tilt-y));
-  }
-
-  .tilt:hover .tilt__card {
-    filter: brightness(1.015);
-  }
+  .tilt__canvas > *:nth-child(1):hover ~ .tilt__card { transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * -1)); }
+  .tilt__canvas > *:nth-child(2):hover ~ .tilt__card { transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * -0.5)); }
+  .tilt__canvas > *:nth-child(3):hover ~ .tilt__card { transform: rotateX(var(--tilt-x)); }
+  .tilt__canvas > *:nth-child(4):hover ~ .tilt__card { transform: rotateX(var(--tilt-x)) rotateY(calc(var(--tilt-y) * 0.5)); }
+  .tilt__canvas > *:nth-child(5):hover ~ .tilt__card { transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)); }
+  .tilt__canvas > *:nth-child(6):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * -1)); }
+  .tilt__canvas > *:nth-child(7):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * -0.5)); }
+  .tilt__canvas > *:nth-child(8):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * 0.5)); }
+  .tilt__canvas > *:nth-child(9):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * 0.5)); }
+  .tilt__canvas > *:nth-child(10):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(var(--tilt-y)); }
+  .tilt__canvas > *:nth-child(11):hover ~ .tilt__card { transform: rotateY(calc(var(--tilt-y) * -1)); }
+  .tilt__canvas > *:nth-child(12):hover ~ .tilt__card { transform: rotateY(calc(var(--tilt-y) * -0.5)); }
+  .tilt__canvas > *:nth-child(13):hover ~ .tilt__card { transform: none; }
+  .tilt__canvas > *:nth-child(14):hover ~ .tilt__card { transform: rotateY(calc(var(--tilt-y) * 0.5)); }
+  .tilt__canvas > *:nth-child(15):hover ~ .tilt__card { transform: rotateY(var(--tilt-y)); }
+  .tilt__canvas > *:nth-child(16):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * -1)); }
+  .tilt__canvas > *:nth-child(17):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * -0.5)); }
+  .tilt__canvas > *:nth-child(18):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -0.5)); }
+  .tilt__canvas > *:nth-child(19):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(calc(var(--tilt-y) * 0.5)); }
+  .tilt__canvas > *:nth-child(20):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -0.5)) rotateY(var(--tilt-y)); }
+  .tilt__canvas > *:nth-child(21):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * -1)); }
+  .tilt__canvas > *:nth-child(22):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * -0.5)); }
+  .tilt__canvas > *:nth-child(23):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -1)); }
+  .tilt__canvas > *:nth-child(24):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(calc(var(--tilt-y) * 0.5)); }
+  .tilt__canvas > *:nth-child(25):hover ~ .tilt__card { transform: rotateX(calc(var(--tilt-x) * -1)) rotateY(var(--tilt-y)); }
 
   /* Featured surfaces keep the depth but not the movement. */
   .tilt-flat {
     --tilt-x: 0deg;
     --tilt-y: 0deg;
+  }
+
+  /* A tracker grid only means something where a pointer can hover; on touch it
+     would just be an invisible sheet over the card. */
+  @media (hover: hover) {
+    .tilt__card {
+      will-change: transform;
+    }
+  }
+
+  @media (hover: none) {
+    .tilt__canvas {
+      display: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -206,6 +172,12 @@
 
     .tilt__card {
       transform: none !important;
+      transition: none;
+    }
+
+    .tilt-glass {
+      transform: none;
+      transition: none;
     }
   }
 
@@ -213,16 +185,26 @@
 
   .wheel {
     --wheel-accent: var(--c-accent);
+    /* The source's geometry: slots at -30/0/+30 degrees on an arc. The radius
+       and the panel are scaled to a settings card (the source's fixed 280px
+       would need a landing-page slab). Sizing, so the far slot — two steps
+       around, 60 degrees, once the arc has turned — still clears the rim with
+       its 44px tap target: 100px radius, 240px panel. The component reads the
+       step back out for its angles and spin, so the numbers live in one place. */
+    --wheel-r: 6.25rem;
+    --wheel-step: 30deg;
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
+    width: 100%;
+    min-inline-size: 0;
     padding-top: 1.25rem;
   }
 
   .wheel__hint {
     position: absolute;
     top: 0;
+    inset-inline: 0;
+    text-align: center;
     font-size: 0.5625rem;
     font-weight: 700;
     letter-spacing: 0.16em;
@@ -235,7 +217,7 @@
   .wheel__panel {
     position: relative;
     width: 100%;
-    height: 11.5rem;
+    height: 15rem;
     overflow: hidden;
     border-radius: var(--radius-xl);
     border: 1px solid var(--c-line);
@@ -243,6 +225,7 @@
     box-shadow: inset 0 3px 10px var(--c-shade), var(--shadow-card);
   }
 
+  /* The marker: where the chosen slot lands. */
   .wheel__panel::before {
     content: '';
     position: absolute;
@@ -289,14 +272,30 @@
     left: 2.25rem;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 0.125rem;
-    transform-origin: 11rem center;
+    min-height: 2.75rem;
+    transform-origin: var(--wheel-r) center;
     transform: translateY(-50%) rotate(var(--angle, 0deg));
     filter: blur(2px);
     opacity: 0.16;
     cursor: pointer;
     transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease, filter 0.4s ease;
     z-index: 1;
+  }
+
+  /* The chosen slot: sharp, lit, and nudged clear of the marker. */
+  .wheel__input:checked + .wheel__option {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(-50%) translateX(0.5rem) rotate(var(--angle, 0deg));
+    z-index: 4;
+  }
+
+  .wheel__input:focus-visible + .wheel__option {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs);
   }
 
   .wheel__num {
@@ -316,28 +315,24 @@
     white-space: nowrap;
   }
 
-  .wheel__input:focus-visible + .wheel__option {
-    outline: 2px solid var(--c-accent);
-    outline-offset: 4px;
-    border-radius: var(--radius-xs);
-  }
-
-  .wheel__input:checked + .wheel__option {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(-50%) translateX(0.5rem) rotate(var(--angle, 0deg));
-    z-index: 4;
-  }
-
   .wheel__input:checked + .wheel__option .wheel__label {
     text-shadow: 0 1px 14px color-mix(in oklab, var(--c-accent) 30%, transparent);
   }
 
-  /* Rotation of the whole wheel: the selected slot travels to the marker. */
-  .wheel:has(input[value='1']:checked) .wheel__option,
-  .wheel:has(.wheel__input:nth-of-type(1):checked) .wheel__option {
-    --spin: 0deg;
+  .wheel__note {
+    font-size: 0.6875rem;
+    color: var(--c-muted);
+    white-space: nowrap;
   }
+
+  /* Rotation of the whole arc: the selected slot travels to the marker. One
+     rule per slot, reading the real radio state, so any way of choosing —
+     click, tap, arrow keys, a screen reader — animates the same way. */
+  .wheel:has(.wheel__input:nth-of-type(1):checked) .wheel__spin { transform: rotate(var(--wheel-spin-1, 0deg)); }
+  .wheel:has(.wheel__input:nth-of-type(2):checked) .wheel__spin { transform: rotate(var(--wheel-spin-2, 0deg)); }
+  .wheel:has(.wheel__input:nth-of-type(3):checked) .wheel__spin { transform: rotate(var(--wheel-spin-3, 0deg)); }
+  .wheel:has(.wheel__input:nth-of-type(4):checked) .wheel__spin { transform: rotate(var(--wheel-spin-4, 0deg)); }
+  .wheel:has(.wheel__input:nth-of-type(5):checked) .wheel__spin { transform: rotate(var(--wheel-spin-5, 0deg)); }
 
   .wheel__spin {
     position: absolute;
@@ -345,21 +340,15 @@
     transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
-  .wheel-1 .wheel__spin {
-    transform: rotate(26deg);
-  }
+  @media (prefers-reduced-motion: reduce) {
+    .wheel__spin,
+    .wheel__option {
+      transition: none;
+    }
 
-  .wheel-2 .wheel__spin {
-    transform: rotate(0deg);
-  }
-
-  .wheel-3 .wheel__spin {
-    transform: rotate(-26deg);
-  }
-
-  .wheel__note {
-    font-size: 0.6875rem;
-    color: var(--c-muted);
+    .wheel__hint {
+      animation: none;
+    }
   }
 }
 

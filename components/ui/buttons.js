@@ -18,6 +18,19 @@ import { Icon } from '@/components/ui/icons';
 
 const SIZE = { sm: 'btn-sm', md: 'btn-md', lg: 'btn-lg' };
 
+/* The supplied secondary button stacks seven radial layers, each on its own
+   delay and duration, which is what makes the reflection drift instead of
+   spinning in lockstep. The timings are the source's. */
+const SHEEN_LAYERS = [
+  { delay: '0s', duration: '25s' },
+  { delay: '0.15s', duration: '15.9s' },
+  { delay: '0.53s', duration: '26.4s' },
+  { delay: '0.45s', duration: '17.8s' },
+  { delay: '1.6s', duration: '19.2s' },
+  { delay: '1.6s', duration: '29.2s' },
+  { delay: '1.6s', duration: '20.2s' },
+];
+
 const VARIANT = {
   secondary: 'btn-secondary',
   ghost: 'btn-quiet',
@@ -71,7 +84,19 @@ export function Button({
           <span className="btn-face" aria-hidden="true" />
         </>
       ) : null}
-      {variant === 'sheen' ? <span className="btn-sheen-layer" aria-hidden="true" /> : null}
+      {variant === 'sheen' ? (
+        <>
+          <span className="btn-light" aria-hidden="true" />
+          {SHEEN_LAYERS.map((layer) => (
+            <span
+              key={layer.duration + layer.delay}
+              className="btn-sheen-layer"
+              style={{ animationDelay: layer.delay, animationDuration: layer.duration }}
+              aria-hidden="true"
+            />
+          ))}
+        </>
+      ) : null}
       <span className="btn-label">
         {loading ? <span className="dot-spin" aria-hidden="true" /> : icon ? <Icon name={icon} size={glyph} /> : null}
         {children ? <span>{children}</span> : null}
