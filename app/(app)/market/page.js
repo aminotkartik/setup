@@ -131,7 +131,7 @@ export default async function MarketPage({ searchParams }) {
         <section aria-label="Featured listing" className="flex flex-col gap-2">
           <SectionHeader title="Just listed" description="The newest item on the campus marketplace." />
           <TiltCard intensity="soft">
-            <div className="card flex flex-wrap items-end justify-between gap-4 p-5">
+            <div className="glass glass-sheen card-glass flex flex-wrap items-end justify-between gap-4 p-5">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="accent">{featuredListing.is_free ? 'Free' : formatPrice(featuredListing.price)}</Badge>

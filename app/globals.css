@@ -21,100 +21,118 @@
    the right palette — no flash, no inline bootstrap script.
    ========================================================================== */
 
+/* Raw palette — one warm neutral family, one full blue tonal family.
+   Blues carry the identity; the warm neutrals keep the product cozy rather
+   than clinical. Everything below is defined for light, for the explicit
+   dark attribute and for "system" + a dark OS preference. */
 :root {
   color-scheme: light;
 
-  /* Warm neutral family — cream canvas, near-black ink. */
-  --c-canvas: #f7f3ec;
-  --c-canvas-deep: #f1ece3;
+  /* Warm neutral family — warm white canvas, charcoal ink. */
+  --c-canvas: #f7f5f1;
+  --c-canvas-deep: #efebe4;
   --c-surface: #ffffff;
-  --c-surface-2: #faf7f2;
-  --c-surface-3: #f3eee5;
-  --c-ink: #1a1512;
-  --c-ink-soft: #453d35;
-  --c-muted: #7c7368;
-  --c-muted-soft: #a0968a;
-  --c-line: #e8e1d5;
-  --c-line-strong: #d8cfc0;
+  --c-surface-2: #fbf9f6;
+  --c-surface-3: #f2eee8;
+  --c-ink: #1c1b19;
+  --c-ink-soft: #474440;
+  --c-muted: #767065;
+  --c-muted-soft: #a19a8d;
+  --c-line: #e8e4dd;
+  --c-line-strong: #d7d2c8;
 
-  /* Campus+ identity: a warm, confident orange. */
-  --c-accent: #ef6a1c;
-  --c-accent-hover: #db5a10;
-  --c-accent-press: #c44d09;
-  --c-accent-soft: #ffeede;
-  --c-accent-tint: #fff6ee;
-  --c-accent-ink: #8d3703;
+  /* Blue tonal system — the Campus+ identity.
+     primary → hover → pressed → deep, then the soft/pale/tint surfaces that
+     carry active states, badges, glass reflections and focus. */
+  --c-accent: #3566e8;
+  --c-accent-hover: #2754cf;
+  --c-accent-press: #1d42a6;
+  --c-accent-deep: #16307a;
+  --c-accent-soft: #e6eeff;
+  --c-accent-tint: #f1f6ff;
+  --c-accent-pale: #cddcff;
+  --c-accent-highlight: #7ea3ff;
+  --c-accent-glass: rgba(53, 102, 232, 0.14);
+  --c-accent-ink: #1b3d9c;
   --c-on-accent: #ffffff;
 
-  --c-success: #15803d;
-  --c-success-soft: #e9f7ee;
-  --c-warning: #a16207;
-  --c-warning-soft: #fdf6e3;
-  --c-danger: #c0392b;
-  --c-danger-soft: #fdeeec;
-  --c-info: #2563a8;
-  --c-info-soft: #ecf3fb;
-  --c-unread: #ef6a1c;
+  --c-success: #0f7a4d;
+  --c-success-soft: #e7f6ee;
+  --c-warning: #96650a;
+  --c-warning-soft: #fdf3e0;
+  --c-danger: #c02f34;
+  --c-danger-soft: #fdeceb;
+  --c-info: #10708f;
+  --c-info-soft: #e6f3f7;
+  --c-unread: #3566e8;
 
   /* Material accents used by the tactile + glass surfaces. */
   --c-highlight: #ffffff;
-  --c-highlight-soft: rgba(255, 255, 255, 0.62);
-  --c-shade: rgba(26, 21, 18, 0.06);
-  --c-ink-surface: #17130f;
-  --c-ink-surface-2: #241e18;
+  --c-highlight-soft: rgba(255, 255, 255, 0.65);
+  --c-shade: rgba(28, 27, 25, 0.06);
+  --c-ink-surface: #151a26;
+  --c-ink-surface-2: #212838;
 
   --c-glass-bg: color-mix(in oklab, var(--c-surface) 74%, transparent);
+  --c-glass-tint: color-mix(in oklab, var(--c-accent) 5%, transparent);
   --c-glass-border: color-mix(in oklab, var(--c-line) 78%, transparent);
-  --c-scrim: rgba(26, 21, 18, 0.42);
+  --c-scrim: rgba(18, 24, 36, 0.44);
 
-  --shadow-card: 0 1px 1px rgba(32, 22, 10, 0.03), 0 12px 28px -24px rgba(32, 22, 10, 0.45);
-  --shadow-raised: 0 2px 4px -2px rgba(32, 22, 10, 0.08), 0 18px 40px -28px rgba(32, 22, 10, 0.5);
-  --shadow-float: 0 6px 16px -8px rgba(32, 22, 10, 0.16), 0 32px 64px -40px rgba(32, 22, 10, 0.55);
+  --shadow-card: 0 1px 1px rgba(24, 28, 42, 0.03), 0 12px 28px -24px rgba(24, 28, 42, 0.45);
+  --shadow-raised: 0 2px 4px -2px rgba(24, 28, 42, 0.08), 0 18px 40px -28px rgba(24, 28, 42, 0.5);
+  --shadow-float: 0 6px 16px -8px rgba(24, 28, 42, 0.16), 0 32px 64px -40px rgba(24, 28, 42, 0.55);
   --shadow-inset-top: inset 0 1px 0 var(--c-highlight-soft);
 }
 
+/* Dark theme — a second, deliberately designed theme: deep blue-tinted ink
+   rather than pure black, with luminous blue accents. */
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --c-canvas: #14110e;
-  --c-canvas-deep: #0f0d0b;
-  --c-surface: #1c1915;
-  --c-surface-2: #221e19;
-  --c-surface-3: #2a251f;
-  --c-ink: #f6f1e8;
-  --c-ink-soft: #ded5c8;
-  --c-muted: #a89e91;
-  --c-muted-soft: #857c6f;
-  --c-line: #322c24;
-  --c-line-strong: #453d33;
+  --c-canvas: #121824;
+  --c-canvas-deep: #0d111b;
+  --c-surface: #1a2130;
+  --c-surface-2: #1f2737;
+  --c-surface-3: #273143;
+  --c-ink: #f0f1f4;
+  --c-ink-soft: #ccd2de;
+  --c-muted: #98a1b3;
+  --c-muted-soft: #79839a;
+  --c-line: #2b3446;
+  --c-line-strong: #3d4860;
 
-  --c-accent: #ff8a3d;
-  --c-accent-hover: #ff9c5c;
-  --c-accent-press: #f0803a;
-  --c-accent-soft: rgba(255, 138, 61, 0.15);
-  --c-accent-tint: rgba(255, 138, 61, 0.08);
-  --c-accent-ink: #ffc79a;
-  --c-on-accent: #21150a;
+  --c-accent: #6f9bff;
+  --c-accent-hover: #8db1ff;
+  --c-accent-press: #5b89f5;
+  --c-accent-deep: #3f6ce0;
+  --c-accent-soft: rgba(111, 155, 255, 0.16);
+  --c-accent-tint: rgba(111, 155, 255, 0.09);
+  --c-accent-pale: rgba(111, 155, 255, 0.3);
+  --c-accent-highlight: #a9c4ff;
+  --c-accent-glass: rgba(111, 155, 255, 0.12);
+  --c-accent-ink: #c3d6ff;
+  --c-on-accent: #0d1730;
 
-  --c-success: #5fd08a;
-  --c-success-soft: rgba(95, 208, 138, 0.14);
+  --c-success: #4fd39b;
+  --c-success-soft: rgba(79, 211, 155, 0.14);
   --c-warning: #f0bd57;
   --c-warning-soft: rgba(240, 189, 87, 0.14);
-  --c-danger: #ff8478;
-  --c-danger-soft: rgba(255, 132, 120, 0.14);
-  --c-info: #7cb6f0;
-  --c-info-soft: rgba(124, 182, 240, 0.14);
-  --c-unread: #ff8a3d;
+  --c-danger: #ff8b86;
+  --c-danger-soft: rgba(255, 139, 134, 0.14);
+  --c-info: #6fc7e8;
+  --c-info-soft: rgba(111, 199, 232, 0.14);
+  --c-unread: #6f9bff;
 
   --c-highlight: #ffffff;
   --c-highlight-soft: rgba(255, 255, 255, 0.08);
   --c-shade: rgba(0, 0, 0, 0.3);
-  --c-ink-surface: #0c0a08;
-  --c-ink-surface-2: #1a1613;
+  --c-ink-surface: #0b0f18;
+  --c-ink-surface-2: #151b28;
 
   --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
+  --c-glass-tint: color-mix(in oklab, var(--c-accent) 8%, transparent);
   --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
-  --c-scrim: rgba(0, 0, 0, 0.6);
+  --c-scrim: rgba(5, 8, 14, 0.62);
 
   --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
   --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
@@ -127,45 +145,50 @@
   [data-theme='system'] {
     color-scheme: dark;
 
-    --c-canvas: #14110e;
-    --c-canvas-deep: #0f0d0b;
-    --c-surface: #1c1915;
-    --c-surface-2: #221e19;
-    --c-surface-3: #2a251f;
-    --c-ink: #f6f1e8;
-    --c-ink-soft: #ded5c8;
-    --c-muted: #a89e91;
-    --c-muted-soft: #857c6f;
-    --c-line: #322c24;
-    --c-line-strong: #453d33;
+    --c-canvas: #121824;
+    --c-canvas-deep: #0d111b;
+    --c-surface: #1a2130;
+    --c-surface-2: #1f2737;
+    --c-surface-3: #273143;
+    --c-ink: #f0f1f4;
+    --c-ink-soft: #ccd2de;
+    --c-muted: #98a1b3;
+    --c-muted-soft: #79839a;
+    --c-line: #2b3446;
+    --c-line-strong: #3d4860;
 
-    --c-accent: #ff8a3d;
-    --c-accent-hover: #ff9c5c;
-    --c-accent-press: #f0803a;
-    --c-accent-soft: rgba(255, 138, 61, 0.15);
-    --c-accent-tint: rgba(255, 138, 61, 0.08);
-    --c-accent-ink: #ffc79a;
-    --c-on-accent: #21150a;
+    --c-accent: #6f9bff;
+    --c-accent-hover: #8db1ff;
+    --c-accent-press: #5b89f5;
+    --c-accent-deep: #3f6ce0;
+    --c-accent-soft: rgba(111, 155, 255, 0.16);
+    --c-accent-tint: rgba(111, 155, 255, 0.09);
+    --c-accent-pale: rgba(111, 155, 255, 0.3);
+    --c-accent-highlight: #a9c4ff;
+    --c-accent-glass: rgba(111, 155, 255, 0.12);
+    --c-accent-ink: #c3d6ff;
+    --c-on-accent: #0d1730;
 
-    --c-success: #5fd08a;
-    --c-success-soft: rgba(95, 208, 138, 0.14);
+    --c-success: #4fd39b;
+    --c-success-soft: rgba(79, 211, 155, 0.14);
     --c-warning: #f0bd57;
     --c-warning-soft: rgba(240, 189, 87, 0.14);
-    --c-danger: #ff8478;
-    --c-danger-soft: rgba(255, 132, 120, 0.14);
-    --c-info: #7cb6f0;
-    --c-info-soft: rgba(124, 182, 240, 0.14);
-    --c-unread: #ff8a3d;
+    --c-danger: #ff8b86;
+    --c-danger-soft: rgba(255, 139, 134, 0.14);
+    --c-info: #6fc7e8;
+    --c-info-soft: rgba(111, 199, 232, 0.14);
+    --c-unread: #6f9bff;
 
     --c-highlight: #ffffff;
     --c-highlight-soft: rgba(255, 255, 255, 0.08);
     --c-shade: rgba(0, 0, 0, 0.3);
-    --c-ink-surface: #0c0a08;
-    --c-ink-surface-2: #1a1613;
+    --c-ink-surface: #0b0f18;
+    --c-ink-surface-2: #151b28;
 
     --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
+    --c-glass-tint: color-mix(in oklab, var(--c-accent) 8%, transparent);
     --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
-    --c-scrim: rgba(0, 0, 0, 0.6);
+    --c-scrim: rgba(5, 8, 14, 0.62);
 
     --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
     --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
@@ -194,6 +217,9 @@
   --color-accent-soft: var(--c-accent-soft);
   --color-accent-tint: var(--c-accent-tint);
   --color-accent-ink: var(--c-accent-ink);
+  --color-accent-deep: var(--c-accent-deep);
+  --color-accent-pale: var(--c-accent-pale);
+  --color-accent-highlight: var(--c-accent-highlight);
   --color-on-accent: var(--c-on-accent);
   --color-danger: var(--c-danger);
   --color-danger-soft: var(--c-danger-soft);
@@ -503,6 +529,20 @@
       padding-bottom: 1rem;
     }
   }
+}
+
+/* Mentions inside user text: the one inline link the product renders, so it
+   carries the identity colour and never shouts (no underline until hover). */
+.mention {
+  color: var(--c-accent-ink);
+  font-weight: 550;
+  border-radius: var(--radius-xs);
+}
+
+.mention:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 /* --------------------------------------------------------------------------

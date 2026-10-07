@@ -56,6 +56,20 @@
     border-color: color-mix(in oklab, var(--c-accent) 22%, var(--c-line));
   }
 
+  /* Elevated: for the one card in a column that should sit above the rest. */
+  .card-elevated {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised);
+  }
+
+  /* Glass card: reserved for featured/special content, never body copy. */
+  .card-glass {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised), var(--shadow-inset-top);
+  }
+
   .hairline {
     border-bottom: 1px solid var(--c-line);
   }
@@ -64,6 +78,9 @@
 
   .glass {
     background-color: var(--c-glass-bg);
+    /* The faint blue cast that keeps the material from reading as plain grey
+       transparency — the "liquid" in the liquid glass. */
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 62%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
     border: 1px solid var(--c-glass-border);
@@ -72,6 +89,7 @@
 
   .glass-soft {
     background-color: color-mix(in oklab, var(--c-surface) 86%, transparent);
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 70%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid var(--c-glass-border);
@@ -79,6 +97,7 @@
 
   .glass-strong {
     background-color: color-mix(in oklab, var(--c-surface) 92%, transparent);
+    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 58%);
     -webkit-backdrop-filter: blur(26px) saturate(160%);
     backdrop-filter: blur(26px) saturate(160%);
     border: 1px solid var(--c-glass-border);
@@ -252,6 +271,14 @@
       border-color 0.15s ease,
       color 0.15s ease,
       transform 0.15s ease;
+  }
+
+  /* Read-only chips (technologies, subjects): identical material, no
+     affordance — they are labels, not controls. */
+  .chip-static {
+    padding: 0.1875rem 0.625rem;
+    color: var(--c-muted);
+    pointer-events: none;
   }
 
   .chip:hover {

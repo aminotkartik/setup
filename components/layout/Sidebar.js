@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PRIMARY_NAV, ROUTES } from '@/lib/constants';
-import { Icon } from '@/components/ui/icons';
 import { IdentityMark, StaffDot } from '@/components/ui';
+import { Icon } from '@/components/ui/icons';
+import { BrandLockup } from '@/components/brand/Brand';
 import { CreateMenu } from '@/components/layout/CreateMenu';
 import { cn } from '@/lib/utils';
 
@@ -27,15 +28,7 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17rem] flex-col overflow-y-auto border-r border-line bg-canvas/80 px-3 pb-4 pt-5 backdrop-blur-xl lg:flex">
-      <Link href={ROUTES.home} className="brand px-2">
-        <span className="brand-mark" aria-hidden="true">
-          <Icon name="plus" size={18} />
-        </span>
-        <span className="flex flex-col leading-tight">
-          <span className="brand-word">Campus+</span>
-          <span className="brand-sub">PCCOE</span>
-        </span>
-      </Link>
+      <BrandLockup className="px-2" />
 
       <div className="mt-5">
         <CreateMenu items={createItems} />

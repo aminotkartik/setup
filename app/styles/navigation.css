@@ -131,6 +131,7 @@
     text-decoration: none;
   }
 
+  /* Three responsive sizes; the mark keeps its aspect ratio at each one. */
   .brand-mark {
     display: grid;
     place-items: center;
@@ -144,10 +145,60 @@
       0 6px 14px -8px color-mix(in oklab, var(--c-accent) 80%, transparent);
   }
 
-  .brand-mark-sm {
+  .brand-mark[data-size='sm'] {
     width: 1.75rem;
     height: 1.75rem;
     border-radius: var(--radius-sm);
+  }
+
+  .brand-mark[data-size='lg'] {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Real logo mode: no plate behind the asset, proportions untouched. */
+  .brand-mark-img {
+    background-image: none;
+    box-shadow: none;
+  }
+
+  .brand-mark-img img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* The sign-in front door: a soft blue halo behind the mark, and the small
+     icon chips beside the three facts. Both are brand-area helpers, so they
+     live with the brand rather than in a page-local stylesheet. */
+  .login-halo {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .login-halo::before {
+    content: '';
+    position: absolute;
+    inset: -1.5rem;
+    z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--c-accent) 28%, transparent), transparent 68%);
+    pointer-events: none;
+  }
+
+  .login-fact {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: -0.0625rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in oklab, var(--c-accent) 22%, transparent);
+    background-color: var(--c-accent-tint);
+    color: var(--c-accent-ink);
   }
 
   .brand-word {

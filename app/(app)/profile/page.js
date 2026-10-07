@@ -47,7 +47,7 @@ export default async function ProfilePage() {
       {/* Your own card is one of the few surfaces that gets the interactive
           depth — a single, featured object rather than a scrolling list. */}
       <TiltCard intensity="soft">
-      <Card className="p-4 sm:p-5">
+      <Card className="card-elevated p-4 sm:p-5">
         <div className="flex items-start gap-4">
           <IdentityMark name={name} size={48} tone="accent" square={false} />
           <div className="min-w-0">

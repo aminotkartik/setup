@@ -233,7 +233,7 @@
     border-radius: 999px;
     border: 1px solid var(--c-glass-border);
     background-color: color-mix(in oklab, var(--c-ink-surface) 94%, transparent);
-    color: #f7f3ec;
+    color: #f2f4f8;
     padding: 0.5rem 0.9375rem;
     font-size: 0.8125rem;
     font-weight: 550;

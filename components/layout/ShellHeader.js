@@ -13,6 +13,7 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
+import { BrandLockup } from '@/components/brand/Brand';
 import { Icon } from '@/components/ui/icons';
 import { GlassSurface, ThemeSwitch } from '@/components/ui';
 import { AccountMenu } from '@/components/layout/AccountMenu';
@@ -49,12 +50,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
           theme={theme}
           createItems={createItems}
         />
-        <Link href={ROUTES.home} className="brand">
-          <span className="brand-mark brand-mark-sm" aria-hidden="true">
-            <Icon name="plus" size={15} />
-          </span>
-          <span className="brand-word text-[0.9375rem]">Campus+</span>
-        </Link>
+        <BrandLockup size="sm" subtitle={null} wordClass="text-[0.9375rem]" />
         <div className="ml-auto flex items-center gap-0.5">
           <Link href={ROUTES.explore} aria-label="Search Campus+" className="icon-btn">
             <Icon name="search" size={19} />

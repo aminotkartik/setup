@@ -139,26 +139,26 @@
   /* --- primary: animated edge light ------------------------------------ */
 
   .btn-primary {
-    --btn-base-a: #241d16;
-    --btn-base-b: #120f0b;
+    --btn-base-a: #1c2436;
+    --btn-base-b: #0e131e;
     --btn-light-a: var(--c-accent);
-    --btn-light-b: #ffb066;
-    --btn-light-core: #ffd9b0;
+    --btn-light-b: #a9c4ff;
+    --btn-light-core: #e9f0ff;
     background: linear-gradient(180deg, var(--btn-base-a), var(--btn-base-b));
     border-color: color-mix(in oklab, #000 55%, transparent);
     color: #fff;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.14),
       inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-      0 1px 2px rgba(24, 12, 4, 0.28),
+      0 1px 2px rgba(10, 16, 30, 0.28),
       0 10px 24px -16px color-mix(in oklab, var(--btn-light-a) 70%, transparent);
   }
 
   .btn-primary[data-tone='accent'] {
     --btn-base-a: color-mix(in oklab, var(--c-accent) 92%, #fff);
     --btn-base-b: var(--c-accent-hover);
-    --btn-light-a: #ffd9a8;
-    --btn-light-b: #fff3e2;
+    --btn-light-a: var(--c-accent-pale);
+    --btn-light-b: #eef4ff;
     --btn-light-core: #ffffff;
     border-color: color-mix(in oklab, var(--c-accent-press) 60%, transparent);
     color: var(--c-on-accent);
@@ -334,7 +334,7 @@
     padding: 0.5rem 0.875rem 0.5625rem;
     border: 0.5px solid rgba(0, 0, 0, 0.35);
     border-radius: 0.9rem 0.9rem 0.75rem 0.75rem;
-    background-color: #16110d;
+    background-color: #1a1420;
     background-image:
       linear-gradient(to right, rgba(0, 0, 0, 0.75), transparent),
       linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
@@ -400,8 +400,8 @@
     padding: 0.5rem 0.7rem 0.5625rem;
     border: 0;
     border-radius: 0.625rem;
-    background: linear-gradient(180deg, #2b2620, #201b16);
-    color: #f4efe6;
+    background: linear-gradient(180deg, #2a3346, #1b2334);
+    color: #eef1f8;
     font-size: 0.75rem;
     font-weight: 650;
     letter-spacing: 0.02em;
@@ -427,7 +427,7 @@
     right: 9px;
     bottom: 9px;
     border-radius: 0.5rem;
-    background: linear-gradient(90deg, #2c2621, #4c443c);
+    background: linear-gradient(90deg, #313b52, #4b5878);
     border-left: 1px solid rgba(0, 0, 0, 0.28);
     border-bottom: 1px solid rgba(0, 0, 0, 0.28);
     border-top: 1px solid rgba(0, 0, 0, 0.55);

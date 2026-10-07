@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Icon } from '@/components/ui/icons';
+import { BrandLockup } from '@/components/brand/Brand';
 
 /**
  * The public frame.
@@ -16,15 +15,7 @@ export function PublicShell({ eyebrow = null, title = null, description = null, 
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full flex-col justify-center px-5 py-10 sm:py-14">
-      <Link href="/" className="brand mb-8 w-fit" aria-label="Campus+">
-        <span className="brand-mark" aria-hidden="true">
-          <Icon name="plus" size={18} />
-        </span>
-        <span className="flex flex-col leading-tight">
-          <span className="brand-word">Campus+</span>
-          <span className="brand-sub">PCCOE</span>
-        </span>
-      </Link>
+      <BrandLockup href="/" size="lg" className="mb-8 w-fit" />
 
       <div className={cn('w-full', widths[width] || widths.md)}>
         {eyebrow ? <p className="t-label">{eyebrow}</p> : null}

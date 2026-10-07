@@ -119,7 +119,7 @@ export default async function CommunitiesPage({ searchParams }) {
         <section aria-label="Most members" className="flex flex-col gap-2">
           <SectionHeader title="Biggest right now" description="The community with the most members on Campus+ today." />
           <TiltCard>
-            <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+            <div className="glass glass-sheen card-glass flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="min-w-0">
                 <p className="t-label">{featured.kind === 'club' ? 'Club' : featured.kind === 'study_group' ? 'Study group' : 'Community'}</p>
                 <h3 className="t-section mt-1">{featured.name}</h3>

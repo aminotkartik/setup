@@ -68,10 +68,13 @@ describe('no artificial intelligence anywhere (spec §2)', () => {
 });
 
 describe('text-first: no uploads, no images, no files (spec §3)', () => {
-  it('renders images in exactly one place: the GIF picker', () => {
+  it('renders images in exactly two places: the GIF picker and the brand asset', () => {
     const GIF_SURFACE = path.join('components', 'media', 'GifPicker.js');
+    // The brand mark is the one other <img> in the product, and only when the
+    // supplied logo asset is configured (LOGO_SRC); user content is never media.
+    const BRAND_SURFACE = path.join('components', 'brand', 'Brand.js');
     const imageUsers = grep([...appFiles, ...componentFiles], /<img[\s>]|from 'next\/image'|from "next\/image"/);
-    expect(imageUsers).toEqual([GIF_SURFACE]);
+    expect(imageUsers.sort()).toEqual([BRAND_SURFACE, GIF_SURFACE].sort());
     // That single surface must point at the validated provider hosts.
     const picker = read(GIF_SURFACE);
     expect(picker).toMatch(/giphy/i);
@@ -238,7 +241,15 @@ describe('design system (spec §4)', () => {
       '--c-line',
       '--c-line-strong',
       '--c-accent',
+      '--c-accent-hover',
+      '--c-accent-press',
+      '--c-accent-deep',
       '--c-accent-soft',
+      '--c-accent-tint',
+      '--c-accent-pale',
+      '--c-accent-highlight',
+      '--c-accent-glass',
+      '--c-accent-ink',
       '--c-on-accent',
       '--c-danger',
       '--c-success',
@@ -246,6 +257,7 @@ describe('design system (spec §4)', () => {
       '--c-info',
       '--c-unread',
       '--c-glass-bg',
+      '--c-glass-tint',
       '--c-glass-border',
     ]) {
       expect(globals).toContain(token);
@@ -258,11 +270,17 @@ describe('design system (spec §4)', () => {
     expect(globals).toContain('@theme inline');
   });
 
-  it('keeps the warm canvas, deep ink and the Campus+ orange as tokens', () => {
-    expect(globals).toContain('#f7f3ec'); // warm off-white canvas
-    expect(globals).toContain('#1a1512'); // deep ink
-    expect(globals).toContain('#ef6a1c'); // Campus+ identity accent
-    expect(globals).toContain('#14110e'); // the dark theme is a designed palette, not an inversion
+  it('keeps the warm neutrals, the blue identity and a designed dark theme', () => {
+    expect(globals).toContain('#f7f5f1'); // warm off-white canvas
+    expect(globals).toContain('#1c1b19'); // warm charcoal ink
+    expect(globals).toContain('#3566e8'); // Campus+ primary blue
+    expect(globals).toContain('#1d42a6'); // pressed blue
+    expect(globals).toContain('#121824'); // dark theme: deep blue-tinted ink, not black
+    expect(globals).toContain('#6f9bff'); // dark theme accent stays blue and luminous
+
+    // The old orange identity is gone for good.
+    expect(globals).not.toContain('#ef6a1c');
+    expect(globals).not.toMatch(/--c-accent:\s*#(f|e)[0-9a-f]{2}/i);
   });
 
   it('never hardcodes a colour in a page or component', () => {

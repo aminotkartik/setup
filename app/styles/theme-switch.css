@@ -13,16 +13,18 @@
     --sw-h: 1.75rem;
     --sw-disc: 1.3125rem;
     --sw-pad: 0.1875rem;
-    --sw-day-top: #7fb6d8;
-    --sw-day-bottom: #cfe3ec;
-    --sw-night-top: #16172c;
-    --sw-night-bottom: #2b2b52;
+    /* The celestial palette is the control's own illustration, but the sky
+       tones are drawn from the Campus+ blue family so it sits in the theme. */
+    --sw-day-top: #9dc0f2;
+    --sw-day-bottom: #e3ecfb;
+    --sw-night-top: #121824;
+    --sw-night-bottom: #24304a;
     --sw-sun: #f7c33f;
     --sw-sun-edge: #c9922a;
     --sw-moon: #e8e3d2;
     --sw-moon-edge: #a5a08d;
     --sw-cloud: #f6f4ef;
-    --sw-cloud-back: #b9cfe0;
+    --sw-cloud-back: #c3d6f0;
     --sw-transition: 0.55s cubic-bezier(0, -0.02, 0.4, 1.22);
 
     position: relative;

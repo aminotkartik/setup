@@ -51,7 +51,7 @@ export function NewConversation({ canMessage = true }) {
   return (
     <div className="card p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[0.8125rem] font-medium">Messages</p>
+        <p className="t-card">Messages</p>
         <Button size="sm" variant={open ? 'ghost' : 'secondary'} icon="plus" onClick={() => setOpen((value) => !value)}>
           {open ? 'Close' : 'New message'}
         </Button>
