@@ -6,6 +6,7 @@ import { describeAuthError, safeNextPath } from '@/lib/auth/oauth';
 import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
 import { Notice } from '@/components/ui';
+import { PublicShell } from '@/components/layout/PublicShell';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 export const metadata = { title: 'Sign in' };
@@ -34,16 +35,23 @@ export default async function LoginPage({ searchParams }) {
       : null;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-12">
-      <div className="mb-8">
-        <p className="text-2xs uppercase tracking-widest text-muted">Unofficial student project</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Campus+</h1>
-        <p className="mt-2 text-[0.9375rem] text-muted">
-          Sign in with your PCCOE Google account. There is no password and no code to remember.
+    <PublicShell
+      eyebrow="Unofficial student project"
+      title="The campus, in one place"
+      description="Sign in with your PCCOE Google account. There is no password and no code to remember."
+      width="sm"
+      footer={
+        <p className="text-2xs leading-relaxed text-muted">
+          Campus+ is not affiliated with or endorsed by PCCOE. By continuing you agree to keep the space
+          respectful and to follow the{' '}
+          <Link href="/rules" className="font-semibold text-ink underline">
+            community rules
+          </Link>
+          .
         </p>
-      </div>
-
-      <div className="card flex flex-col gap-4 p-5">
+      }
+    >
+      <div className="glass-strong flex flex-col gap-4 rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-card)]">
         {callbackError ? (
           <Notice tone="danger" icon="flag">
             {callbackError}
@@ -57,25 +65,22 @@ export default async function LoginPage({ searchParams }) {
         <LoginForm next={next} />
       </div>
 
-      <ul className="mt-6 flex flex-col gap-2 text-[0.8125rem] text-muted">
-        <li className="flex items-start gap-2">
+      <ul className="mt-7 flex flex-col gap-2.5 text-[0.8125rem] text-muted">
+        <li className="flex items-start gap-2.5">
           <Icon name="mail" size={16} className="mt-0.5 shrink-0" />
-          Only <span className="text-ink">@pccoepune.org</span> accounts can sign in.
+          <span>
+            Only <span className="font-semibold text-ink">@pccoepune.org</span> accounts can sign in.
+          </span>
         </li>
-        <li className="flex items-start gap-2">
+        <li className="flex items-start gap-2.5">
           <Icon name="lock" size={16} className="mt-0.5 shrink-0" />
-          Your email stays private. Other students only ever see your @username.
+          <span>Your email stays private. Other students only ever see your @username.</span>
+        </li>
+        <li className="flex items-start gap-2.5">
+          <Icon name="users" size={16} className="mt-0.5 shrink-0" />
+          <span>Text-first by design: posts, discussions, communities and messages.</span>
         </li>
       </ul>
-
-      <p className="mt-8 text-2xs text-muted">
-        Campus+ is not affiliated with or endorsed by PCCOE. By continuing you agree to keep the
-        space respectful and to follow the community rules.{' '}
-        <Link href="/rules" className="text-ink underline">
-          Read the rules
-        </Link>
-        .
-      </p>
-    </div>
+    </PublicShell>
   );
 }

@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/icons';
+import { LinkButton } from '@/components/ui';
+import { PublicShell } from '@/components/layout/PublicShell';
 
 export const metadata = { title: 'Community rules' };
 
@@ -19,34 +21,40 @@ export default function RulesPage() {
   ];
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col justify-center px-5 py-14">
-      <h1 className="text-2xl font-semibold tracking-tight">Community rules</h1>
-      <p className="mt-2 text-[0.9375rem] text-muted">
-        Campus+ is run by students for students. Reports are reviewed by moderators, and every
-        moderation action is logged.
-      </p>
-
-      <ol className="card mt-6 divide-y divide-line">
+    <PublicShell
+      eyebrow="Campus+"
+      title="Community rules"
+      description="Campus+ is run by students for students. Reports are reviewed by people, and every moderation action is logged."
+      width="lg"
+    >
+      <ol className="card divide-y divide-line overflow-hidden">
         {rules.map(([title, body], index) => (
-          <li key={title} className="flex gap-3 p-4">
-            <span className="text-2xs text-muted">{index + 1}</span>
-            <div>
-              <p className="text-sm font-medium text-ink">{title}</p>
-              <p className="mt-0.5 text-[0.8125rem] text-muted">{body}</p>
+          <li key={title} className="flex gap-3.5 p-4">
+            <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-line bg-surface-2 text-2xs font-bold text-muted">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <p className="t-card">{title}</p>
+              <p className="t-caption mt-1 leading-relaxed">{body}</p>
             </div>
           </li>
         ))}
       </ol>
 
-      <p className="mt-6 flex items-start gap-2 text-[0.8125rem] text-muted">
+      <p className="mt-6 flex items-start gap-2.5 text-[0.8125rem] text-muted">
         <Icon name="shield" size={16} className="mt-0.5 shrink-0" />
         Anything that breaks these rules can be reported from where you see it. Reporting is always
         available, even if you have blocked the person.
       </p>
 
-      <Link href="/login" className="mt-8 text-[0.8125rem] text-muted underline hover:text-ink">
-        Back to sign-in
-      </Link>
-    </div>
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <LinkButton href="/login" variant="primary" icon="chevronRight">
+          Back to sign-in
+        </LinkButton>
+        <Link href="/" className="text-[0.8125rem] font-medium text-muted underline hover:text-ink">
+          What is Campus+?
+        </Link>
+      </div>
+    </PublicShell>
   );
 }

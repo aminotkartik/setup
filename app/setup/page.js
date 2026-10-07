@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '@/lib/config';
 import { configurationStatus } from '@/lib/config.server';
 import { Badge, Notice } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
+import { PublicShell } from '@/components/layout/PublicShell';
 
 export const metadata = { title: 'Setup' };
 
@@ -22,16 +23,13 @@ export default async function SetupPage() {
   const items = configurationStatus();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col justify-center px-5 py-14">
-      <p className="text-2xs uppercase tracking-widest text-muted">Configuration required</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Connect Campus+ to Supabase</h1>
-      <p className="mt-2 max-w-xl text-[0.9375rem] text-muted">
-        This deployment is running without a database connection. Add the two public values below to
-        <span className="text-ink"> .env.local</span> (locally) or to the project&apos;s environment
-        variables (Vercel), then restart. Nothing else on this screen needs to be edited by hand.
-      </p>
-
-      <div className="card mt-6 divide-y divide-line">
+    <PublicShell
+      eyebrow="Configuration required"
+      title="Connect Campus+ to Supabase"
+      description="This deployment is running without a database connection. Add the public values below to .env.local (locally) or to the project environment variables (Vercel), then restart. Nothing else on this screen needs to be edited by hand."
+      width="lg"
+    >
+      <div className="card divide-y divide-line overflow-hidden">
         {items.map((item) => (
           <div key={item.key} className="flex items-start justify-between gap-4 p-4">
             <div className="min-w-0">
@@ -68,6 +66,6 @@ export default async function SetupPage() {
         Secret values belong in server-only variables. Never put a service-role/secret key in a
         NEXT_PUBLIC_* variable — those are bundled for the browser.
       </p>
-    </div>
+    </PublicShell>
   );
 }
