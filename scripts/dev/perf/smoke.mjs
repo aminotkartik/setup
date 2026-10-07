@@ -4,8 +4,9 @@
  *
  * Not a replacement for the real test suites — it proves that every signed-in
  * surface still renders the data it is supposed to render (feed, notices, admin
- * tables, marketplace, communities, DMs, random, notifications) and that the
- * anonymous gate still redirects. Run it against `serve.mjs` + a production
+ * tables, marketplace, communities, DMs, notifications) and that the anonymous
+ * gate still redirects and the retired Random surface still does not exist.
+ * Run it against `serve.mjs` + a production
  * build the same way `measure.mjs` runs.
  *
  *   node scripts/dev/perf/smoke.mjs
@@ -77,7 +78,9 @@ await check('profile', '/profile', { cookie: studentCookie, contains: ['aria-lab
 await check('settings', '/settings', { cookie: studentCookie, contains: ['Settings', 'Sign out'] });
 await check('public profile', `/user/${harness.student.username}`, { cookie: studentCookie, contains: ['aria-label="Post"'] });
 await check('post detail', `/post/${harness.postId}`, { cookie: studentCookie, contains: ['Comments'] });
-await check('random', '/random', { cookie: studentCookie, contains: ['Random'] });
+// Random chat is retired: there is no student route, no navigation entry and no
+// session url. This asserts the retirement instead of expecting a page.
+await check('random stays retired', '/random', { cookie: studentCookie, status: 404 });
 
 await check('admin: counts tab', '/admin?tab=counts', { cookie: adminCookie, contains: ['Operational counts'] });
 await check('admin: users tab', '/admin?tab=users', { cookie: adminCookie, contains: [harness.student.username] });

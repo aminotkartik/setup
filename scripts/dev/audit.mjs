@@ -1018,7 +1018,10 @@ function notificationTypeLiterals(text) {
 async function main() {
   await auditMigrationHistory();
 
-  const { pg, client } = await startDatabase({ port: 55433, dataDirName: 'pg-audit-data' });
+  // Port is overridable so the audit can run next to the perf harness, which
+  // keeps the development database on 55433.
+  const port = Number(process.env.AUDIT_DB_PORT || 55435);
+  const { pg, client } = await startDatabase({ port, dataDirName: 'pg-audit-data' });
   try {
     banner('Applying migrations…');
     const files = await migrationFiles();

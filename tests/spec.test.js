@@ -222,15 +222,70 @@ describe('route surface (spec §5, §6)', () => {
 });
 
 describe('design system (spec §4)', () => {
-  const css = read('app/globals.css');
+  const globals = read('app/globals.css');
+  const partials = ['surfaces', 'controls', 'feedback', 'theme-switch', 'interactive', 'navigation']
+    .map((name) => read(`app/styles/${name}.css`))
+    .join('\n');
 
-  it('defines the required palette', () => {
-    for (const token of ['#F8F7F4', '#171717', '#737373', '#E5E5E5', '#F97316']) {
-      expect(css.toUpperCase()).toContain(token.toUpperCase());
+  it('defines the semantic token set for light, dark and system', () => {
+    for (const token of [
+      '--c-canvas',
+      '--c-surface',
+      '--c-surface-2',
+      '--c-ink',
+      '--c-ink-soft',
+      '--c-muted',
+      '--c-line',
+      '--c-line-strong',
+      '--c-accent',
+      '--c-accent-soft',
+      '--c-on-accent',
+      '--c-danger',
+      '--c-success',
+      '--c-warning',
+      '--c-info',
+      '--c-unread',
+      '--c-glass-bg',
+      '--c-glass-border',
+    ]) {
+      expect(globals).toContain(token);
     }
+    // Two intentional themes plus "follow the device".
+    expect(globals).toContain("[data-theme='dark']");
+    expect(globals).toContain("[data-theme='system']");
+    expect(globals).toContain('@media (prefers-color-scheme: dark)');
+    // The tokens are exposed to Tailwind as utilities.
+    expect(globals).toContain('@theme inline');
   });
 
-  it('contains no gradients, neon or glassmorphism', () => {
-    expect(css).not.toMatch(/linear-gradient|radial-gradient|backdrop-filter/);
+  it('keeps the warm canvas, deep ink and the Campus+ orange as tokens', () => {
+    expect(globals).toContain('#f7f3ec'); // warm off-white canvas
+    expect(globals).toContain('#1a1512'); // deep ink
+    expect(globals).toContain('#ef6a1c'); // Campus+ identity accent
+    expect(globals).toContain('#14110e'); // the dark theme is a designed palette, not an inversion
+  });
+
+  it('never hardcodes a colour in a page or component', () => {
+    // The only allowed literals are the two theme-color meta entries, which have
+    // to mirror the tokens for the browser chrome.
+    const offenders = allSource.filter((file) => {
+      if (file === path.join('app', 'layout.js')) return false;
+      return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps glass, motion and the interactive materials inside the design system', () => {
+    expect(partials).toContain('.glass {');
+    expect(partials).toContain('.glass-soft');
+    expect(partials).toContain('.glass-strong');
+    expect(partials).toMatch(/prefers-reduced-motion/);
+    expect(partials).toContain('.tilt__card');
+    expect(partials).toContain('.wheel__option');
+
+    // Glass is an accent: only a small, deliberate set of floating surfaces may
+    // opt into their own backdrop blur on top of the primitives.
+    const blurry = allSource.filter((file) => /backdrop-blur|backdrop-filter/.test(read(file)));
+    expect(blurry.length).toBeLessThanOrEqual(8);
   });
 });
