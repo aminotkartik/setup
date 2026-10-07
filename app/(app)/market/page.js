@@ -84,9 +84,8 @@ export default async function MarketPage({ searchParams }) {
             <Link
               key={item.key}
               href={item.key === 'all' ? ROUTES.market : `${ROUTES.market}?tab=${item.key}`}
-              className={`rounded-full border px-3 py-1 text-2xs ${
-                tab === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
-              }`}
+              className="chip"
+              data-active={tab === item.key}
             >
               {item.label}
             </Link>

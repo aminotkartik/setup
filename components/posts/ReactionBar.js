@@ -20,14 +20,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
       disabled={!canReact || pending}
       aria-pressed={state.reacted}
       aria-label={state.reacted ? 'Remove reaction' : 'React to this'}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-all active:scale-[0.96]',
-        state.reacted
-          ? 'border-accent/40 bg-accent-soft text-accent-ink shadow-[var(--shadow-inset-top)]'
-          : 'border-line text-muted hover:border-line-strong hover:text-ink',
-        !canReact ? 'cursor-default opacity-70' : null,
-        className,
-      )}
+      className={cn('chip chip-toggle', !canReact ? 'cursor-default opacity-70' : null, className)}
       onClick={() => {
         const next = { count: state.count + (state.reacted ? -1 : 1), reacted: !state.reacted };
         setState(next);

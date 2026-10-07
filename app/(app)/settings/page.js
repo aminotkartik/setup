@@ -76,7 +76,8 @@ export default async function SettingsPage({ searchParams }) {
             key={item.key}
             href={`${ROUTES.settings}?tab=${item.key}`}
             aria-current={tab === item.key ? 'page' : undefined}
-            className={`chip ${tab === item.key ? 'border-accent/40 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-muted hover:text-ink'}`}
+            data-active={tab === item.key}
+            className="chip"
           >
             {item.label}
           </Link>

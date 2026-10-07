@@ -70,9 +70,8 @@ export default async function NewCommunityPage({ searchParams }) {
           <a
             key={option.key}
             href={`/communities/new?kind=${option.key}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              kind === option.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
-            }`}
+            className="chip"
+            data-active={kind === option.key}
           >
             {option.label}
           </a>

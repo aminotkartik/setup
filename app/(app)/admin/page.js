@@ -164,9 +164,8 @@ export default async function AdminPage({ searchParams }) {
           <Link
             key={tab.key}
             href={`${ROUTES.admin}?tab=${tab.key}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              activeTab === tab.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
-            }`}
+            className="chip"
+            data-active={activeTab === tab.key}
           >
             {tab.label}
           </Link>
@@ -355,9 +354,8 @@ export default async function AdminPage({ searchParams }) {
               <Link
                 key={item.key}
                 href={`${ROUTES.admin}?tab=content&table=${item.key}`}
-                className={`rounded-full border px-3 py-1 text-2xs ${
-                  contentTable === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
-                }`}
+                className="chip"
+                data-active={contentTable === item.key}
               >
                 {item.label}
               </Link>

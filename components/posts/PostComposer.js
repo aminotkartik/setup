@@ -79,10 +79,7 @@ export function PostComposer({ communityId = null, defaultKind = 'post', compact
                 aria-selected={kind === item.value}
                 title={item.hint}
                 onClick={() => setKind(item.value)}
-                className={cn(
-                  'chip',
-                  kind === item.value ? 'border-accent/40 bg-accent-soft text-accent-ink' : 'border-transparent bg-transparent',
-                )}
+                className="chip chip-plain"
               >
                 <Icon name={item.icon} size={12} />
                 {item.label}
