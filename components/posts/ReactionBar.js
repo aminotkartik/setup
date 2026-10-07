@@ -22,7 +22,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
       aria-label={state.reacted ? 'Remove reaction' : 'React to this'}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs transition-colors',
-        state.reacted ? 'border-accent/40 bg-accent-soft text-[#9a3412]' : 'border-line text-muted hover:text-ink',
+        state.reacted ? 'border-accent/40 bg-accent-soft text-accent-ink' : 'border-line text-muted hover:text-ink',
         className,
       )}
       onClick={() => {

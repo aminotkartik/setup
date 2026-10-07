@@ -832,6 +832,12 @@ async function auditJsColumnReferences(client) {
 
       for (const column of referenced) {
         if (ignorable.has(column)) continue;
+        // A `${...}` interpolation inside a template-literal select list (e.g.
+        // `${PRIVATE_COLUMNS}, profiles (...)`) is not a column name this
+        // static scan can resolve — it is a JS identifier, not schema text —
+        // so treat an unresolved placeholder as "cannot verify" rather than
+        // "does not exist".
+        if (column.includes('$') || column.includes('{') || column.includes('}')) continue;
         if (!columns.has(column)) {
           problems.push(`${path.relative(root, file)}: ${table}.${column} does not exist`);
         }

@@ -14,7 +14,7 @@ import { Icon } from '@/components/ui/icons';
 /* -------------------------------------------------------------------------- */
 
 const BUTTON_VARIANTS = {
-  primary: 'bg-accent text-white border-accent hover:bg-[#ea6a0c]',
+  primary: 'bg-accent text-white border-accent hover:bg-accent-hover',
   secondary: 'bg-surface text-ink border-line hover:border-muted',
   ghost: 'bg-transparent text-ink border-transparent hover:bg-white',
   danger: 'bg-surface text-danger border-danger hover:bg-danger-soft',
@@ -121,7 +121,7 @@ export function Checkbox({ label, id, className = '', ...props }) {
       <input
         id={id}
         type="checkbox"
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-[#F97316]"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-[var(--color-accent)]"
         {...props}
       />
       <span>{label}</span>
@@ -178,7 +178,7 @@ export function PageHeader({ title, description = null, action = null, back = nu
 export function Badge({ children, tone = 'neutral', className = '', title = undefined }) {
   const tones = {
     neutral: 'border-line bg-canvas text-muted',
-    accent: 'border-accent/30 bg-accent-soft text-[#9a3412]',
+    accent: 'border-accent/30 bg-accent-soft text-accent-ink',
     danger: 'border-danger/30 bg-danger-soft text-danger',
     success: 'border-success/30 bg-success-soft text-success',
     warning: 'border-warning/30 bg-warning-soft text-warning',
@@ -213,7 +213,7 @@ export function OfficialBadge({ className = '' }) {
 export function StaffDot({ tone = 'danger', label, className = '' }) {
   return (
     <span className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', className)}
-      style={{ backgroundColor: tone === 'danger' ? '#dc2626' : '#a16207' }}
+      style={{ backgroundColor: tone === 'danger' ? 'var(--color-danger)' : 'var(--color-warning)' }}
       role="img"
       aria-label={label || 'Staff member'}
       title={label || 'Staff member'}

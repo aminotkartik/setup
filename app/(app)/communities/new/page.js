@@ -16,14 +16,32 @@ export default async function NewCommunityPage({ searchParams }) {
   const user = await requireUser();
   const actor = toActor(user);
   const params = await searchParams;
-  const kind = ['community', 'study_group', 'club'].includes(String(params?.kind)) ? String(params.kind) : 'community';
-
-  if (!can(actor, 'create_communities')) {
+  const requestedKind = ['community', 'study_group', 'club'].includes(String(params?.kind)) ? String(params.kind) : 'community';
+  const canCreateClubs = can(actor, 'manage_clubs');
+  // A student with no community permissions at all cannot create anything.
+  // Clubs are gated separately (`manage_clubs`, staff-only): students create
+  // communities and study groups, but official clubs are campus-run spaces.
+  if (!can(actor, 'create_communities') && !canCreateClubs) {
     return (
       <div className="flex flex-col gap-4">
         <PageHeader title="Create" back={{ href: ROUTES.communities, label: 'Communities' }} />
         <Notice tone="warning" icon="lock">
           Your account cannot create communities right now.
+        </Notice>
+      </div>
+    );
+  }
+
+  // A student who followed a `?kind=club` link without the permission falls
+  // back to "community" instead of hitting a raw database permission error.
+  const kind = requestedKind === 'club' && !canCreateClubs ? 'community' : requestedKind;
+  if (requestedKind === 'club' && !canCreateClubs) {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader title="Create a club" back={{ href: ROUTES.communities, label: 'Communities' }} />
+        <Notice tone="warning" icon="lock">
+          Clubs are campus-run spaces. Your account cannot create one — create a community or study group instead,
+          or ask an admin to set one up from the admin console.
         </Notice>
       </div>
     );
@@ -47,7 +65,7 @@ export default async function NewCommunityPage({ searchParams }) {
         {[
           { key: 'community', label: 'Community' },
           { key: 'study_group', label: 'Study group' },
-          { key: 'club', label: 'Club' },
+          ...(canCreateClubs ? [{ key: 'club', label: 'Club' }] : []),
         ].map((option) => (
           <a
             key={option.key}
@@ -68,7 +86,10 @@ export default async function NewCommunityPage({ searchParams }) {
         pendingLabel="Creating…"
         successMessage="Created. You are the owner."
         cancelHref={ROUTES.communities}
-        redirectTo={(result) => result.href || ROUTES.communities}
+        // No redirectTo here on purpose: createCommunity() returns { href },
+        // and useFormAction() follows an action's own href automatically.
+        // (Passing a closure here from this Server Component to the
+        // Client Component ActionForm previously crashed the page.)
         fields={[
           { name: 'name', label: 'Name', required: true, maxLength: LIMITS.community.name.max },
           { name: 'slug', label: 'Link (optional)', maxLength: 60, hint: 'Lowercase letters, numbers and dashes. Generated from the name if left empty.' },

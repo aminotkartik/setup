@@ -70,7 +70,9 @@ export function PostCard({
         ) : null}
 
         {isDeleted ? (
-          <p className="mt-1 text-[0.8125rem] italic text-muted">This post was deleted by its author.</p>
+          <p className="mt-1 text-[0.8125rem] italic text-muted">
+            {isOwner ? 'You deleted this post. It stays hidden from everyone else — restore it to bring it back.' : 'This post was deleted by its author.'}
+          </p>
         ) : (
           <p className="user-text mt-1 text-[0.9375rem] leading-relaxed">
             {detail ? renderTextWithMentions(post.body) : renderTextWithMentions(body)}

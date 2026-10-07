@@ -132,7 +132,7 @@ export function SearchResults({ initialQuery = '', initialScope = 'all' }) {
 
       {groups.map((group) =>
         group.items?.length ? (
-          <section key={group.scope} aria-label={group.label} className="card divide-y divide-[#E5E5E5]">
+          <section key={group.scope} aria-label={group.label} className="card divide-y divide-line">
             <header className="flex items-center justify-between px-4 py-2.5">
               <h2 className="text-[0.8125rem] font-semibold">{group.label}</h2>
               <Badge>{group.items.length}</Badge>

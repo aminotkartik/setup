@@ -31,10 +31,10 @@ export function MobileMenu({ canModerate = false, canAdmin = false }) {
     };
   }, [open]);
 
+  // Settings and sign-out live in the account menu (top-right) now — not
+  // duplicated here.
   const items = [
-    { href: ROUTES.random, label: 'Random', icon: 'sparkle' },
     { href: ROUTES.notifications, label: 'Notifications', icon: 'bell' },
-    { href: ROUTES.settings, label: 'Settings', icon: 'settings' },
     ...(canModerate ? [{ href: ROUTES.moderator, label: 'Moderation', icon: 'shield' }] : []),
     ...(canAdmin ? [{ href: ROUTES.admin, label: 'Admin', icon: 'eye' }] : []),
   ];

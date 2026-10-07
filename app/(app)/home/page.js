@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/icons';
 import { PostComposer } from '@/components/posts/PostComposer';
 import { PostCard } from '@/components/posts/PostCard';
 import { SearchEntry } from '@/components/search/SearchEntry';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDate, formatTime, formatCalendarBadge } from '@/lib/utils';
 
 export const metadata = { title: 'Home' };
 
@@ -68,7 +68,7 @@ export default async function HomePage() {
       )}
 
       {pinnedNotices?.length ? (
-        <section aria-label="Notices" className="card divide-y divide-[#E5E5E5]">
+        <section aria-label="Notices" className="card divide-y divide-line">
           {pinnedNotices.map((notice) => (
             <Link key={notice.id} href={ROUTES.notice(notice.id)} className="flex items-start gap-3 p-3 hover:bg-canvas hover:no-underline">
               <Icon name="megaphone" size={16} className="mt-0.5 shrink-0 text-muted" />
@@ -178,15 +178,13 @@ export default async function HomePage() {
           </Link>
         </div>
         {events?.length ? (
-          <ul className="mt-3 divide-y divide-[#E5E5E5]">
+          <ul className="mt-3 divide-y divide-line">
             {events.map((event) => (
               <li key={event.id}>
                 <Link href={ROUTES.event(event.id)} className="flex items-start gap-3 py-2.5 hover:no-underline">
                   <span className="flex w-12 shrink-0 flex-col items-center rounded-md border border-line py-1">
-                    <span className="text-2xs uppercase text-muted">
-                      {new Date(event.starts_on).toLocaleDateString('en-IN', { month: 'short' })}
-                    </span>
-                    <span className="text-sm font-semibold leading-none">{new Date(event.starts_on).getDate()}</span>
+                    <span className="text-2xs uppercase text-muted">{formatCalendarBadge(event.starts_on).month}</span>
+                    <span className="text-sm font-semibold leading-none">{formatCalendarBadge(event.starts_on).day}</span>
                   </span>
                   <span className="min-w-0">
                     <span className="flex items-center gap-2">

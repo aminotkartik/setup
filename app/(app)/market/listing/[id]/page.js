@@ -144,6 +144,7 @@ export default async function ListingPage({ params }) {
           sellerUsername={seller?.username || null}
           isSeller={isSeller}
           status={listing.status}
+          isFree={Boolean(listing.is_free)}
           canMessage={can(actor, 'send_messages')}
           canReport={can(actor, 'report_content')}
           canRate={Boolean(rating === null && can(actor, 'rate_users') && listing.status === 'sold')}

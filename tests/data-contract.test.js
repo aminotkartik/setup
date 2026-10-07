@@ -4,6 +4,7 @@ import { listNotices, listResources, listEvents, listLostFound } from '@/lib/dat
 import { listListings } from '@/lib/data/marketplace';
 import { listReports } from '@/lib/data/moderation';
 import { listUsers } from '@/lib/data/admin';
+import { getCommunityPosts, getPostsByAuthor } from '@/lib/data/feed';
 
 /**
  * Data-layer contracts.
@@ -114,6 +115,81 @@ describe('visibility filters are applied in the query, not the view', () => {
     const database = stub([notice]);
     await listNotices(database, { limit: 5, offset: 10 });
     expect(database.queries[0].range).toEqual([10, 14]);
+  });
+});
+
+describe('community feed excludes the author\'s own non-published posts', () => {
+  // `posts_select_author` lets an author read every status of their own row —
+  // intentional, it is what makes "restore my deleted post" possible. A *feed*
+  // query must still filter to published rows itself, the same way
+  // `campus_feed()` does for the home feed, or the author's own
+  // deleted/hidden/pending posts would leak into the shared community feed next
+  // to everyone else's live posts (the "deleted by its author" tombstone bug).
+  function multiTableStub(postsRows) {
+    const postsQuery = { filters: [] };
+    return {
+      from(table) {
+        if (table === 'posts') {
+          const api = {
+            select() { return api; },
+            eq(column, value) { postsQuery.filters.push([column, value]); return api; },
+            order() { return api; },
+            range() {
+              const matched = postsRows.filter((row) => postsQuery.filters.every(([c, v]) => row[c] === v));
+              return Promise.resolve({ data: matched, error: null });
+            },
+          };
+          return api;
+        }
+        // author/reaction/poll lookups during hydration: no rows, nothing to join.
+        const empty = {
+          select() { return empty; },
+          eq() { return empty; },
+          in() { return Promise.resolve({ data: [] }); },
+          order() { return Promise.resolve({ data: [] }); },
+        };
+        return empty;
+      },
+      postsQuery,
+    };
+  }
+
+  it('only requests status = published for a community feed', async () => {
+    const database = multiTableStub([{ id: 'p1', author_id: 'a1', community_id: 'c1', status: 'published' }]);
+    await getCommunityPosts(database, 'c1');
+    expect(database.postsQuery.filters).toContainEqual(['status', 'published']);
+  });
+
+  it('never returns the author\'s own deleted post into the shared feed', async () => {
+    const rows = [
+      { id: 'p1', author_id: 'a1', community_id: 'c1', status: 'published' },
+      { id: 'p2', author_id: 'a1', community_id: 'c1', status: 'deleted' },
+    ];
+    const database = multiTableStub(rows);
+    const posts = await getCommunityPosts(database, 'c1', { currentProfileId: 'a1' });
+    expect(posts.map((p) => p.id)).toEqual(['p1']);
+  });
+
+  it('never returns the author\'s own deleted/hidden/pending post into their profile post list', async () => {
+    // Same `posts_select_author` reasoning as above, but for `getPostsByAuthor`
+    // (profile pages, both your own and someone else's) — this is the exact
+    // query that previously leaked a "deleted by its author" tombstone card
+    // into the author's own profile list because it had no status filter.
+    const rows = [
+      { id: 'p1', author_id: 'a1', status: 'published' },
+      { id: 'p2', author_id: 'a1', status: 'deleted' },
+      { id: 'p3', author_id: 'a1', status: 'hidden' },
+      { id: 'p4', author_id: 'a1', status: 'pending' },
+    ];
+    const database = multiTableStub(rows);
+    const posts = await getPostsByAuthor(database, 'a1', { currentProfileId: 'a1' });
+    expect(posts.map((p) => p.id)).toEqual(['p1']);
+  });
+
+  it('requests status = published for the author post list', async () => {
+    const database = multiTableStub([{ id: 'p1', author_id: 'a1', status: 'published' }]);
+    await getPostsByAuthor(database, 'a1');
+    expect(database.postsQuery.filters).toContainEqual(['status', 'published']);
   });
 });
 

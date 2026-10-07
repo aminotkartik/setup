@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { listBlockedUsers } from '@/lib/blocks';
 import { ROUTES, BRANCHES, YEARS, DIVISIONS, LIMITS, DEFAULT_PLATFORM_SETTINGS } from '@/lib/constants';
-import { PageHeader, Card, Notice, Badge, LinkButton, EmptyState } from '@/components/ui';
+import { PageHeader, Card, Notice, LinkButton, EmptyState } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { ProfileActions } from '@/components/profile/ProfileActions';
@@ -210,7 +210,7 @@ export default async function SettingsPage({ searchParams }) {
       {tab === 'blocked' ? (
         <div className="flex flex-col gap-3">
           {blocked.length ? (
-            <ul className="card divide-y divide-[#E5E5E5]">
+            <ul className="card divide-y divide-line">
               {blocked.map((person) => (
                 <li key={person.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
                   <span className="min-w-0">
@@ -283,10 +283,11 @@ export default async function SettingsPage({ searchParams }) {
 
           <Card className="flex flex-col gap-2 p-4">
             <h2 className="text-sm font-semibold">Session</h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <SignOutButton />
-              <Badge>Signing out clears this device only</Badge>
-            </div>
+            {/* One sign-out control for the whole page — the header action above,
+                visible on every tab — not a second button repeated here. */}
+            <p className="text-[0.8125rem] text-muted">
+              Use <strong>Sign out</strong> at the top of this page any time. Signing out clears this device only.
+            </p>
           </Card>
         </div>
       ) : null}

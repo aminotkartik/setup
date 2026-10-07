@@ -51,7 +51,10 @@ export function PostComposer({ communityId = null, defaultKind = 'post', compact
         const data = new FormData(event.currentTarget);
         data.set('kind', kind);
         if (gif) data.set('gif', JSON.stringify(gif));
-        if (communityId) data.set('community_id', communityId);
+        if (communityId) {
+          data.set('community_id', communityId);
+          data.set('visibility', 'community');
+        }
         run(data);
       }}
     >

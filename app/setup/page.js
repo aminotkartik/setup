@@ -31,7 +31,7 @@ export default async function SetupPage() {
         variables (Vercel), then restart. Nothing else on this screen needs to be edited by hand.
       </p>
 
-      <div className="card mt-6 divide-y divide-[#E5E5E5]">
+      <div className="card mt-6 divide-y divide-line">
         {items.map((item) => (
           <div key={item.key} className="flex items-start justify-between gap-4 p-4">
             <div className="min-w-0">

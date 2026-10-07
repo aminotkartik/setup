@@ -29,11 +29,6 @@ export default async function ChatPage() {
       <PageHeader
         title="Messages"
         description="Direct messages, community chats and study groups."
-        action={
-          <Link href={ROUTES.random} className="text-2xs text-muted underline hover:text-ink">
-            Try Random
-          </Link>
-        }
       />
 
       <NewConversation canMessage={can(actor, 'send_messages')} />
@@ -53,7 +48,7 @@ export default async function ChatPage() {
       ) : null}
 
       {conversations.length ? (
-        <ul className="card divide-y divide-[#E5E5E5]">
+        <ul className="card divide-y divide-line">
           {conversations.map((conversation) => {
             const title = conversationTitle(conversation, conversation.other, conversation.members);
             const last = conversation.lastMessage;

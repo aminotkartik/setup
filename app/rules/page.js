@@ -26,7 +26,7 @@ export default function RulesPage() {
         moderation action is logged.
       </p>
 
-      <ol className="card mt-6 divide-y divide-[#E5E5E5]">
+      <ol className="card mt-6 divide-y divide-line">
         {rules.map(([title, body], index) => (
           <li key={title} className="flex gap-3 p-4">
             <span className="text-2xs text-muted">{index + 1}</span>
