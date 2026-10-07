@@ -1,15 +1,21 @@
 import './globals.css';
 
 import { PLATFORM } from '@/lib/constants';
+import { readTheme } from '@/lib/theme';
+import { CampusFilters } from '@/components/ui/icons';
 
 /**
- * Campus+ — root layout (spec §6).
+ * Campus+ — root layout.
  *
  * Typography-first: one sans-serif family, no display fonts, no icon webfont.
  * The application frame (sidebar / bottom navigation) is applied per-route
  * group so the sign-in and setup screens can stay deliberately plain.
  *
- * The type stack prefers Inter (then Geist) and falls back to the platform UI
+ * The appearance (light/dark) is stored in a cookie and read here, so the very
+ * first paint already has the right palette: no flash of the wrong theme, and
+ * no inline bootstrap script. `applyTheme()` keeps the cookie in step.
+ *
+ * The font stack prefers Inter (then Geist) and falls back to the platform UI
  * font. The font is not fetched at build time on purpose: a build that depends
  * on a third-party CDN cannot be reproduced offline. To self-host Inter, drop
  * the woff2 files into app/fonts/ and switch to next/font/local — see
@@ -32,13 +38,22 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#F8F7F4',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f3ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#14110e' },
+  ],
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const theme = await readTheme();
+
   return (
-    <html lang="en">
-      <body className="min-h-dvh bg-canvas text-ink antialiased">{children}</body>
+    <html lang="en" data-theme={theme} suppressHydrationWarning>
+      <body className="min-h-dvh bg-canvas text-ink antialiased">
+        {/* The Uiverse-derived light stack used by the primary button. */}
+        <CampusFilters />
+        {children}
+      </body>
     </html>
   );
 }

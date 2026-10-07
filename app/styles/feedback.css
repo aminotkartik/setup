@@ -1,0 +1,389 @@
+/* ==========================================================================
+   Feedback — loaders, skeletons, overlays, toasts, empty and error states
+   ========================================================================== */
+
+@layer components {
+  /* ============================================================= skeletons */
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background-color: var(--c-surface-3);
+    background-image: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in oklab, var(--c-highlight) 45%, transparent) 42%,
+      transparent 64%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: campus-shimmer 1.9s ease-in-out infinite;
+  }
+
+  .skeleton-line {
+    height: 0.625rem;
+    border-radius: 999px;
+  }
+
+  .skeleton-title {
+    height: 1rem;
+    width: 9rem;
+    border-radius: 999px;
+  }
+
+  /* ========================================================== word loader */
+
+  .word-loader {
+    --word-loader-bg: var(--c-canvas);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.9375rem;
+    font-weight: 550;
+    color: var(--c-muted);
+    line-height: 1;
+  }
+
+  .word-loader__viewport {
+    position: relative;
+    display: block;
+    height: 1.35em;
+    overflow: hidden;
+  }
+
+  .word-loader__viewport::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      var(--word-loader-bg) 6%,
+      transparent 34%,
+      transparent 66%,
+      var(--word-loader-bg) 94%
+    );
+  }
+
+  .word-loader__track {
+    display: block;
+    animation: campus-words 7.2s cubic-bezier(0.72, 0, 0.28, 1) infinite;
+  }
+
+  .word-loader__word {
+    display: block;
+    height: 1.35em;
+    padding-left: 0.3rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: var(--c-accent);
+  }
+
+  .word-loader-lg {
+    font-size: 1.0625rem;
+  }
+
+  .word-loader-lg .word-loader__viewport {
+    height: 1.5em;
+  }
+
+  .word-loader-lg .word-loader__word {
+    height: 1.5em;
+  }
+
+  /* ======================================================= orbital loader */
+
+  .orb-loader {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: var(--orb-size, 1.5rem);
+    height: var(--orb-size, 1.5rem);
+  }
+
+  .orb-loader__dot {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    border-top-color: var(--c-accent);
+    border-right-color: color-mix(in oklab, var(--c-accent) 45%, transparent);
+    animation: campus-orb 0.9s linear infinite;
+  }
+
+  .orb-loader__dot:nth-child(2) {
+    inset: 0.3rem;
+    border-top-color: color-mix(in oklab, var(--c-accent) 70%, var(--c-muted));
+    border-right-color: transparent;
+    animation-duration: 1.25s;
+    animation-direction: reverse;
+  }
+
+  .orb-loader__dot:nth-child(3) {
+    inset: 0.62rem;
+    border-top-color: var(--c-muted);
+    border-right-color: transparent;
+    animation-duration: 1.6s;
+  }
+
+  .orb-loader-lg {
+    --orb-size: 2.75rem;
+  }
+
+  /* Inline dot spinner used inside buttons and rows. */
+  .dot-spin {
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 999px;
+    border: 2px solid color-mix(in oklab, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    animation: campus-orb 0.75s linear infinite;
+  }
+
+  /* ============================================================== overlays */
+
+  .scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background-color: var(--c-scrim);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    animation: campus-fade 0.18s var(--ease-out-soft);
+  }
+
+  .dialog {
+    position: relative;
+    z-index: 61;
+    width: 100%;
+    max-width: 30rem;
+    border-radius: var(--radius-xl);
+    background-color: color-mix(in oklab, var(--c-surface) 94%, transparent);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    backdrop-filter: blur(26px) saturate(160%);
+    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--shadow-float), var(--shadow-inset-top);
+    padding: 1.125rem;
+    animation: campus-pop 0.2s var(--ease-out-soft);
+  }
+
+  .dialog-centred {
+    position: fixed;
+    inset: 0;
+    z-index: 61;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .dialog-centred > .dialog {
+    pointer-events: auto;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    margin: 0;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding-bottom: calc(1.125rem + env(safe-area-inset-bottom));
+    animation: campus-sheet-up 0.24s var(--ease-out-soft);
+  }
+
+  @media (min-width: 640px) {
+    .dialog-centred {
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .dialog-centred > .dialog {
+      border-radius: var(--radius-xl);
+      animation: campus-pop 0.2s var(--ease-out-soft);
+      padding-bottom: 1.125rem;
+    }
+  }
+
+  .dialog-title {
+    font-size: 1.0625rem;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+  }
+
+  .dialog-body {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--c-muted);
+  }
+
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.125rem;
+  }
+
+  /* ================================================================ toast */
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 999px;
+    border: 1px solid var(--c-glass-border);
+    background-color: color-mix(in oklab, var(--c-ink-surface) 94%, transparent);
+    color: #f7f3ec;
+    padding: 0.5rem 0.9375rem;
+    font-size: 0.8125rem;
+    font-weight: 550;
+    box-shadow: var(--shadow-float);
+    animation: campus-pop 0.22s var(--ease-out-soft);
+  }
+
+  .toast-success {
+    border-color: color-mix(in oklab, var(--c-success) 45%, transparent);
+  }
+
+  .toast-danger {
+    border-color: color-mix(in oklab, var(--c-danger) 45%, transparent);
+  }
+
+  /* ================================================================= states */
+
+  .state-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2.75rem 1.5rem;
+    text-align: center;
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--c-line-strong);
+    background-image: linear-gradient(180deg, var(--c-surface-2), transparent 60%);
+  }
+
+  .state-icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 0.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--c-line);
+    background-color: var(--c-surface);
+    color: var(--c-accent);
+    box-shadow: var(--shadow-inset-top);
+  }
+
+  .state-title {
+    font-size: 0.9375rem;
+    font-weight: 620;
+    letter-spacing: -0.012em;
+    color: var(--c-ink);
+  }
+
+  .state-copy {
+    max-width: 26rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--c-muted);
+  }
+
+  .error-block {
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in oklab, var(--c-danger) 32%, transparent);
+    background-color: var(--c-danger-soft);
+    padding: 0.8125rem 0.9375rem;
+    color: var(--c-ink);
+  }
+}
+
+@keyframes campus-shimmer {
+  from {
+    background-position: 140% 0;
+  }
+  to {
+    background-position: -40% 0;
+  }
+}
+
+@keyframes campus-orb {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes campus-words {
+  0%,
+  12% {
+    transform: translateY(0);
+  }
+  16.7%,
+  28.7% {
+    transform: translateY(-1.35em);
+  }
+  33.4%,
+  45.4% {
+    transform: translateY(-2.7em);
+  }
+  50%,
+  62% {
+    transform: translateY(-4.05em);
+  }
+  66.7%,
+  78.7% {
+    transform: translateY(-5.4em);
+  }
+  83.4%,
+  100% {
+    transform: translateY(-6.75em);
+  }
+}
+
+@keyframes campus-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes campus-pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes campus-sheet-up {
+  from {
+    transform: translateY(1.5rem);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes campus-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: campus-rise 0.24s var(--ease-out-soft) both;
+}

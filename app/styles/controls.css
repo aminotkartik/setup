@@ -1,0 +1,885 @@
+/* ==========================================================================
+   Controls — buttons, delete, keycap, inputs, checkbox, switch
+   --------------------------------------------------------------------------
+   Material rules: every control has a rest state, a hover lift, a pressed
+   state that moves *into* the surface, a visible focus ring, a disabled state
+   and (where it does work) a loading state.
+
+   The primary button carries the animated edge-light derived from the supplied
+   Uiverse implementation: layered gradients, an unopaque SVG filter stack and a
+   rotating light that only moves while the control is hovered or focused.
+   ========================================================================== */
+
+@layer components {
+  /* ============================================================== buttons */
+
+  .btn {
+    --btn-radius: var(--radius-md);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--btn-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.006em;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.14s var(--ease-out-soft),
+      box-shadow 0.2s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      opacity 0.18s ease;
+  }
+
+  .btn:hover {
+    text-decoration: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.994);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+
+  .btn-sm {
+    height: 2rem;
+    padding-inline: 0.6875rem;
+    font-size: 0.8125rem;
+    gap: 0.375rem;
+    --btn-radius: var(--radius-sm);
+  }
+
+  .btn-md {
+    height: 2.375rem;
+    padding-inline: 0.9375rem;
+  }
+
+  .btn-lg {
+    height: 2.75rem;
+    padding-inline: 1.25rem;
+    font-size: 0.9375rem;
+    --btn-radius: var(--radius-lg);
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  .btn-icon {
+    padding-inline: 0;
+    width: 2.375rem;
+  }
+
+  .btn-icon.btn-sm {
+    width: 2rem;
+  }
+
+  .btn-icon.btn-lg {
+    width: 2.75rem;
+  }
+
+  /* --- calm variants (most of the product) ----------------------------- */
+
+  .btn-secondary {
+    background-color: var(--c-surface);
+    border-color: var(--c-line);
+    color: var(--c-ink);
+    box-shadow: var(--shadow-inset-top);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--c-line-strong);
+    background-color: var(--c-surface-2);
+  }
+
+  .btn-quiet {
+    background-color: transparent;
+    color: var(--c-ink-soft);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
+  }
+
+  .btn-subtle {
+    background-color: var(--c-surface-2);
+    border-color: var(--c-line);
+    color: var(--c-ink);
+  }
+
+  .btn-subtle:hover:not(:disabled) {
+    background-color: var(--c-surface-3);
+  }
+
+  .btn-danger {
+    background-color: var(--c-danger-soft);
+    border-color: color-mix(in oklab, var(--c-danger) 30%, transparent);
+    color: var(--c-danger);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-danger) 18%, var(--c-surface));
+  }
+
+  /* --- primary: animated edge light ------------------------------------ */
+
+  .btn-primary {
+    --btn-base-a: #241d16;
+    --btn-base-b: #120f0b;
+    --btn-light-a: var(--c-accent);
+    --btn-light-b: #ffb066;
+    --btn-light-core: #ffd9b0;
+    background: linear-gradient(180deg, var(--btn-base-a), var(--btn-base-b));
+    border-color: color-mix(in oklab, #000 55%, transparent);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+      0 1px 2px rgba(24, 12, 4, 0.28),
+      0 10px 24px -16px color-mix(in oklab, var(--btn-light-a) 70%, transparent);
+  }
+
+  .btn-primary[data-tone='accent'] {
+    --btn-base-a: color-mix(in oklab, var(--c-accent) 92%, #fff);
+    --btn-base-b: var(--c-accent-hover);
+    --btn-light-a: #ffd9a8;
+    --btn-light-b: #fff3e2;
+    --btn-light-core: #ffffff;
+    border-color: color-mix(in oklab, var(--c-accent-press) 60%, transparent);
+    color: var(--c-on-accent);
+  }
+
+  .btn-primary .btn-light {
+    position: absolute;
+    inset: -180%;
+    z-index: -3;
+    background-image: radial-gradient(circle at 50% 50%, transparent 0 22%, color-mix(in oklab, #000 68%, transparent) 52%);
+    background-size: 3px 3px;
+    pointer-events: none;
+  }
+
+  .btn-spin {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    opacity: 0.45;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-spin::before {
+    content: '';
+    position: absolute;
+    inset: -150%;
+    animation:
+      campus-spin 9s cubic-bezier(0.56, 0.15, 0.28, 0.86) infinite,
+      campus-spin-breathe 5s ease-in-out infinite;
+    animation-play-state: paused;
+  }
+
+  .btn-spin-soft {
+    filter: blur(1.25rem) url(#campus-unopaq);
+  }
+
+  .btn-spin-soft::before {
+    background: linear-gradient(90deg, var(--btn-light-a) 28%, transparent 50%, var(--btn-light-b) 72%);
+  }
+
+  .btn-spin-intense {
+    inset: -0.12rem;
+    border-radius: inherit;
+    filter: blur(0.28rem) url(#campus-unopaq-2);
+  }
+
+  .btn-spin-intense::before {
+    background: linear-gradient(90deg, var(--btn-light-a) 18%, transparent 45%, transparent 55%, var(--btn-light-b) 82%);
+  }
+
+  .btn-spin-core {
+    inset: -2px;
+    border-radius: inherit;
+    z-index: 0;
+    filter: blur(2px) url(#campus-unopaq-3);
+    opacity: 0.55;
+  }
+
+  .btn-spin-core::before {
+    background: linear-gradient(90deg, var(--btn-light-core) 30%, transparent 45%, transparent 55%, var(--btn-light-core) 70%);
+  }
+
+  .btn-primary .btn-face {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--c-highlight) 10%, transparent), transparent 45%);
+    pointer-events: none;
+  }
+
+  .btn-primary:hover:not(:disabled) .btn-spin::before,
+  .btn-primary:focus-visible:not(:disabled) .btn-spin::before {
+    animation-play-state: running;
+  }
+
+  .btn-primary:hover:not(:disabled) .btn-spin,
+  .btn-primary:focus-visible:not(:disabled) .btn-spin {
+    opacity: 0.75;
+  }
+
+  .btn-primary:active:not(:disabled) .btn-spin {
+    opacity: 1;
+  }
+
+  .btn-primary:disabled {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .btn-label > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* --- secondary: layered reflective light ----------------------------- */
+
+  .btn-sheen {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: var(--c-surface);
+    border-color: var(--c-line);
+    color: var(--c-ink);
+    box-shadow: var(--shadow-inset-top);
+  }
+
+  .btn-sheen .btn-sheen-layer {
+    position: absolute;
+    inset: -40% -10%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      color-mix(in oklab, var(--c-accent) 34%, transparent) 40deg,
+      transparent 90deg,
+      color-mix(in oklab, var(--c-info) 26%, transparent) 190deg,
+      transparent 250deg,
+      color-mix(in oklab, var(--c-accent) 22%, transparent) 320deg,
+      transparent 360deg
+    );
+    animation: campus-sheen-rotate 26s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .btn-sheen:hover:not(:disabled) .btn-sheen-layer,
+  .btn-sheen:focus-visible:not(:disabled) .btn-sheen-layer {
+    animation-play-state: running;
+  }
+
+  .btn-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, color-mix(in oklab, var(--c-highlight) 65%, transparent) 0%, transparent 38%),
+      radial-gradient(120% 90% at 50% 130%, color-mix(in oklab, var(--c-accent) 12%, transparent), transparent 70%);
+    mix-blend-mode: normal;
+  }
+
+  .btn-sheen:hover:not(:disabled) {
+    border-color: color-mix(in oklab, var(--c-accent) 32%, var(--c-line));
+  }
+
+  .btn-sheen > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* --- destructive key: tactile, only for destructive actions ---------- */
+
+  .btn-delete {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.875rem 0.5625rem;
+    border: 0.5px solid rgba(0, 0, 0, 0.35);
+    border-radius: 0.9rem 0.9rem 0.75rem 0.75rem;
+    background-color: #16110d;
+    background-image:
+      linear-gradient(to right, rgba(0, 0, 0, 0.75), transparent),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+    background-position: bottom right, bottom right;
+    background-size: 100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset -2px -6px 0 rgba(255, 255, 255, 0.22),
+      inset -2px -4px 0 rgba(0, 0, 0, 0.3),
+      0 2px 1px rgba(0, 0, 0, 0.3),
+      0 2px 1px rgba(255, 255, 255, 0.06);
+    transform: perspective(90px) rotateX(4deg);
+    transition: all 0.1s ease-in-out 0s;
+  }
+
+  .btn-delete::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 0.9rem;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.45));
+    box-shadow:
+      inset 2px 0 0 rgba(255, 255, 255, 0.08),
+      inset 2px -5px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-delete:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .btn-delete:active:not(:disabled),
+  .btn-delete[data-pressed='true'] {
+    transform: perspective(90px) rotateX(5deg) rotateY(1deg) translateY(2px) scale(0.965);
+    border-width: 0.25px;
+    box-shadow:
+      inset -2px -4px 0 rgba(255, 255, 255, 0.12),
+      inset -2px -3px 0 rgba(0, 0, 0, 0.8),
+      0 1px 0 rgba(0, 0, 0, 0.85);
+  }
+
+  .btn-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* --- keycap: small, deliberate confirmation control ------------------ */
+
+  .keycap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 3rem;
+    padding: 0.5rem 0.7rem 0.5625rem;
+    border: 0;
+    border-radius: 0.625rem;
+    background: linear-gradient(180deg, #2b2620, #201b16);
+    color: #f4efe6;
+    font-size: 0.75rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset -3px 0 4px rgba(0, 0, 0, 0.18),
+      inset 0 -3px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 1.5px rgba(0, 0, 0, 0.7),
+      4px 7px 10px rgba(0, 0, 0, 0.28);
+    transition:
+      transform 0.1s ease-in-out,
+      box-shadow 0.1s ease-in;
+  }
+
+  .keycap::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    right: 9px;
+    bottom: 9px;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #2c2621, #4c443c);
+    border-left: 1px solid rgba(0, 0, 0, 0.28);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.28);
+    border-top: 1px solid rgba(0, 0, 0, 0.55);
+    box-shadow:
+      -4px -4px 6px rgba(255, 255, 255, 0.16),
+      5px 3px 6px rgba(0, 0, 0, 0.16);
+    transition: all 0.1s ease-in-out;
+  }
+
+  .keycap > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .keycap:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow:
+      inset -2px 0 3px rgba(0, 0, 0, 0.14),
+      inset 0 -2px 3px rgba(0, 0, 0, 0.2),
+      0 0 0 1.5px rgba(0, 0, 0, 0.5),
+      2px 4px 6px rgba(0, 0, 0, 0.24);
+  }
+
+  .keycap:active:not(:disabled)::before {
+    top: 3px;
+    left: 4px;
+    right: 8px;
+    bottom: 7px;
+    box-shadow:
+      -2px -2px 3px rgba(255, 255, 255, 0.12),
+      3px 2px 4px rgba(0, 0, 0, 0.12);
+  }
+
+  .keycap:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .keycap-accent {
+    background: linear-gradient(180deg, color-mix(in oklab, var(--c-accent) 88%, #fff), var(--c-accent-press));
+    color: var(--c-on-accent);
+    box-shadow:
+      inset -3px 0 4px rgba(0, 0, 0, 0.16),
+      inset 0 -3px 4px rgba(0, 0, 0, 0.26),
+      0 0 0 1.5px color-mix(in oklab, var(--c-accent-press) 80%, transparent),
+      4px 7px 10px color-mix(in oklab, var(--c-accent) 30%, transparent);
+  }
+
+  .keycap-accent::before {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--c-accent) 80%, #000 6%), color-mix(in oklab, var(--c-accent) 55%, #fff));
+  }
+
+  /* --- icon-only control ---------------------------------------------- */
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--c-muted);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.14s var(--ease-out-soft);
+  }
+
+  .icon-btn:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
+    color: var(--c-ink);
+  }
+
+  .icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  .icon-btn-outline {
+    border-color: var(--c-line);
+    background-color: var(--c-surface);
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* =============================================================== inputs */
+
+  .control {
+    width: 100%;
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-md);
+    background-color: var(--c-surface);
+    color: var(--c-ink);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: inset 0 1px 2px var(--c-shade);
+    transition:
+      border-color 0.16s ease,
+      box-shadow 0.16s ease,
+      background-color 0.16s ease;
+  }
+
+  .control:hover:not(:disabled) {
+    border-color: var(--c-line-strong);
+  }
+
+  .control:focus {
+    outline: none;
+    border-color: color-mix(in oklab, var(--c-accent) 55%, var(--c-line));
+    box-shadow:
+      inset 0 1px 2px var(--c-shade),
+      0 0 0 3px color-mix(in oklab, var(--c-accent) 16%, transparent);
+  }
+
+  .control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--c-surface-2);
+  }
+
+  .control[aria-invalid='true'] {
+    border-color: color-mix(in oklab, var(--c-danger) 60%, var(--c-line));
+    box-shadow: inset 0 1px 2px var(--c-shade), 0 0 0 3px color-mix(in oklab, var(--c-danger) 14%, transparent);
+  }
+
+  .control-input {
+    height: 2.5rem;
+  }
+
+  .control-select {
+    height: 2.5rem;
+    padding-right: 2rem;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--c-muted) 50%), linear-gradient(135deg, var(--c-muted) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.05rem) calc(50% + 1px),
+      calc(100% - 0.7rem) calc(50% + 1px);
+    background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+  }
+
+  .control-textarea {
+    min-height: 6rem;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .control-search {
+    padding-left: 2.125rem;
+  }
+
+  .control-search::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  .field-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--c-ink);
+    letter-spacing: -0.005em;
+  }
+
+  .field-hint {
+    font-size: 0.6875rem;
+    color: var(--c-muted);
+  }
+
+  .field-error {
+    font-size: 0.6875rem;
+    font-weight: 550;
+    color: var(--c-danger);
+  }
+
+  /* ============================================================= checkbox */
+
+  .check {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .check-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .check-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.0625rem;
+    border: 1.5px solid var(--c-line-strong);
+    border-radius: var(--radius-xs);
+    background-color: var(--c-surface);
+    box-shadow: inset 0 1px 2px var(--c-shade);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      transform 0.16s var(--ease-spring),
+      box-shadow 0.18s ease;
+  }
+
+  .check:hover .check-box {
+    border-color: color-mix(in oklab, var(--c-accent) 55%, var(--c-line-strong));
+  }
+
+  .check:active .check-box {
+    transform: scale(0.92);
+  }
+
+  .check-input:focus-visible + .check-box {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+
+  .check-input:checked + .check-box {
+    background-color: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 2px 6px -2px color-mix(in oklab, var(--c-accent) 60%, transparent);
+  }
+
+  .check-input:disabled + .check-box {
+    opacity: 0.5;
+  }
+
+  .check-mark {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--c-on-accent);
+  }
+
+  .check-mark path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 26;
+    stroke-dashoffset: 26;
+    transition: stroke-dashoffset 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0.04s;
+  }
+
+  .check-input:checked + .check-box .check-mark path {
+    stroke-dashoffset: 0;
+  }
+
+  .check-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .check-title {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--c-ink);
+  }
+
+  .check-note {
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    color: var(--c-muted);
+  }
+
+  /* =============================================================== switch */
+
+  .switch {
+    --switch-w: 2.75rem;
+    --switch-h: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .switch-track {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--switch-w);
+    height: var(--switch-h);
+    border: 1.5px solid var(--c-line-strong);
+    border-radius: 999px;
+    background-color: var(--c-surface-3);
+    box-shadow: inset 0 2px 4px var(--c-shade);
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .switch-thumb {
+    position: absolute;
+    top: 50%;
+    left: 0.125rem;
+    width: 1.0625rem;
+    height: 1.0625rem;
+    border: 1.5px solid color-mix(in oklab, var(--c-ink) 42%, transparent);
+    border-radius: 999px;
+    background-color: var(--c-surface);
+    transform: translateY(-50%);
+    box-shadow:
+      0 1px 0 color-mix(in oklab, var(--c-ink) 35%, transparent),
+      0 3px 6px -1px color-mix(in oklab, var(--c-ink) 30%, transparent);
+    transition:
+      transform 0.22s var(--ease-spring),
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .switch:hover .switch-thumb {
+    transform: translateY(calc(-50% - 1.5px));
+    box-shadow:
+      0 2px 0 color-mix(in oklab, var(--c-ink) 35%, transparent),
+      0 5px 9px -2px color-mix(in oklab, var(--c-ink) 34%, transparent);
+  }
+
+  .switch:active .switch-thumb {
+    transform: translateY(calc(-50% + 1px)) scale(0.94);
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--c-ink) 30%, transparent);
+  }
+
+  .switch-input:focus-visible + .switch-track {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+
+  .switch-input:checked + .switch-track {
+    background-color: var(--c-accent);
+    border-color: color-mix(in oklab, var(--c-accent-press) 70%, transparent);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.22);
+  }
+
+  .switch-input:checked + .switch-track .switch-thumb {
+    transform: translateX(calc(var(--switch-w) - 1.0625rem - 0.35rem)) translateY(-50%);
+    border-color: color-mix(in oklab, var(--c-accent-press) 55%, transparent);
+  }
+
+  .switch-input:checked + .switch-track:hover .switch-thumb {
+    transform: translateX(calc(var(--switch-w) - 1.0625rem - 0.35rem)) translateY(calc(-50% - 1.5px));
+  }
+
+  .switch-input:checked + .switch-track:active .switch-thumb {
+    transform: translateX(calc(var(--switch-w) - 1.0625rem - 0.35rem)) translateY(calc(-50% + 1px)) scale(0.94);
+  }
+
+  .switch-input:disabled + .switch-track {
+    opacity: 0.55;
+  }
+
+  .switch-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  /* ========================================================== segmented */
+
+  .segmented {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--c-line);
+    border-radius: 999px;
+    background-color: var(--c-surface-2);
+    box-shadow: inset 0 1px 2px var(--c-shade);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Motion: the animation language, and the reduced-motion contract
+   -------------------------------------------------------------------------- */
+
+@keyframes campus-spin {
+  from {
+    rotate: 10deg;
+  }
+  50% {
+    rotate: 190deg;
+  }
+  to {
+    rotate: 370deg;
+  }
+}
+
+@keyframes campus-spin-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 0.82;
+  }
+}
+
+@keyframes campus-sheen-rotate {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .btn-primary .btn-spin::before,
+  .btn-sheen .btn-sheen-layer {
+    animation: none !important;
+  }
+}

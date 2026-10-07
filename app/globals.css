@@ -1,59 +1,282 @@
 @import 'tailwindcss';
+@import './styles/surfaces.css';
+@import './styles/controls.css';
+@import './styles/feedback.css';
+@import './styles/theme-switch.css';
+@import './styles/interactive.css';
+@import './styles/navigation.css';
 
 /* ==========================================================================
-   Campus+ design tokens (spec §4)
+   Campus+ design system — foundation
    --------------------------------------------------------------------------
-   Minimal, calm, typography-first. Warm off-white canvas, near-black text,
-   one muted grey, one hairline border colour, a single orange accent.
-   No gradients, no neon, no glassmorphism, no decorative shadows.
+   Layer 1 (raw palette):  --c-*   theme-dependent, defined for light, for
+                                   [data-theme="dark"], and for
+                                   [data-theme="system"] + dark OS preference.
+   Layer 2 (semantic):     --color-* consumable both by Tailwind utilities
+                                   (`bg-surface`, `text-muted`, …) and directly
+                                   from component CSS.
+
+   Everything visible is drawn from these tokens: no component hardcodes a
+   colour. The theme is chosen on the server (cookie) so the first paint has
+   the right palette — no flash, no inline bootstrap script.
    ========================================================================== */
 
-@theme {
-  --color-canvas: #f8f7f4;
-  --color-surface: #ffffff;
-  --color-ink: #171717;
-  --color-muted: #737373;
-  --color-line: #e5e5e5;
-  --color-accent: #f97316;
-  --color-accent-hover: #ea6a0c;
-  --color-accent-soft: #fff1e6;
-  --color-accent-ink: #9a3412;
-  --color-danger: #b91c1c;
-  --color-danger-soft: #fef2f2;
-  --color-success: #15803d;
-  --color-success-soft: #f0fdf4;
-  --color-warning: #a16207;
-  --color-warning-soft: #fefce8;
+:root {
+  color-scheme: light;
+
+  /* Warm neutral family — cream canvas, near-black ink. */
+  --c-canvas: #f7f3ec;
+  --c-canvas-deep: #f1ece3;
+  --c-surface: #ffffff;
+  --c-surface-2: #faf7f2;
+  --c-surface-3: #f3eee5;
+  --c-ink: #1a1512;
+  --c-ink-soft: #453d35;
+  --c-muted: #7c7368;
+  --c-muted-soft: #a0968a;
+  --c-line: #e8e1d5;
+  --c-line-strong: #d8cfc0;
+
+  /* Campus+ identity: a warm, confident orange. */
+  --c-accent: #ef6a1c;
+  --c-accent-hover: #db5a10;
+  --c-accent-press: #c44d09;
+  --c-accent-soft: #ffeede;
+  --c-accent-tint: #fff6ee;
+  --c-accent-ink: #8d3703;
+  --c-on-accent: #ffffff;
+
+  --c-success: #15803d;
+  --c-success-soft: #e9f7ee;
+  --c-warning: #a16207;
+  --c-warning-soft: #fdf6e3;
+  --c-danger: #c0392b;
+  --c-danger-soft: #fdeeec;
+  --c-info: #2563a8;
+  --c-info-soft: #ecf3fb;
+  --c-unread: #ef6a1c;
+
+  /* Material accents used by the tactile + glass surfaces. */
+  --c-highlight: #ffffff;
+  --c-highlight-soft: rgba(255, 255, 255, 0.62);
+  --c-shade: rgba(26, 21, 18, 0.06);
+  --c-ink-surface: #17130f;
+  --c-ink-surface-2: #241e18;
+
+  --c-glass-bg: color-mix(in oklab, var(--c-surface) 74%, transparent);
+  --c-glass-border: color-mix(in oklab, var(--c-line) 78%, transparent);
+  --c-scrim: rgba(26, 21, 18, 0.42);
+
+  --shadow-card: 0 1px 1px rgba(32, 22, 10, 0.03), 0 12px 28px -24px rgba(32, 22, 10, 0.45);
+  --shadow-raised: 0 2px 4px -2px rgba(32, 22, 10, 0.08), 0 18px 40px -28px rgba(32, 22, 10, 0.5);
+  --shadow-float: 0 6px 16px -8px rgba(32, 22, 10, 0.16), 0 32px 64px -40px rgba(32, 22, 10, 0.55);
+  --shadow-inset-top: inset 0 1px 0 var(--c-highlight-soft);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-canvas: #14110e;
+  --c-canvas-deep: #0f0d0b;
+  --c-surface: #1c1915;
+  --c-surface-2: #221e19;
+  --c-surface-3: #2a251f;
+  --c-ink: #f6f1e8;
+  --c-ink-soft: #ded5c8;
+  --c-muted: #a89e91;
+  --c-muted-soft: #857c6f;
+  --c-line: #322c24;
+  --c-line-strong: #453d33;
+
+  --c-accent: #ff8a3d;
+  --c-accent-hover: #ff9c5c;
+  --c-accent-press: #f0803a;
+  --c-accent-soft: rgba(255, 138, 61, 0.15);
+  --c-accent-tint: rgba(255, 138, 61, 0.08);
+  --c-accent-ink: #ffc79a;
+  --c-on-accent: #21150a;
+
+  --c-success: #5fd08a;
+  --c-success-soft: rgba(95, 208, 138, 0.14);
+  --c-warning: #f0bd57;
+  --c-warning-soft: rgba(240, 189, 87, 0.14);
+  --c-danger: #ff8478;
+  --c-danger-soft: rgba(255, 132, 120, 0.14);
+  --c-info: #7cb6f0;
+  --c-info-soft: rgba(124, 182, 240, 0.14);
+  --c-unread: #ff8a3d;
+
+  --c-highlight: #ffffff;
+  --c-highlight-soft: rgba(255, 255, 255, 0.08);
+  --c-shade: rgba(0, 0, 0, 0.3);
+  --c-ink-surface: #0c0a08;
+  --c-ink-surface-2: #1a1613;
+
+  --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
+  --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
+  --c-scrim: rgba(0, 0, 0, 0.6);
+
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
+  --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
+  --shadow-float: 0 8px 20px -10px rgba(0, 0, 0, 0.6), 0 36px 68px -40px rgba(0, 0, 0, 0.95);
+}
+
+/* "System" is resolved server-side into light/dark whenever possible; this
+   covers the first visit and any OS change while a tab stays open. */
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] {
+    color-scheme: dark;
+
+    --c-canvas: #14110e;
+    --c-canvas-deep: #0f0d0b;
+    --c-surface: #1c1915;
+    --c-surface-2: #221e19;
+    --c-surface-3: #2a251f;
+    --c-ink: #f6f1e8;
+    --c-ink-soft: #ded5c8;
+    --c-muted: #a89e91;
+    --c-muted-soft: #857c6f;
+    --c-line: #322c24;
+    --c-line-strong: #453d33;
+
+    --c-accent: #ff8a3d;
+    --c-accent-hover: #ff9c5c;
+    --c-accent-press: #f0803a;
+    --c-accent-soft: rgba(255, 138, 61, 0.15);
+    --c-accent-tint: rgba(255, 138, 61, 0.08);
+    --c-accent-ink: #ffc79a;
+    --c-on-accent: #21150a;
+
+    --c-success: #5fd08a;
+    --c-success-soft: rgba(95, 208, 138, 0.14);
+    --c-warning: #f0bd57;
+    --c-warning-soft: rgba(240, 189, 87, 0.14);
+    --c-danger: #ff8478;
+    --c-danger-soft: rgba(255, 132, 120, 0.14);
+    --c-info: #7cb6f0;
+    --c-info-soft: rgba(124, 182, 240, 0.14);
+    --c-unread: #ff8a3d;
+
+    --c-highlight: #ffffff;
+    --c-highlight-soft: rgba(255, 255, 255, 0.08);
+    --c-shade: rgba(0, 0, 0, 0.3);
+    --c-ink-surface: #0c0a08;
+    --c-ink-surface-2: #1a1613;
+
+    --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
+    --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
+    --c-scrim: rgba(0, 0, 0, 0.6);
+
+    --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
+    --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
+    --shadow-float: 0 8px 20px -10px rgba(0, 0, 0, 0.6), 0 36px 68px -40px rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Layer 2 — semantic tokens exposed to Tailwind and to component CSS
+   -------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-canvas: var(--c-canvas);
+  --color-canvas-deep: var(--c-canvas-deep);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-muted: var(--c-muted);
+  --color-muted-soft: var(--c-muted-soft);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-accent: var(--c-accent);
+  --color-accent-hover: var(--c-accent-hover);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-tint: var(--c-accent-tint);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-on-accent: var(--c-on-accent);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-success: var(--c-success);
+  --color-success-soft: var(--c-success-soft);
+  --color-warning: var(--c-warning);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-info: var(--c-info);
+  --color-info-soft: var(--c-info-soft);
+  --color-unread: var(--c-unread);
+  --color-ink-surface: var(--c-ink-surface);
 
   --font-sans: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
 
-  --radius-card: 0.75rem;
+  /* Shape scale — cards, buttons and inputs all draw from these. */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
 
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.05rem;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-float: var(--shadow-float);
+
+  --ease-out-soft: cubic-bezier(0.22, 0.68, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.5, 1);
 }
 
-/* ==========================================================================
+/* Direct CSS-variable consumers (inline styles, legacy component styles). */
+:root,
+[data-theme='dark'],
+[data-theme='system'] {
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-danger: var(--c-danger);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-info: var(--c-info);
+  --radius-card: var(--radius-lg);
+}
+
+/* --------------------------------------------------------------------------
    Base
-   ========================================================================== */
+   -------------------------------------------------------------------------- */
 
 @layer base {
   * {
-    border-color: var(--color-line);
+    border-color: var(--c-line);
   }
 
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    background-color: var(--c-canvas);
   }
 
   body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
+    background-color: var(--c-canvas);
+    /* A single, whisper-soft warm wash at the top of the canvas: identity
+       without a "gradient background". */
+    background-image: radial-gradient(115% 55% at 50% -12%, color-mix(in oklab, var(--c-accent) 7%, transparent), transparent 70%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--c-ink);
     font-family: var(--font-sans);
     font-size: 0.9375rem;
     line-height: 1.6;
+    font-feature-settings: 'cv05' 1, 'ss01' 1;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -62,21 +285,26 @@
   h2,
   h3,
   h4 {
-    font-weight: 600;
-    letter-spacing: -0.011em;
-    line-height: 1.25;
+    font-weight: 620;
+    letter-spacing: -0.018em;
+    line-height: 1.22;
+    text-wrap: balance;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
   }
 
   h2 {
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
   }
 
   h3 {
-    font-size: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   a {
@@ -90,11 +318,11 @@
     text-underline-offset: 2px;
   }
 
-  /* Keyboard users always get a visible, high-contrast focus ring (spec §72). */
+  /* Keyboard users always get a visible, high-contrast focus ring. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--c-accent);
     outline-offset: 2px;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
   }
 
   input,
@@ -105,13 +333,19 @@
     color: inherit;
   }
 
+  input::placeholder,
+  textarea::placeholder {
+    color: color-mix(in oklab, var(--c-muted) 85%, transparent);
+  }
+
   ::selection {
-    background: var(--color-accent-soft);
+    background: var(--c-accent-soft);
+    color: var(--c-accent-ink);
   }
 
   hr {
     border: 0;
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid var(--c-line);
   }
 
   /* Long words in usernames/URLs must not break the layout. */
@@ -119,53 +353,170 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--c-muted) 32%, transparent);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--c-muted) 55%, transparent);
+    background-clip: content-box;
+  }
 }
 
-/* ==========================================================================
-   Small reusable pieces (kept as CSS so components stay readable)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   Typography scale — one hierarchy, used everywhere
+   -------------------------------------------------------------------------- */
 
 @layer components {
-  .card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-card);
+  .t-display {
+    font-size: clamp(1.625rem, 1.35rem + 1.1vw, 2.125rem);
+    font-weight: 660;
+    letter-spacing: -0.032em;
+    line-height: 1.1;
   }
 
-  .hairline {
-    border-bottom: 1px solid var(--color-line);
+  .t-page {
+    font-size: 1.375rem;
+    font-weight: 650;
+    letter-spacing: -0.024em;
+    line-height: 1.18;
   }
 
-  /* Preserve intentional blank lines in user text without allowing HTML. */
-  .user-text {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+  .t-section {
+    font-size: 1.0625rem;
+    font-weight: 620;
+    letter-spacing: -0.018em;
   }
 
-  .skeleton {
-    background-color: #efedE9;
-    border-radius: 0.375rem;
-    animation: campus-pulse 1.6s ease-in-out infinite;
+  .t-card {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
   }
 
-  @keyframes campus-pulse {
-    0%,
-    100% {
-      opacity: 1;
+  .t-body {
+    font-size: 0.9375rem;
+    line-height: 1.62;
+  }
+
+  .t-secondary {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--c-muted);
+  }
+
+  .t-meta {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--c-muted);
+  }
+
+  .t-label {
+    font-size: 0.6875rem;
+    font-weight: 620;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+  }
+
+  .t-caption {
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    color: var(--c-muted);
+  }
+
+  .t-utility {
+    font-size: 0.75rem;
+    font-weight: 550;
+    letter-spacing: 0.01em;
+  }
+
+  .t-numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Page scaffolding
+   -------------------------------------------------------------------------- */
+
+@layer components {
+  .page-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Wide layout: a readable primary column plus a contextual rail on xl. */
+  .page-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 1280px) {
+    .page-grid[data-rail='true'] {
+      grid-template-columns: minmax(0, 1fr) 19rem;
     }
-    50% {
-      opacity: 0.55;
+  }
+
+  /* The default reading measure: one balanced column, centred. */
+  .shell-content {
+    max-width: 48rem;
+  }
+
+  /* Pages that opt in with .page-grid (feed + rail, admin tables) widen the
+     shell itself. Specificity of :has() wins over the base rule above. */
+  .shell-content:has(.page-grid) {
+    max-width: 78rem;
+  }
+
+  .rail {
+    display: none;
+  }
+
+  @media (min-width: 1280px) {
+    .rail {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+      max-height: calc(100dvh - 6rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-bottom: 1rem;
     }
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
+/* --------------------------------------------------------------------------
+   User-authored text
+   --------------------------------------------------------------------------
+   Post bodies, comments, bios, descriptions and messages keep the newlines a
+   student typed, and never blow the layout out with a long unbroken URL. */
+
+.user-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.user-text a {
+  text-underline-offset: 2px;
 }
