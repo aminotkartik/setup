@@ -1,75 +1,93 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+/**
+ * The mobile "everything else" sheet.
+ *
+ * The bottom bar carries Home, Explore, Market, Chat and Profile, so this holds
+ * the rest: communities, campus, notifications, settings, creation shortcuts and
+ * the appearance control, plus the staff panels when they apply.
+ *
+ * It is a real dialog (portalled, focus-managed, Escape and backdrop close) that
+ * becomes a bottom sheet on phones.
+ */
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
+import { IdentityMark, Sheet, StaffDot, ThemeSwitch } from '@/components/ui';
+import { SignOutButton } from '@/components/auth/SignOutButton';
 
-/**
- * The mobile "everything else" menu: Chat and Profile live in the bottom bar,
- * so this holds Random, Notifications, Settings and (for staff) the panels.
- * A plain <dialog>-less disclosure with Escape/outside-click handling keeps it
- * accessible without a dependency.
- */
-export function MobileMenu({ canModerate = false, canAdmin = false }) {
+function SheetLink({ href, icon, label, count = 0, onNavigate }) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[0.875rem] font-medium text-ink transition-colors hover:bg-surface-2 hover:no-underline"
+    >
+      <span className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] border border-line bg-surface text-muted">
+        <Icon name={icon} size={16} />
+      </span>
+      <span className="flex-1">{label}</span>
+      {count > 0 ? <span className="nav-count">{count > 99 ? '99+' : count}</span> : null}
+    </Link>
+  );
+}
+
+export function MobileMenu({ user = null, isStaff = false, canModerate = false, canAdmin = false, theme = 'light', createItems = [] }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = (event) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    const onClick = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) setOpen(false);
-    };
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('mousedown', onClick);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('mousedown', onClick);
-    };
-  }, [open]);
-
-  // Settings and sign-out live in the account menu (top-right) now — not
-  // duplicated here.
-  const items = [
-    { href: ROUTES.notifications, label: 'Notifications', icon: 'bell' },
-    ...(canModerate ? [{ href: ROUTES.moderator, label: 'Moderation', icon: 'shield' }] : []),
-    ...(canAdmin ? [{ href: ROUTES.admin, label: 'Admin', icon: 'eye' }] : []),
-  ];
+  const close = () => setOpen(false);
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="More"
-        className="p-2 text-muted hover:text-ink"
-      >
+    <>
+      <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} className="icon-btn lg:hidden">
         <Icon name="dots" size={20} />
       </button>
-      {open ? (
-        <div
-          role="menu"
-          className="card absolute left-0 top-11 z-30 w-52 py-1 shadow-sm"
-        >
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-ink hover:bg-canvas hover:no-underline"
-            >
-              <Icon name={item.icon} size={17} />
-              {item.label}
-            </Link>
-          ))}
+
+      <Sheet open={open} onClose={close} title="Menu" size="sm">
+        <div className="mt-3 flex flex-col gap-1">
+          <SheetLink href={ROUTES.communities} icon="users" label="Communities" onNavigate={close} />
+          <SheetLink href={ROUTES.campus} icon="building" label="Campus" onNavigate={close} />
+          <SheetLink href={ROUTES.notifications} icon="bell" label="Notifications" onNavigate={close} />
+          <SheetLink href={ROUTES.settings} icon="settings" label="Settings" onNavigate={close} />
+          {canModerate ? <SheetLink href={ROUTES.moderator} icon="shield" label="Moderation" onNavigate={close} /> : null}
+          {canAdmin ? <SheetLink href={ROUTES.admin} icon="eye" label="Admin" onNavigate={close} /> : null}
         </div>
-      ) : null}
-    </div>
+
+        {createItems.length ? (
+          <div className="mt-4">
+            <p className="t-label mb-2">Create</p>
+            <div className="flex flex-col gap-1">
+              {createItems.map((item) => (
+                <SheetLink key={item.href} href={item.href} icon={item.icon} label={item.label} onNavigate={close} />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-line bg-surface-2 px-3 py-2.5">
+          <span className="text-[0.8125rem] font-medium">Dark mode</span>
+          <ThemeSwitch theme={theme} />
+        </div>
+
+        {user ? (
+          <div className="mt-4 border-t border-line pt-3">
+            <Link href={ROUTES.profile} onClick={close} className="flex items-center gap-2.5 hover:no-underline">
+              <IdentityMark name={user.displayName || user.username} size={32} tone="accent" square={false} />
+              <span className="min-w-0">
+                <span className="flex items-center gap-1.5 truncate text-[0.8125rem] font-semibold">
+                  {user.displayName || `@${user.username}`}
+                  {isStaff ? <StaffDot label={user.staffLabel || 'Staff member'} /> : null}
+                </span>
+                <span className="block truncate text-2xs text-muted">@{user.username}</span>
+              </span>
+            </Link>
+            <div className="mt-3">
+              <SignOutButton variant="secondary" />
+            </div>
+          </div>
+        ) : null}
+      </Sheet>
+    </>
   );
 }
