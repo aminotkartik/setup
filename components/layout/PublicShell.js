@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { BrandLockup } from '@/components/brand/Brand';
+import { BrandLockup, CollegeCrest } from '@/components/brand/Brand';
 
 /**
  * The public frame.
@@ -23,6 +23,12 @@ export function PublicShell({ eyebrow = null, title = null, description = null, 
         {description ? <p className="t-secondary mt-2.5 max-w-xl">{description}</p> : null}
         <div className="mt-6">{children}</div>
         {footer ? <div className="mt-8">{footer}</div> : null}
+        <div className="mt-6 flex items-center gap-2.5">
+          <CollegeCrest size={22} />
+          <p className="text-2xs leading-relaxed text-muted-soft">
+            Campus+ is an unofficial student project for PCCOE, not affiliated with or endorsed by the college.
+          </p>
+        </div>
       </div>
     </div>
   );

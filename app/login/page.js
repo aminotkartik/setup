@@ -6,7 +6,7 @@ import { describeAuthError, safeNextPath } from '@/lib/auth/oauth';
 import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
 import { GlassSurface, Notice } from '@/components/ui';
-import { BrandMark } from '@/components/brand/Brand';
+import { BrandMark, CollegeCrest } from '@/components/brand/Brand';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 export const metadata = { title: 'Sign in' };
@@ -45,7 +45,10 @@ export default async function LoginPage({ searchParams }) {
         <span className="login-halo inline-flex rounded-[var(--radius-xl)]">
           <BrandMark size="lg" />
         </span>
-        <p className="t-label mt-5">Unofficial student project</p>
+        <span className="mt-5 flex items-center gap-2.5">
+          <CollegeCrest size={26} />
+          <p className="t-label">Unofficial student project</p>
+        </span>
         <h1 className="t-display mt-2">The campus, in one place</h1>
         <p className="t-secondary mt-2.5 max-w-md">
           Sign in with your PCCOE Google account. There is no password and no code to remember.

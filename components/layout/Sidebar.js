@@ -5,9 +5,8 @@ import { usePathname } from 'next/navigation';
 import { PRIMARY_NAV, ROUTES } from '@/lib/constants';
 import { IdentityMark, StaffDot } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
-import { BrandLockup } from '@/components/brand/Brand';
+import { BrandLockup, CollegeCrest } from '@/components/brand/Brand';
 import { CreateMenu } from '@/components/layout/CreateMenu';
-import { cn } from '@/lib/utils';
 
 /**
  * Desktop navigation: a light rail with the Campus+ identity at the top, one
@@ -87,9 +86,12 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
             Sign in
           </Link>
         )}
-        <p className={cn('px-2 pt-2.5 text-2xs leading-relaxed text-muted-soft')}>
-          Unofficial student project. Not affiliated with PCCOE.
-        </p>
+        <div className="flex items-start gap-2 px-2 pt-2.5">
+          <CollegeCrest size={22} />
+          <p className="text-2xs leading-relaxed text-muted-soft">
+            Unofficial student project. Not affiliated with PCCOE.
+          </p>
+        </div>
       </div>
     </aside>
   );

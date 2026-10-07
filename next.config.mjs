@@ -16,18 +16,19 @@ const nextConfig = {
       { protocol: 'https', hostname: 'media4.giphy.com' },
     ],
   },
+  // Local tooling (the sandbox preview proxy) frames the dev server, so the
+  // clickjacking guard is only sent by real deployments — `next dev` runs with
+  // NODE_ENV=development, `next build`/Vercel always with production.
   async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-        ],
-      },
+    const headers = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
     ];
+    if (process.env.NODE_ENV === 'production') {
+      headers.push({ key: 'X-Frame-Options', value: 'DENY' });
+    }
+    return [{ source: '/:path*', headers }];
   },
 };
 
