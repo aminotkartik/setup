@@ -38,7 +38,7 @@ export default async function NoticeboardPage({ searchParams }) {
         <Link
           href="/campus/noticeboard"
           className={`rounded-full border px-3 py-1 text-2xs ${
-            !category ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
+            !category ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
           }`}
         >
           Everything
@@ -48,7 +48,7 @@ export default async function NoticeboardPage({ searchParams }) {
             key={value}
             href={`/campus/noticeboard?category=${value}`}
             className={`rounded-full border px-3 py-1 text-2xs ${
-              category === value ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
+              category === value ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
             }`}
           >
             {value}

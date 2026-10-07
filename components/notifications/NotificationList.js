@@ -1,17 +1,20 @@
 'use client';
 
 /**
- * The one notification list (spec §47).
+ * The one notification list.
  *
  * Rows carry a deep link, the notification's own text and an unread marker.
  * Marking read and dismissing are server actions; the list is purely the
  * presentation layer and never decides visibility itself.
+ *
+ * Hierarchy comes from type and tone, not from decoration: what kind of thing
+ * happened, how urgent it is, and when.
  */
 
 import { useTransition } from 'react';
 import Link from 'next/link';
 import { cn, relativeTime } from '@/lib/utils';
-import { Button, EmptyState, Notice } from '@/components/ui';
+import { Badge, Button, EmptyState, Notice } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { markNotificationRead, clearNotification, markAllNotificationsRead } from '@/lib/actions/notifications';
 
@@ -51,6 +54,13 @@ const ICON_BY_TYPE = {
   system: 'megaphone',
 };
 
+/** Only the types that carry real urgency get a coloured marker. */
+const TONE_BY_TYPE = {
+  moderation_notice: 'danger',
+  report_result: 'accent',
+  system: 'info',
+};
+
 export function NotificationList({ items = [], emptyTitle = 'No notifications yet' }) {
   const [pending, startTransition] = useTransition();
 
@@ -59,7 +69,7 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
       <EmptyState
         icon="bell"
         title={emptyTitle}
-        description="Replies, mentions, messages and official updates appear here."
+        description="Replies, mentions, messages and official updates appear here. Campus+ sends nothing by email or push."
       />
     );
   }
@@ -88,34 +98,47 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
     });
   };
 
+  const unread = items.filter((item) => !item.read_at).length;
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <p className="text-2xs text-muted">
-          {items.filter((item) => !item.read_at).length} unread of {items.length}
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-2xs font-semibold text-muted">
+          <span className="t-numeric">{unread}</span> unread of <span className="t-numeric">{items.length}</span>
         </p>
-        <Button variant="ghost" size="sm" onClick={markAll} disabled={pending}>
+        <Button variant="ghost" size="sm" icon="check" onClick={markAll} disabled={pending || unread === 0}>
           Mark all read
         </Button>
       </div>
 
-      <ul className={cn('card divide-y divide-line', pending && 'opacity-70')}>
+      <ul className={cn('card divide-y divide-line overflow-hidden', pending && 'opacity-70')}>
         {items.map((item) => {
+          const tone = TONE_BY_TYPE[item.type];
           const body = (
-            <span className="flex min-w-0 items-start gap-3 p-3">
-              <span className="mt-0.5 shrink-0 text-muted">
-                <Icon name={ICON_BY_TYPE[item.type] || 'bell'} size={16} />
+            <span className="flex min-w-0 items-start gap-3 p-3.5">
+              <span
+                className={cn(
+                  'mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-sm)] border',
+                  item.read_at ? 'border-line bg-surface-2 text-muted' : 'border-accent/30 bg-accent-soft text-accent-ink',
+                )}
+              >
+                <Icon name={ICON_BY_TYPE[item.type] || 'bell'} size={15} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <span className={cn('truncate text-[0.875rem]', item.read_at ? 'font-normal' : 'font-medium')}>
+                  <span className={cn('truncate text-[0.875rem]', item.read_at ? 'font-normal text-ink-soft' : 'font-semibold text-ink')}>
                     {item.title}
                   </span>
-                  {!item.read_at ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-label="Unread" /> : null}
+                  {!item.read_at ? <span className="unread-dot" aria-label="Unread" /> : null}
                 </span>
-                {item.body ? <span className="mt-0.5 block text-[0.8125rem] text-muted">{item.body}</span> : null}
-                <span className="mt-1 block text-2xs text-muted">
-                  {LABEL_BY_TYPE[item.type] || 'Campus+'} · {relativeTime(item.created_at)}
+                {item.body ? <span className="mt-0.5 block text-[0.8125rem] leading-relaxed text-muted">{item.body}</span> : null}
+                <span className="mt-1.5 flex items-center gap-2 text-2xs text-muted-soft">
+                  {tone ? (
+                    <Badge tone={tone}>{LABEL_BY_TYPE[item.type] || 'Campus+'}</Badge>
+                  ) : (
+                    <span className="font-semibold">{LABEL_BY_TYPE[item.type] || 'Campus+'}</span>
+                  )}
+                  <time dateTime={item.created_at}>{relativeTime(item.created_at)}</time>
                 </span>
               </span>
             </span>
@@ -124,15 +147,11 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
           return (
             <li key={item.id} className="flex items-stretch">
               {item.url ? (
-                <Link
-                  href={item.url}
-                  onClick={() => open(item)}
-                  className="min-w-0 flex-1 hover:bg-canvas hover:no-underline"
-                >
+                <Link href={item.url} onClick={() => open(item)} className="min-w-0 flex-1 transition-colors hover:bg-surface-2 hover:no-underline">
                   {body}
                 </Link>
               ) : (
-                <button type="button" onClick={() => open(item)} className="min-w-0 flex-1 text-left hover:bg-canvas">
+                <button type="button" onClick={() => open(item)} className="min-w-0 flex-1 text-left transition-colors hover:bg-surface-2">
                   {body}
                 </button>
               )}
@@ -140,7 +159,7 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
                 type="button"
                 onClick={() => dismiss(item)}
                 aria-label="Dismiss notification"
-                className="px-2 text-muted hover:text-ink"
+                className="px-3 text-muted-soft transition-colors hover:text-ink"
               >
                 <Icon name="close" size={14} />
               </button>

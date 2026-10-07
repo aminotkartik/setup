@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { Button, Notice } from '@/components/ui';
+import { Button, DeleteButton, Field, Input, KeycapButton, Notice, Select } from '@/components/ui';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { useFormAction } from '@/lib/forms';
 import {
@@ -101,28 +101,28 @@ export function ListingActions({
 
         {isSeller && status !== 'sold' ? (
           confirmingDelete ? (
-            <>
-              <span className="text-2xs text-muted">Delete this listing permanently?</span>
-              <Button
-                variant="danger"
-                size="sm"
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-2xs font-medium text-muted">Delete this listing permanently?</span>
+              <KeycapButton
+                tone="accent"
                 disabled={remove.pending}
+                aria-label="Confirm deleting this listing"
                 onClick={() => {
                   const data = new FormData();
                   data.set('id', listingId);
                   remove.run(data);
                 }}
               >
-                {remove.pending ? 'Deleting…' : 'Yes, delete'}
-              </Button>
+                {remove.pending ? '…' : 'OK'}
+              </KeycapButton>
               <Button variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
                 Cancel
               </Button>
-            </>
+            </span>
           ) : (
-            <Button variant="ghost" size="sm" icon="close" onClick={() => setConfirmingDelete(true)}>
+            <DeleteButton size="sm" onClick={() => setConfirmingDelete(true)}>
               Delete listing
-            </Button>
+            </DeleteButton>
           )
         ) : null}
 
@@ -155,27 +155,26 @@ export function ListingActions({
 
       {statusOpen && isSeller ? (
         <form
-          className="card flex flex-wrap items-end gap-2 p-3"
+          className="card flex flex-wrap items-end gap-3 p-3"
           action={(formData) => {
             formData.set('id', listingId);
             statusChange.run(formData);
           }}
         >
-          <label className="text-2xs text-muted" htmlFor="listing-status">
-            New status
-          </label>
-          <select
+          <Field label="New status" htmlFor="listing-status">
+          <Select
             id="listing-status"
             name="status"
             defaultValue="active"
-            className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem]"
+            className="w-44"
           >
             <option value="active">Available</option>
             <option value="reserved">Reserved</option>
             <option value="sold">Sold</option>
             <option value="removed">Remove listing</option>
-          </select>
-          <Button type="submit" size="sm" disabled={statusChange.pending}>
+          </Select>
+          </Field>
+          <Button type="submit" size="sm" tone="accent" disabled={statusChange.pending}>
             Save
           </Button>
         </form>
@@ -183,36 +182,33 @@ export function ListingActions({
 
       {ratingOpen ? (
         <form
-          className="card flex flex-wrap items-end gap-2 p-3"
+          className="card flex flex-wrap items-end gap-3 p-3"
           action={(formData) => {
             formData.set('listing_id', listingId);
             rate.run(formData);
           }}
         >
-          <label className="text-2xs text-muted" htmlFor="rating-score">
-            Rating
-          </label>
-          <select
+          <Field label="Rating" htmlFor="rating-score">
+          <Select
             id="rating-score"
             name="score"
             defaultValue="5"
-            className="rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem]"
+            className="w-32"
           >
             {[5, 4, 3, 2, 1].map((score) => (
               <option key={score} value={score}>
                 {score} / 5
               </option>
             ))}
-          </select>
+          </Select>
+          </Field>
           <input type="hidden" name="ratee_id" value={sellerId} />
           <input type="hidden" name="role" value="buyer" />
-          <input
-            name="comment"
-            maxLength={300}
-            placeholder="Optional comment"
-            className="min-w-[12rem] flex-1 rounded-lg border border-line bg-white px-2 py-1.5 text-[0.8125rem]"
-          />
-          <Button type="submit" size="sm" disabled={rate.pending}>
+          <label className="flex min-w-[12rem] flex-1 flex-col gap-1.5">
+            <span className="field-label">Comment</span>
+            <Input name="comment" maxLength={300} placeholder="Optional comment" />
+          </label>
+          <Button type="submit" size="sm" tone="accent" disabled={rate.pending}>
             Submit
           </Button>
         </form>

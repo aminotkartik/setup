@@ -37,7 +37,7 @@ export function CommentComposer({ postId, parentId = null, compact = false, labe
     <form
       ref={formRef}
       action={run}
-      className={compact ? 'flex flex-col gap-2' : 'card flex flex-col gap-2 p-3'}
+      className={compact ? 'flex flex-col gap-2' : 'card flex flex-col gap-2.5 p-3'}
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -65,7 +65,7 @@ export function CommentComposer({ postId, parentId = null, compact = false, labe
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" size="sm" disabled={pending || !body.trim()}>
+          <Button type="submit" size="sm" tone="accent" icon="send" disabled={pending || !body.trim()}>
             {pending ? 'Sending…' : parentId ? 'Reply' : 'Comment'}
           </Button>
         </div>

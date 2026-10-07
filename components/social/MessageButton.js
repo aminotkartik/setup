@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * "Message @someone" — the single way every surface starts a DM (spec §21):
+ * "Message @someone" — the single way every surface starts a DM:
  * marketplace sellers, event organizers, club contacts, project creators, gig
  * posters, lost & found posters and team finders all use this same button.
  */
@@ -38,7 +38,7 @@ export function MessageButton({
       }}
       className={className}
     >
-      <Button type="submit" variant={variant} size={size} icon={icon} disabled={start.pending}>
+      <Button type="submit" variant={variant} size={size} icon={icon} loading={start.pending}>
         {start.pending ? 'Opening…' : label}
       </Button>
       {start.error ? <span className="ml-2 text-2xs text-danger">{start.error}</span> : null}

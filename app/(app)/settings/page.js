@@ -3,10 +3,12 @@ import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { listBlockedUsers } from '@/lib/blocks';
 import { ROUTES, BRANCHES, YEARS, DIVISIONS, LIMITS, DEFAULT_PLATFORM_SETTINGS } from '@/lib/constants';
-import { PageHeader, Card, Notice, LinkButton, EmptyState } from '@/components/ui';
+import { Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { ProfileActions } from '@/components/profile/ProfileActions';
+import { AppearancePanel } from '@/components/profile/AppearancePanel';
+import { readTheme } from '@/lib/theme';
 import { updateProfile, changeUsername, deactivateAccount, reactivateAccount } from '@/lib/actions/profile';
 import { markAllNotificationsRead } from '@/lib/actions/notifications';
 import { formatDate, daysBetween } from '@/lib/utils';
@@ -16,6 +18,7 @@ export const metadata = { title: 'Settings' };
 const TABS = [
   { key: 'profile', label: 'Profile' },
   { key: 'username', label: 'Username' },
+  { key: 'appearance', label: 'Appearance' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'privacy', label: 'Privacy' },
   { key: 'blocked', label: 'Blocked users' },
@@ -54,6 +57,7 @@ export default async function SettingsPage({ searchParams }) {
     ? configuredCooldown
     : DEFAULT_PLATFORM_SETTINGS.username_change_cooldown_days;
 
+  const theme = await readTheme();
   const usernameChangedAt = user.profile.username_changed_at || null;
   const daysSinceChange = usernameChangedAt ? daysBetween(usernameChangedAt) : null;
   const cooldownRemaining = daysSinceChange !== null ? Math.max(0, cooldownDays - daysSinceChange) : 0;
@@ -71,9 +75,8 @@ export default async function SettingsPage({ searchParams }) {
           <Link
             key={item.key}
             href={`${ROUTES.settings}?tab=${item.key}`}
-            className={`rounded-full border px-3 py-1 text-2xs ${
-              tab === item.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
-            }`}
+            aria-current={tab === item.key ? 'page' : undefined}
+            className={`chip ${tab === item.key ? 'border-accent/40 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-muted hover:text-ink'}`}
           >
             {item.label}
           </Link>
@@ -92,11 +95,13 @@ export default async function SettingsPage({ searchParams }) {
             { name: 'branch', label: 'Branch', type: 'select', defaultValue: profile.branch || '', options: BRANCHES.map((branch) => ({ value: branch, label: branch })) },
             { name: 'year', label: 'Year', type: 'select', defaultValue: profile.year || '', options: YEARS.map((year) => ({ value: year, label: year })) },
             { name: 'division', label: 'Division', type: 'select', defaultValue: profile.division || '', options: DIVISIONS.map((division) => ({ value: division, label: division })) },
-            { name: 'show_branch_year', label: 'Show my branch and year on my profile', type: 'checkbox', defaultChecked: profile.show_branch_year !== false },
-            { name: 'allow_dms_from_everyone', label: 'Allow any student to message me', type: 'checkbox', defaultChecked: profile.allow_dms_from_everyone !== false },
+            { name: 'show_branch_year', label: 'Show my branch and year', type: 'switch', hint: 'Visible on your profile and next to your posts.', defaultChecked: profile.show_branch_year !== false },
+            { name: 'allow_dms_from_everyone', label: 'Allow any student to message me', type: 'switch', hint: 'Off means only people you have messaged before can start a conversation.', defaultChecked: profile.allow_dms_from_everyone !== false },
           ]}
         />
       ) : null}
+
+      {tab === 'appearance' ? <AppearancePanel theme={theme} /> : null}
 
       {tab === 'username' ? (
         <div className="flex flex-col gap-3">
@@ -151,12 +156,9 @@ export default async function SettingsPage({ searchParams }) {
                 Open notifications
               </LinkButton>
               <form action={markAllNotificationsRead}>
-                <button
-                  type="submit"
-                  className="h-8 rounded-lg border border-line bg-white px-3 text-[0.8125rem] hover:bg-canvas"
-                >
+                <Button type="submit" size="sm" variant="secondary" icon="check">
                   Mark all as read
-                </button>
+                </Button>
               </form>
             </div>
           </Card>

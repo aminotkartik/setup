@@ -12,12 +12,15 @@ import { ReportDialog } from '@/components/social/ReportDialog';
 import { renderTextWithMentions } from '@/components/posts/richText';
 
 /**
- * The one post card (spec §13) — posts, discussions and polls.
+ * The one post card — posts, discussions and polls.
  *
  * Reading order is deliberate: who → what → what can I do. No view counts, no
  * engagement theatre, no presence: username, text, timestamp, reactions,
  * comments, report. Official content is labelled; student content never claims
  * to be official.
+ *
+ * The card is quiet on purpose: a hairline edge, a soft shadow, and hierarchy
+ * carried by type rather than by decoration.
  */
 export function PostCard({
   post,
@@ -33,9 +36,10 @@ export function PostCard({
   const isHidden = post.status === 'hidden' || post.status === 'removed';
   const body = detail ? post.body : truncate(post.body, 420);
   const commentCount = post.comment_count ?? 0;
+  const kindLabel = post.kind === 'discussion' ? 'Discussion' : post.kind === 'poll' ? 'Poll' : null;
 
   return (
-    <article className="card p-4" aria-label={post.kind === 'poll' ? 'Poll' : 'Post'}>
+    <article className="card p-4" aria-label={kindLabel || 'Post'}>
       <div className="flex items-start justify-between gap-3">
         <IdentityLine
           username={post.author_username}
@@ -45,16 +49,15 @@ export function PostCard({
         />
         <div className="flex shrink-0 items-center gap-1.5">
           {post.is_official ? <OfficialBadge /> : null}
-          {post.kind === 'discussion' ? <Badge>Discussion</Badge> : null}
-          {post.kind === 'poll' ? <Badge>Poll</Badge> : null}
-          {isHidden ? <Badge tone="danger">{post.status}</Badge> : null}
-          {!isOwner ? (
-            <ReportDialog targetType="post" targetRef={post.id} label="this post" />
+          {kindLabel ? (
+            <Badge icon={post.kind === 'poll' ? 'trend' : 'comment'}>{kindLabel}</Badge>
           ) : null}
+          {isHidden ? <Badge tone="danger">{post.status}</Badge> : null}
+          {!isOwner ? <ReportDialog targetType="post" targetRef={post.id} label="this post" /> : null}
           {canModerate ? (
             <Link
               href={`/moderator?target=post&id=${post.id}`}
-              className="text-2xs text-muted underline hover:text-ink"
+              className="rounded-full border border-line px-2 py-0.5 text-2xs font-semibold text-muted transition-colors hover:border-line-strong hover:text-ink hover:no-underline"
             >
               Moderate
             </Link>
@@ -64,22 +67,24 @@ export function PostCard({
 
       <div className="mt-3">
         {post.kind !== 'post' && post.title ? (
-          <h2 className="text-[0.9375rem] font-semibold leading-snug">
+          <h2 className="t-card leading-snug">
             {detail ? post.title : <Link href={ROUTES.post(post.id)}>{post.title}</Link>}
           </h2>
         ) : null}
 
         {isDeleted ? (
           <p className="mt-1 text-[0.8125rem] italic text-muted">
-            {isOwner ? 'You deleted this post. It stays hidden from everyone else — restore it to bring it back.' : 'This post was deleted by its author.'}
+            {isOwner
+              ? 'You deleted this post. It stays hidden from everyone else — restore it to bring it back.'
+              : 'This post was deleted by its author.'}
           </p>
         ) : (
-          <p className="user-text mt-1 text-[0.9375rem] leading-relaxed">
+          <p className="user-text t-body mt-1">
             {detail ? renderTextWithMentions(post.body) : renderTextWithMentions(body)}
             {!detail && post.body?.length > 420 ? (
               <>
                 {' '}
-                <Link href={ROUTES.post(post.id)} className="text-muted underline">
+                <Link href={ROUTES.post(post.id)} className="font-medium text-accent-ink underline">
                   Read more
                 </Link>
               </>
@@ -96,16 +101,16 @@ export function PostCard({
         {poll && !isDeleted ? <PollBlock postId={post.id} poll={poll} canVote={Boolean(currentUserId)} /> : null}
 
         {showCommunity && post.community_slug ? (
-          <p className="mt-2 text-2xs text-muted">
+          <p className="mt-2.5 text-2xs text-muted">
             in{' '}
-            <Link href={ROUTES.community(post.community_slug)} className="text-ink underline">
+            <Link href={ROUTES.community(post.community_slug)} className="font-semibold text-ink-soft underline">
               {post.community_name || `c/${post.community_slug}`}
             </Link>
           </p>
         ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
         <div className="flex items-center gap-2">
           <ReactionBar
             targetType="post"
@@ -116,7 +121,7 @@ export function PostCard({
           />
           <Link
             href={ROUTES.post(post.id)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-2xs text-muted hover:text-ink hover:no-underline"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-2xs font-semibold text-muted transition-colors hover:border-line-strong hover:text-ink hover:no-underline"
           >
             <Icon name="comment" size={13} />
             {commentCount > 0 ? `${commentCount} comment${commentCount === 1 ? '' : 's'}` : 'Comment'}
@@ -124,7 +129,7 @@ export function PostCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-2xs text-muted lg:hidden">{relativeTime(post.created_at)}</span>
+          <span className="text-2xs text-muted-soft lg:hidden">{relativeTime(post.created_at)}</span>
           <PostActions postId={post.id} status={post.status} canManage={isOwner} />
         </div>
       </div>

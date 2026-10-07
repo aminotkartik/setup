@@ -70,7 +70,7 @@ export default async function UtilitiesPage({ searchParams }) {
             key={key}
             href={`/campus/utilities?section=${key}`}
             className={`rounded-full border px-3 py-1 text-2xs ${
-              section === key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
+              section === key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
             }`}
           >
             {SECTIONS[key].label}

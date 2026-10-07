@@ -2,11 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Input } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 
-/** Compact search entry that hands off to the Explore results view. */
-export function SearchEntry({ initialQuery = '', autoFocus = false }) {
+/**
+ * The feed's search entry: a glass-edged, thumb-friendly field that hands the
+ * query to Explore (the real `global_search()` surface). It renders nothing
+ * client-heavy — the results page owns the search.
+ */
+export function SearchEntry({ initialQuery = '', autoFocus = false, hint = 'People, posts, communities, events, listings…' }) {
   const router = useRouter();
   const [value, setValue] = useState(initialQuery);
 
@@ -20,17 +23,17 @@ export function SearchEntry({ initialQuery = '', autoFocus = false }) {
         if (query.length >= 2) router.push(`/explore?q=${encodeURIComponent(query)}`);
       }}
     >
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-        <Icon name="search" size={16} />
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-soft">
+        <Icon name="search" size={17} />
       </span>
-      <Input
+      <input
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Search people, posts, communities, events, listings…"
+        placeholder={hint}
         aria-label="Search Campus+"
-        className="pl-9"
         autoFocus={autoFocus}
+        className="control control-search h-11 rounded-[var(--radius-lg)] bg-surface/80 pl-10 pr-4 backdrop-blur-md"
       />
     </form>
   );

@@ -1,10 +1,10 @@
-import { SkeletonList } from '@/components/ui';
+import { LoadingPanel } from '@/components/ui';
 
-export default function ConversationLoading() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="h-7 w-48 animate-pulse rounded bg-white" />
-      <SkeletonList rows={4} />
-    </div>
-  );
+/**
+ * Route loading state: the same skeleton language as every other page — a title
+ * placeholder, the word loader and the list that is about to arrive — so waiting
+ * never looks like a different product.
+ */
+export default function ChatIdLoading() {
+  return <LoadingPanel words={['messages', 'replies', 'attachments', 'history']} rows={5} />;
 }

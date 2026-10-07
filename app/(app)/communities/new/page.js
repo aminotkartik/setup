@@ -71,7 +71,7 @@ export default async function NewCommunityPage({ searchParams }) {
             key={option.key}
             href={`/communities/new?kind=${option.key}`}
             className={`rounded-full border px-3 py-1 text-2xs ${
-              kind === option.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-white text-muted hover:text-ink'
+              kind === option.key ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line bg-surface text-muted hover:text-ink'
             }`}
           >
             {option.label}

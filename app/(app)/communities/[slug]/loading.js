@@ -1,11 +1,10 @@
-import { SkeletonList } from '@/components/ui';
+import { LoadingPanel } from '@/components/ui';
 
-export default function CommunitiesLoading() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="h-7 w-40 animate-pulse rounded bg-white" />
-      <div className="card h-24 animate-pulse" />
-      <SkeletonList rows={5} />
-    </div>
-  );
+/**
+ * Route loading state: the same skeleton language as every other page — a title
+ * placeholder, the word loader and the list that is about to arrive — so waiting
+ * never looks like a different product.
+ */
+export default function CommunitiesSlugLoading() {
+  return <LoadingPanel words={['community', 'posts', 'members', 'discussions']} rows={5} />;
 }

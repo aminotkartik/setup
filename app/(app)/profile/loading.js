@@ -1,11 +1,10 @@
-import { SkeletonList } from '@/components/ui';
+import { LoadingPanel } from '@/components/ui';
 
-export default function OwnProfileLoading() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="h-7 w-40 animate-pulse rounded bg-white" />
-      <div className="card h-28 animate-pulse" />
-      <SkeletonList rows={3} />
-    </div>
-  );
+/**
+ * Route loading state: the same skeleton language as every other page — a title
+ * placeholder, the word loader and the list that is about to arrive — so waiting
+ * never looks like a different product.
+ */
+export default function ProfileLoading() {
+  return <LoadingPanel words={['profile', 'posts', 'communities', 'listings']} rows={4} />;
 }

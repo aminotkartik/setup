@@ -6,7 +6,8 @@ import { can, toActor } from '@/lib/permissions/authorization';
 import { getPublicProfile, getProfileCounts, isBlockingProfile } from '@/lib/data/profiles';
 import { getPostsByAuthor } from '@/lib/data/feed';
 import { ROUTES, USERNAME_REGEX } from '@/lib/constants';
-import { PageHeader, EmptyState, Badge, Card, StaffDot } from '@/components/ui';
+import { Badge, Card, EmptyState, IdentityMark, PageHeader, StaffDot } from '@/components/ui';
+import { ShareButton } from '@/components/social/ShareButton';
 import { PostCard } from '@/components/posts/PostCard';
 import { ProfileActions } from '@/components/profile/ProfileActions';
 import { formatDate } from '@/lib/utils';
@@ -58,26 +59,24 @@ export default async function UserProfilePage({ params }) {
         title={name}
         back={{ href: ROUTES.home, label: 'Home' }}
         action={
-          <ProfileActions
-            profileId={profile.id}
-            username={profile.username}
-            isSelf={isSelf}
-            isBlocked={blockedByMe}
-            canMessage={can(actor, 'send_messages')}
-            canBlock={can(actor, 'block_users')}
-            canReport={can(actor, 'report_content')}
-          />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <ShareButton path={`/user/${profile.username}`} title={`@${profile.username} on Campus+`} />
+            <ProfileActions
+              profileId={profile.id}
+              username={profile.username}
+              isSelf={isSelf}
+              isBlocked={blockedByMe}
+              canMessage={can(actor, 'send_messages')}
+              canBlock={can(actor, 'block_users')}
+              canReport={can(actor, 'report_content')}
+            />
+          </div>
         }
       />
 
       <Card className="p-4">
         <div className="flex items-start gap-4">
-          <span
-            aria-hidden="true"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-base font-medium text-muted"
-          >
-            {(name || '?').trim().slice(0, 1).toUpperCase()}
-          </span>
+          <IdentityMark name={name} size={48} tone="accent" square={false} />
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-[1.0625rem] font-semibold">
               <span className="truncate">{name}</span>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useFormAction } from '@/lib/forms';
 import { deleteComment } from '@/lib/actions/social';
-import { Button } from '@/components/ui';
+import { Button, DeleteButton, KeycapButton } from '@/components/ui';
 
 /** Delete your own comment (soft delete — moderation evidence is preserved). */
 export function CommentActions({ commentId, postId }) {
@@ -12,19 +12,19 @@ export function CommentActions({ commentId, postId }) {
 
   if (!confirming) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)}>
+      <DeleteButton size="sm" aria-label="Delete comment" onClick={() => setConfirming(true)}>
         Delete
-      </Button>
+      </DeleteButton>
     );
   }
 
   return (
-    <span className="flex items-center gap-2">
-      <span className="text-2xs text-muted">Delete?</span>
-      <Button
-        variant="danger"
-        size="sm"
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="text-2xs font-medium text-muted">Delete?</span>
+      <KeycapButton
+        tone="accent"
         disabled={pending}
+        aria-label="Confirm delete comment"
         onClick={() => {
           const data = new FormData();
           data.set('id', commentId);
@@ -32,8 +32,8 @@ export function CommentActions({ commentId, postId }) {
           run(data);
         }}
       >
-        Yes
-      </Button>
+        {pending ? '…' : 'OK'}
+      </KeycapButton>
       <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
         No
       </Button>

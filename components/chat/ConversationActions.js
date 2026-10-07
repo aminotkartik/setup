@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { Button } from '@/components/ui';
+import { Button, KeycapButton } from '@/components/ui';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { useFormAction } from '@/lib/forms';
 import { blockProfile } from '@/lib/actions/profile';
@@ -44,15 +44,15 @@ export function ConversationActions({
               formData.set('profile_id', otherProfileId);
               block.run(formData);
             }}
-            className="flex items-center gap-2"
+            className="flex flex-wrap items-center gap-2"
           >
-            <span className="text-2xs text-muted">Block this student?</span>
-            <Button type="submit" size="sm" variant="danger" disabled={block.pending}>
+            <span className="text-2xs font-medium text-muted">Block this student?</span>
+            <Button type="submit" size="sm" variant="danger" loading={block.pending}>
               {block.pending ? 'Blocking…' : 'Yes, block'}
             </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(false)}>
-              Cancel
-            </Button>
+            <KeycapButton type="button" onClick={() => setConfirming(false)} aria-label="Cancel blocking">
+              Esc
+            </KeycapButton>
           </form>
         ) : (
           <Button size="sm" variant="ghost" icon="lock" onClick={() => setConfirming(true)}>

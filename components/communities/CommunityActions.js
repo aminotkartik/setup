@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { Button, Notice } from '@/components/ui';
+import { Button, KeycapButton, Notice } from '@/components/ui';
 import { useFormAction } from '@/lib/forms';
 import {
   joinCommunity,
@@ -50,7 +50,7 @@ export function CommunityActions({
               join.run(formData);
             }}
           >
-            <Button type="submit" disabled={join.pending}>
+            <Button type="submit" tone="accent" icon="plus" loading={join.pending}>
               {join.pending ? 'Joining…' : joinPolicy === 'open' ? 'Join' : 'Request to join'}
             </Button>
           </form>
@@ -82,13 +82,13 @@ export function CommunityActions({
                 }}
                 className="flex items-center gap-2"
               >
-                <span className="text-2xs text-muted">Leave this community?</span>
-                <Button type="submit" size="sm" variant="danger" disabled={leave.pending}>
+                <span className="text-2xs font-medium text-muted">Leave this community?</span>
+                <Button type="submit" size="sm" variant="danger" loading={leave.pending}>
                   {leave.pending ? 'Leaving…' : 'Yes, leave'}
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmLeave(false)}>
-                  Cancel
-                </Button>
+                <KeycapButton type="button" onClick={() => setConfirmLeave(false)} aria-label="Cancel leaving">
+                  Esc
+                </KeycapButton>
               </form>
             ) : (
               <Button size="sm" variant="ghost" onClick={() => setConfirmLeave(true)}>
@@ -130,6 +130,7 @@ export function CommunityActions({
                         type="submit"
                         size="sm"
                         variant={decision === 'approved' ? 'primary' : 'ghost'}
+                        tone="accent"
                         disabled={decide.pending}
                       >
                         {decision === 'approved' ? 'Approve' : 'Reject'}

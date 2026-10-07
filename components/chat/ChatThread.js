@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Textarea, Notice, Spinner } from '@/components/ui';
+import { Button, DeleteButton, GlassSurface, Notice, OrbLoader, Textarea } from '@/components/ui';
 import { GifAttachment, GifPicker } from '@/components/media/GifPicker';
 import { useFormAction } from '@/lib/forms';
 import { getBrowserClient, isBrowserConfigured } from '@/lib/supabase/client';
@@ -203,7 +203,7 @@ export function ChatThread({
                 <div
                   className={cn(
                     'max-w-[85%] rounded-lg border px-3 py-2',
-                    mine ? 'border-line bg-accent-soft' : 'border-line bg-white',
+                    mine ? 'border-line bg-accent-soft' : 'border-line bg-surface',
                   )}
                 >
                   {deleted ? (
@@ -218,13 +218,14 @@ export function ChatThread({
               )}
 
               {!deleted && !isEditing && mine ? (
-                <div className="flex items-center gap-2 text-2xs text-muted">
-                  <button type="button" className="hover:text-ink" onClick={() => setEditing(message)}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" size="sm" variant="ghost" icon="file" onClick={() => setEditing(message)}>
                     Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="hover:text-ink"
+                  </Button>
+                  <DeleteButton
+                    size="sm"
+                    disabled={remove.pending}
+                    aria-label="Delete message"
                     onClick={() => {
                       const data = new FormData();
                       data.set('id', message.id);
@@ -232,8 +233,8 @@ export function ChatThread({
                       remove.run(data);
                     }}
                   >
-                    Delete
-                  </button>
+                    {remove.pending ? 'Deleting…' : 'Delete'}
+                  </DeleteButton>
                 </div>
               ) : null}
             </article>
@@ -264,30 +265,37 @@ export function ChatThread({
       </p>
 
       {canPost ? (
-        <form
-          ref={formRef}
-          className="card flex flex-col gap-2 p-3"
-          action={submit}
-        >
-          <Textarea
-            name="body"
-            rows={2}
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            placeholder="Write a message…"
-            maxLength={LIMITS.message.max}
-            aria-label="Message"
-          />
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <GifPicker value={gif} onPick={setGif} onRemove={() => setGif(null)} />
-            <div className="flex items-center gap-2">
-              {send.pending ? <Spinner label="Sending" /> : null}
-              <Button type="submit" size="sm" icon="send" disabled={send.pending || (!body.trim() && !gif)}>
-                Send
-              </Button>
+        <form ref={formRef} className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 lg:bottom-4" action={submit}>
+          <GlassSurface tone="strong" className="flex flex-col gap-2 p-3 shadow-[var(--shadow-float)]">
+            <Textarea
+              name="body"
+              rows={2}
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter sends, Shift+Enter starts a new line — the convention
+                // every student already has in their fingers. IME composition
+                // is never interrupted.
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent?.isComposing) {
+                  event.preventDefault();
+                  if (body.trim() || gif) event.currentTarget.form?.requestSubmit();
+                }
+              }}
+              placeholder="Write a message…  (Enter to send, Shift+Enter for a new line)"
+              maxLength={LIMITS.message.max}
+              aria-label="Message"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <GifPicker value={gif} onPick={setGif} onRemove={() => setGif(null)} />
+              <div className="flex items-center gap-2">
+                {send.pending ? <OrbLoader size="sm" label="Sending message" /> : null}
+                <Button type="submit" size="sm" tone="accent" icon="send" disabled={send.pending || (!body.trim() && !gif)}>
+                  Send
+                </Button>
+              </div>
             </div>
-          </div>
-          {send.error ? <Notice tone="danger">{send.error}</Notice> : null}
+            {send.error ? <Notice tone="danger">{send.error}</Notice> : null}
+          </GlassSurface>
         </form>
       ) : (
         <Notice tone="warning" icon="lock">
