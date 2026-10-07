@@ -210,7 +210,8 @@
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-muted-soft);
-    animation: campus-hint 2.6s ease-in-out infinite;
+    /* Three nudges, then it rests: a hint that never stops moving is noise. */
+    animation: campus-hint 2.6s ease-in-out 3;
     pointer-events: none;
   }
 

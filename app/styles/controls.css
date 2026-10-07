@@ -370,6 +370,27 @@
     transform: scale(0.96);
   }
 
+  /* The metal flows only while the button is engaged, the same trade the
+     primary button makes. The source animates these seven layers (and the
+     label's opacity) forever; across a page of secondary buttons that is
+     constant compositing, and a label whose contrast never settles. At rest the
+     stack is one frame of the same flow, so the button still reads as liquid
+     metal — it simply holds still until you reach for it. */
+  .btn-sheen-layer,
+  .btn-sheen .btn-light,
+  .btn-sheen .btn-label {
+    animation-play-state: paused;
+  }
+
+  .btn-sheen:hover:not(:disabled) .btn-sheen-layer,
+  .btn-sheen:focus-visible:not(:disabled) .btn-sheen-layer,
+  .btn-sheen:hover:not(:disabled) .btn-light,
+  .btn-sheen:focus-visible:not(:disabled) .btn-light,
+  .btn-sheen:hover:not(:disabled) .btn-label,
+  .btn-sheen:focus-visible:not(:disabled) .btn-label {
+    animation-play-state: running;
+  }
+
   .btn-sheen:hover:not(:disabled) {
     border-color: color-mix(in oklab, var(--c-accent) 32%, var(--c-line));
   }

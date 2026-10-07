@@ -3,29 +3,29 @@
   "base": "http://127.0.0.1:3100",
   "rtt": 25,
   "user": "admin",
-  "measuredAt": "2026-10-07T17:21:53.344Z",
+  "measuredAt": "2026-10-07T17:25:23.467Z",
   "pages": [
     {
       "label": "Admin · users",
       "href": "/admin?tab=users",
-      "pageStart": 1791393706114,
-      "ttfb": 11.53914199999997,
-      "total": 168.21760299999994,
+      "pageStart": 1791393916107,
+      "ttfb": 10.620992999999999,
+      "total": 163.74083699999994,
       "bytes": 78318,
       "status": 200,
       "requests": 7,
-      "supabaseMs": 202,
+      "supabaseMs": 198,
       "slowestMs": 30,
       "slowest": {
-        "t0": 1791393706156,
-        "t1": 1791393706186,
+        "t0": 1791393916200,
+        "t1": 1791393916230,
         "ms": 30,
         "method": "GET",
         "path": "/rest/v1/profile_private",
-        "query": "select=profile_id,auth_user_id,college_id,account_status,status_reason,suspended_until,profile_completed,username_changed_at,last_seen,profiles(id,username,display_name,bio,branch,year,division,show_branch_year,allow_dms_from_everyone,reputation_score,reputation_count,marketplace_completed_count,created_at,updated_at,user_roles!user_roles_user_id_fkey(roles(key,label,rank,role_permissions(permissions(key)))))",
+        "query": "select=profile_id,account_status,status_reason,suspended_until",
         "kind": "rest",
         "status": 200,
-        "bytes": 4246
+        "bytes": 1489
       },
       "broken": false,
       "requestBytes": 10460
@@ -33,17 +33,17 @@
     {
       "label": "Admin · roles",
       "href": "/admin?tab=roles",
-      "pageStart": 1791393706742,
-      "ttfb": 11.21586400000001,
-      "total": 129.50575800000001,
+      "pageStart": 1791393916731,
+      "ttfb": 9.65743899999984,
+      "total": 131.41430400000013,
       "bytes": 51733,
       "status": 200,
       "requests": 5,
-      "supabaseMs": 148,
+      "supabaseMs": 140,
       "slowestMs": 30,
       "slowest": {
-        "t0": 1791393706778,
-        "t1": 1791393706808,
+        "t0": 1791393916766,
+        "t1": 1791393916796,
         "ms": 30,
         "method": "GET",
         "path": "/rest/v1/profile_private",
@@ -58,18 +58,18 @@
     {
       "label": "Admin · permissions",
       "href": "/admin?tab=permissions",
-      "pageStart": 1791393707336,
-      "ttfb": 11.275501000000077,
-      "total": 138.40455899999984,
+      "pageStart": 1791393917365,
+      "ttfb": 12.654708000000028,
+      "total": 152.6346649999998,
       "bytes": 110503,
       "status": 200,
       "requests": 5,
-      "supabaseMs": 142,
-      "slowestMs": 30,
+      "supabaseMs": 139,
+      "slowestMs": 29,
       "slowest": {
-        "t0": 1791393707370,
-        "t1": 1791393707400,
-        "ms": 30,
+        "t0": 1791393917420,
+        "t1": 1791393917449,
+        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "query": "select=profile_id,auth_user_id,college_id,account_status,status_reason,suspended_until,profile_completed,username_changed_at,last_seen,profiles(id,username,display_name,bio,branch,year,division,show_branch_year,allow_dms_from_everyone,reputation_score,reputation_count,marketplace_completed_count,created_at,updated_at,user_roles!user_roles_user_id_fkey(roles(key,label,rank,role_permissions(permissions(key)))))",
@@ -83,17 +83,17 @@
     {
       "label": "Admin · reports",
       "href": "/admin?tab=reports",
-      "pageStart": 1791393708047,
-      "ttfb": 10.463044999999966,
-      "total": 163.40811699999995,
+      "pageStart": 1791393918076,
+      "ttfb": 9.974260999999842,
+      "total": 161.72444900000028,
       "bytes": 95593,
       "status": 200,
       "requests": 6,
-      "supabaseMs": 171,
+      "supabaseMs": 169,
       "slowestMs": 30,
       "slowest": {
-        "t0": 1791393708081,
-        "t1": 1791393708111,
+        "t0": 1791393918110,
+        "t1": 1791393918140,
         "ms": 30,
         "method": "GET",
         "path": "/rest/v1/profile_private",
@@ -108,18 +108,18 @@
     {
       "label": "Admin · content",
       "href": "/admin?tab=content",
-      "pageStart": 1791393708592,
-      "ttfb": 10.628934999999728,
-      "total": 108.71718399999963,
+      "pageStart": 1791393918633,
+      "ttfb": 9.38067000000001,
+      "total": 109.77454200000011,
       "bytes": 77728,
       "status": 200,
       "requests": 4,
-      "supabaseMs": 126,
-      "slowestMs": 36,
+      "supabaseMs": 121,
+      "slowestMs": 37,
       "slowest": {
-        "t0": 1791393708658,
-        "t1": 1791393708694,
-        "ms": 36,
+        "t0": 1791393918698,
+        "t1": 1791393918735,
+        "ms": 37,
         "method": "GET",
         "path": "/rest/v1/notices",
         "query": "select=id,title,category,importance,pinned,status,published_at,created_at",
@@ -133,17 +133,17 @@
     {
       "label": "Admin · marketplace",
       "href": "/admin?tab=marketplace",
-      "pageStart": 1791393709062,
-      "ttfb": 9.692280999999639,
-      "total": 108.03340300000036,
+      "pageStart": 1791393919130,
+      "ttfb": 9.543739999999616,
+      "total": 109.08667399999968,
       "bytes": 64698,
       "status": 200,
       "requests": 4,
-      "supabaseMs": 119,
+      "supabaseMs": 126,
       "slowestMs": 36,
       "slowest": {
-        "t0": 1791393709129,
-        "t1": 1791393709165,
+        "t0": 1791393919200,
+        "t1": 1791393919236,
         "ms": 36,
         "method": "GET",
         "path": "/rest/v1/marketplace_listings",
@@ -158,18 +158,18 @@
     {
       "label": "Admin · events",
       "href": "/admin?tab=events",
-      "pageStart": 1791393709533,
-      "ttfb": 10.927429000000302,
-      "total": 101.95910100000037,
+      "pageStart": 1791393919617,
+      "ttfb": 9.981107000000065,
+      "total": 103.24261699999988,
       "bytes": 58064,
       "status": 200,
       "requests": 4,
-      "supabaseMs": 113,
-      "slowestMs": 30,
+      "supabaseMs": 114,
+      "slowestMs": 31,
       "slowest": {
-        "t0": 1791393709567,
-        "t1": 1791393709597,
-        "ms": 30,
+        "t0": 1791393919650,
+        "t1": 1791393919681,
+        "ms": 31,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "query": "select=profile_id,auth_user_id,college_id,account_status,status_reason,suspended_until,profile_completed,username_changed_at,last_seen,profiles(id,username,display_name,bio,branch,year,division,show_branch_year,allow_dms_from_everyone,reputation_score,reputation_count,marketplace_completed_count,created_at,updated_at,user_roles!user_roles_user_id_fkey(roles(key,label,rank,role_permissions(permissions(key)))))",
@@ -183,24 +183,24 @@
     {
       "label": "Admin · settings",
       "href": "/admin?tab=settings",
-      "pageStart": 1791393709984,
-      "ttfb": 8.965747999999621,
-      "total": 101.62388600000031,
+      "pageStart": 1791393920083,
+      "ttfb": 9.054517999999916,
+      "total": 102.22983699999986,
       "bytes": 64968,
       "status": 200,
       "requests": 4,
       "supabaseMs": 114,
-      "slowestMs": 29,
+      "slowestMs": 30,
       "slowest": {
-        "t0": 1791393710017,
-        "t1": 1791393710046,
-        "ms": 29,
+        "t0": 1791393920147,
+        "t1": 1791393920177,
+        "ms": 30,
         "method": "GET",
-        "path": "/rest/v1/profile_private",
-        "query": "select=profile_id,auth_user_id,college_id,account_status,status_reason,suspended_until,profile_completed,username_changed_at,last_seen,profiles(id,username,display_name,bio,branch,year,division,show_branch_year,allow_dms_from_everyone,reputation_score,reputation_count,marketplace_completed_count,created_at,updated_at,user_roles!user_roles_user_id_fkey(roles(key,label,rank,role_permissions(permissions(key)))))",
+        "path": "/rest/v1/platform_settings",
+        "query": "select=key,value,description,category,is_public,updated_at",
         "kind": "rest",
         "status": 200,
-        "bytes": 4246
+        "bytes": 3368
       },
       "broken": false,
       "requestBytes": 8042
@@ -208,18 +208,18 @@
     {
       "label": "Admin · flags",
       "href": "/admin?tab=flags",
-      "pageStart": 1791393710461,
-      "ttfb": 10.702237999999852,
-      "total": 103.27692399999978,
-      "bytes": 87123,
+      "pageStart": 1791393920580,
+      "ttfb": 11.99513300000035,
+      "total": 104.82835200000045,
+      "bytes": 86797,
       "status": 200,
       "requests": 4,
-      "supabaseMs": 111,
-      "slowestMs": 30,
+      "supabaseMs": 115,
+      "slowestMs": 29,
       "slowest": {
-        "t0": 1791393710496,
-        "t1": 1791393710526,
-        "ms": 30,
+        "t0": 1791393920619,
+        "t1": 1791393920648,
+        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "query": "select=profile_id,auth_user_id,college_id,account_status,status_reason,suspended_until,profile_completed,username_changed_at,last_seen,profiles(id,username,display_name,bio,branch,year,division,show_branch_year,allow_dms_from_everyone,reputation_score,reputation_count,marketplace_completed_count,created_at,updated_at,user_roles!user_roles_user_id_fkey(roles(key,label,rank,role_permissions(permissions(key)))))",
@@ -233,18 +233,18 @@
     {
       "label": "Admin · audit",
       "href": "/admin?tab=audit",
-      "pageStart": 1791393711067,
-      "ttfb": 10.569784000000254,
-      "total": 146.17076499999985,
+      "pageStart": 1791393921169,
+      "ttfb": 9.176815000000715,
+      "total": 141.8485439999995,
       "bytes": 76516,
       "status": 200,
       "requests": 5,
-      "supabaseMs": 158,
-      "slowestMs": 39,
+      "supabaseMs": 151,
+      "slowestMs": 37,
       "slowest": {
-        "t0": 1791393711134,
-        "t1": 1791393711173,
-        "ms": 39,
+        "t0": 1791393921235,
+        "t1": 1791393921272,
+        "ms": 37,
         "method": "GET",
         "path": "/rest/v1/audit_logs",
         "query": "select=id,actor_user_id,action,target_type,target_id,metadata,visibility,created_at",
@@ -258,18 +258,18 @@
     {
       "label": "Admin · counts",
       "href": "/admin?tab=counts",
-      "pageStart": 1791393712199,
-      "ttfb": 13.10367000000042,
-      "total": 269.73024499999974,
+      "pageStart": 1791393922242,
+      "ttfb": 9.897077999999965,
+      "total": 281.45180099999925,
       "bytes": 52135,
       "status": 200,
       "requests": 19,
-      "supabaseMs": 1185,
-      "slowestMs": 151,
+      "supabaseMs": 1384,
+      "slowestMs": 206,
       "slowest": {
-        "t0": 1791393712312,
-        "t1": 1791393712463,
-        "ms": 151,
+        "t0": 1791393922363,
+        "t1": 1791393922569,
+        "ms": 206,
         "method": "HEAD",
         "path": "/rest/v1/messages",
         "query": "select=id",
@@ -283,20 +283,20 @@
     {
       "label": "Moderation",
       "href": "/moderator",
-      "pageStart": 1791393713131,
-      "ttfb": 10.184250000000247,
-      "total": 197.27438799999982,
+      "pageStart": 1791393923247,
+      "ttfb": 9.785560999999689,
+      "total": 198.403507,
       "bytes": 95677,
       "status": 200,
       "requests": 10,
-      "supabaseMs": 300,
-      "slowestMs": 31,
+      "supabaseMs": 303,
+      "slowestMs": 33,
       "slowest": {
-        "t0": 1791393713197,
-        "t1": 1791393713228,
-        "ms": 31,
+        "t0": 1791393923312,
+        "t1": 1791393923345,
+        "ms": 33,
         "method": "HEAD",
-        "path": "/rest/v1/notifications",
+        "path": "/rest/v1/reports",
         "query": "select=id",
         "kind": "rest",
         "status": 200,
@@ -316,18 +316,11 @@
         "bytes": 428
       },
       {
-        "ms": 30,
+        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "status": 200,
         "bytes": 4246
-      },
-      {
-        "ms": 26,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
       },
       {
         "ms": 27,
@@ -337,6 +330,13 @@
         "bytes": 2386
       },
       {
+        "ms": 27,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
+      },
+      {
         "ms": 30,
         "method": "GET",
         "path": "/rest/v1/profile_private",
@@ -344,7 +344,7 @@
         "bytes": 1489
       },
       {
-        "ms": 28,
+        "ms": 30,
         "method": "GET",
         "path": "/rest/v1/user_roles",
         "status": 200,
@@ -404,7 +404,7 @@
         "bytes": 428
       },
       {
-        "ms": 30,
+        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "status": 200,
@@ -412,17 +412,17 @@
       },
       {
         "ms": 27,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/permissions",
         "status": 200,
         "bytes": 7233
+      },
+      {
+        "ms": 27,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
       },
       {
         "ms": 27,
@@ -433,80 +433,6 @@
       }
     ],
     "/admin?tab=reports": [
-      {
-        "ms": 27,
-        "method": "GET",
-        "path": "/auth/v1/user",
-        "status": 200,
-        "bytes": 428
-      },
-      {
-        "ms": 30,
-        "method": "GET",
-        "path": "/rest/v1/profile_private",
-        "status": 200,
-        "bytes": 4246
-      },
-      {
-        "ms": 28,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 29,
-        "method": "GET",
-        "path": "/rest/v1/reports",
-        "status": 200,
-        "bytes": 3682
-      },
-      {
-        "ms": 29,
-        "method": "GET",
-        "path": "/rest/v1/posts",
-        "status": 200,
-        "bytes": 590
-      },
-      {
-        "ms": 28,
-        "method": "GET",
-        "path": "/rest/v1/public_profiles",
-        "status": 200,
-        "bytes": 192
-      }
-    ],
-    "/admin?tab=content": [
-      {
-        "ms": 27,
-        "method": "GET",
-        "path": "/auth/v1/user",
-        "status": 200,
-        "bytes": 428
-      },
-      {
-        "ms": 30,
-        "method": "GET",
-        "path": "/rest/v1/profile_private",
-        "status": 200,
-        "bytes": 4246
-      },
-      {
-        "ms": 27,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 36,
-        "method": "GET",
-        "path": "/rest/v1/notices",
-        "status": 200,
-        "bytes": 6394
-      }
-    ],
-    "/admin?tab=marketplace": [
       {
         "ms": 26,
         "method": "GET",
@@ -522,7 +448,81 @@
         "bytes": 4246
       },
       {
+        "ms": 26,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 29,
+        "method": "GET",
+        "path": "/rest/v1/reports",
+        "status": 200,
+        "bytes": 3682
+      },
+      {
+        "ms": 30,
+        "method": "GET",
+        "path": "/rest/v1/posts",
+        "status": 200,
+        "bytes": 590
+      },
+      {
+        "ms": 28,
+        "method": "GET",
+        "path": "/rest/v1/public_profiles",
+        "status": 200,
+        "bytes": 192
+      }
+    ],
+    "/admin?tab=content": [
+      {
+        "ms": 26,
+        "method": "GET",
+        "path": "/auth/v1/user",
+        "status": 200,
+        "bytes": 428
+      },
+      {
+        "ms": 31,
+        "method": "GET",
+        "path": "/rest/v1/profile_private",
+        "status": 200,
+        "bytes": 4246
+      },
+      {
         "ms": 27,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 37,
+        "method": "GET",
+        "path": "/rest/v1/notices",
+        "status": 200,
+        "bytes": 6394
+      }
+    ],
+    "/admin?tab=marketplace": [
+      {
+        "ms": 26,
+        "method": "GET",
+        "path": "/auth/v1/user",
+        "status": 200,
+        "bytes": 428
+      },
+      {
+        "ms": 31,
+        "method": "GET",
+        "path": "/rest/v1/profile_private",
+        "status": 200,
+        "bytes": 4246
+      },
+      {
+        "ms": 33,
         "method": "HEAD",
         "path": "/rest/v1/notifications",
         "status": 200,
@@ -538,14 +538,14 @@
     ],
     "/admin?tab=events": [
       {
-        "ms": 27,
+        "ms": 26,
         "method": "GET",
         "path": "/auth/v1/user",
         "status": 200,
         "bytes": 428
       },
       {
-        "ms": 30,
+        "ms": 31,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "status": 200,
@@ -568,7 +568,7 @@
     ],
     "/admin?tab=settings": [
       {
-        "ms": 25,
+        "ms": 27,
         "method": "GET",
         "path": "/auth/v1/user",
         "status": 200,
@@ -582,14 +582,14 @@
         "bytes": 4246
       },
       {
-        "ms": 27,
+        "ms": 28,
         "method": "HEAD",
         "path": "/rest/v1/notifications",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 29,
+        "ms": 30,
         "method": "GET",
         "path": "/rest/v1/platform_settings",
         "status": 200,
@@ -605,6 +605,36 @@
         "bytes": 428
       },
       {
+        "ms": 29,
+        "method": "GET",
+        "path": "/rest/v1/profile_private",
+        "status": 200,
+        "bytes": 4246
+      },
+      {
+        "ms": 27,
+        "method": "GET",
+        "path": "/rest/v1/feature_flags",
+        "status": 200,
+        "bytes": 4734
+      },
+      {
+        "ms": 26,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
+      }
+    ],
+    "/admin?tab=audit": [
+      {
+        "ms": 26,
+        "method": "GET",
+        "path": "/auth/v1/user",
+        "status": 200,
+        "bytes": 428
+      },
+      {
         "ms": 30,
         "method": "GET",
         "path": "/rest/v1/profile_private",
@@ -619,37 +649,7 @@
         "bytes": 0
       },
       {
-        "ms": 28,
-        "method": "GET",
-        "path": "/rest/v1/feature_flags",
-        "status": 200,
-        "bytes": 4734
-      }
-    ],
-    "/admin?tab=audit": [
-      {
-        "ms": 26,
-        "method": "GET",
-        "path": "/auth/v1/user",
-        "status": 200,
-        "bytes": 428
-      },
-      {
-        "ms": 32,
-        "method": "GET",
-        "path": "/rest/v1/profile_private",
-        "status": 200,
-        "bytes": 4246
-      },
-      {
-        "ms": 27,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 39,
+        "ms": 37,
         "method": "GET",
         "path": "/rest/v1/audit_logs",
         "status": 200,
@@ -665,133 +665,133 @@
     ],
     "/admin?tab=counts": [
       {
-        "ms": 26,
+        "ms": 27,
         "method": "GET",
         "path": "/auth/v1/user",
         "status": 200,
         "bytes": 428
       },
       {
-        "ms": 29,
+        "ms": 31,
         "method": "GET",
         "path": "/rest/v1/profile_private",
         "status": 200,
         "bytes": 4246
       },
       {
-        "ms": 29,
-        "method": "HEAD",
-        "path": "/rest/v1/notifications",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 33,
+        "ms": 28,
         "method": "HEAD",
         "path": "/rest/v1/feature_flags",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 34,
+        "ms": 31,
         "method": "HEAD",
         "path": "/rest/v1/reports",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 33,
+        "ms": 31,
+        "method": "HEAD",
+        "path": "/rest/v1/notifications",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 35,
         "method": "HEAD",
         "path": "/rest/v1/profile_private",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 38,
+        "ms": 45,
         "method": "HEAD",
         "path": "/rest/v1/marketplace_listings",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 64,
-        "method": "HEAD",
-        "path": "/rest/v1/communities",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 66,
+        "ms": 53,
         "method": "HEAD",
         "path": "/rest/v1/profiles",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 66,
+        "ms": 53,
         "method": "HEAD",
-        "path": "/rest/v1/events",
+        "path": "/rest/v1/communities",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 67,
-        "method": "HEAD",
-        "path": "/rest/v1/reports",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 69,
-        "method": "HEAD",
-        "path": "/rest/v1/posts",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 67,
-        "method": "HEAD",
-        "path": "/rest/v1/reactions",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 68,
-        "method": "HEAD",
-        "path": "/rest/v1/gigs",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 68,
+        "ms": 61,
         "method": "HEAD",
         "path": "/rest/v1/marketplace_listings",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 69,
+        "ms": 62,
         "method": "HEAD",
-        "path": "/rest/v1/notices",
+        "path": "/rest/v1/gigs",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 84,
+        "ms": 69,
+        "method": "HEAD",
+        "path": "/rest/v1/events",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 85,
         "method": "HEAD",
         "path": "/rest/v1/random_sessions",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 124,
+        "ms": 85,
+        "method": "HEAD",
+        "path": "/rest/v1/reports",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 92,
+        "method": "HEAD",
+        "path": "/rest/v1/notices",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 106,
+        "method": "HEAD",
+        "path": "/rest/v1/posts",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 125,
+        "method": "HEAD",
+        "path": "/rest/v1/reactions",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 159,
         "method": "HEAD",
         "path": "/rest/v1/comments",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 151,
+        "ms": 206,
         "method": "HEAD",
         "path": "/rest/v1/messages",
         "status": 200,
@@ -800,7 +800,7 @@
     ],
     "/moderator": [
       {
-        "ms": 26,
+        "ms": 27,
         "method": "GET",
         "path": "/auth/v1/user",
         "status": 200,
@@ -814,37 +814,37 @@
         "bytes": 4246
       },
       {
-        "ms": 29,
-        "method": "HEAD",
-        "path": "/rest/v1/reports",
-        "status": 200,
-        "bytes": 0
-      },
-      {
         "ms": 30,
-        "method": "HEAD",
-        "path": "/rest/v1/reports",
-        "status": 200,
-        "bytes": 0
-      },
-      {
-        "ms": 31,
         "method": "HEAD",
         "path": "/rest/v1/notifications",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 31,
+        "ms": 30,
+        "method": "HEAD",
+        "path": "/rest/v1/random_reports",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 33,
         "method": "HEAD",
         "path": "/rest/v1/reports",
         "status": 200,
         "bytes": 0
       },
       {
-        "ms": 31,
+        "ms": 32,
         "method": "HEAD",
-        "path": "/rest/v1/random_reports",
+        "path": "/rest/v1/reports",
+        "status": 200,
+        "bytes": 0
+      },
+      {
+        "ms": 32,
+        "method": "HEAD",
+        "path": "/rest/v1/reports",
         "status": 200,
         "bytes": 0
       },
@@ -856,14 +856,14 @@
         "bytes": 3682
       },
       {
-        "ms": 28,
+        "ms": 29,
         "method": "GET",
         "path": "/rest/v1/posts",
         "status": 200,
         "bytes": 590
       },
       {
-        "ms": 29,
+        "ms": 28,
         "method": "GET",
         "path": "/rest/v1/public_profiles",
         "status": 200,

@@ -382,18 +382,35 @@
     opacity: 1;
   }
 
-  /* Nothing in the night sky runs while the day side is showing. */
+  /* Nothing in the night sky runs while the day side is showing — including the
+     twinkling star field and the aurora, which sit at zero opacity all day. The
+     switch lives in the header, so an animation running behind an invisible
+     layer would be a cost paid on every page of the app. */
   .theme-switch__meteor,
   .theme-switch__comet,
   .theme-switch__shooting,
-  .theme-switch__twinkle {
+  .theme-switch__twinkle,
+  .theme-switch__stars,
+  .theme-switch__aurora {
     animation-play-state: paused;
   }
 
   .theme-switch__input:checked + .theme-switch__container .theme-switch__meteor,
   .theme-switch__input:checked + .theme-switch__container .theme-switch__comet,
   .theme-switch__input:checked + .theme-switch__container .theme-switch__shooting,
-  .theme-switch__input:checked + .theme-switch__container .theme-switch__twinkle {
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__twinkle,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__stars,
+  .theme-switch__input:checked + .theme-switch__container .theme-switch__aurora {
+    animation-play-state: running;
+  }
+
+  /* And the sun's rays only turn while the day side is the one on screen, so
+     the displacement filter behind them is never animating off-screen. */
+  .theme-switch__orb::before {
+    animation-play-state: paused;
+  }
+
+  .theme-switch__input:not(:checked) + .theme-switch__container .theme-switch__orb::before {
     animation-play-state: running;
   }
 
