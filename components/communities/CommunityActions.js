@@ -106,7 +106,7 @@ export function CommunityActions({
       {canManage && pendingRequests.length ? (
         <section aria-label="Join requests" className="card p-3">
           <h3 className="text-[0.8125rem] font-semibold">Join requests</h3>
-          <ul className="mt-2 divide-y divide-[#E5E5E5]">
+          <ul className="mt-2 divide-y divide-line">
             {pendingRequests.map((request) => (
               <li key={request.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="min-w-0">

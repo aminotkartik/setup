@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, BLOCKED_STATUSES } from '@/lib/auth/session';
 import { isSupabaseConfigured } from '@/lib/config';
+import { formatDateTime } from '@/lib/utils';
 import { Notice } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { SignOutButton } from '@/components/auth/SignOutButton';
@@ -43,7 +44,7 @@ export default async function AccountStatusPage() {
 
       {user.suspendedUntil ? (
         <p className="mt-4 text-[0.8125rem] text-muted">
-          The suspension lifts automatically on {new Date(user.suspendedUntil).toLocaleString('en-IN')}.
+          The suspension lifts automatically on {formatDateTime(user.suspendedUntil)}.
         </p>
       ) : null}
 

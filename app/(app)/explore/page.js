@@ -86,7 +86,7 @@ export default async function ExplorePage({ searchParams }) {
           description="Deterministic score from reactions, comments and participants — no algorithm, no AI."
         />
         {trending?.length ? (
-          <ul className="card divide-y divide-[#E5E5E5]">
+          <ul className="card divide-y divide-line">
             {trending.map((item) => (
               <li key={item.id}>
                 <Link href={ROUTES.post(item.id)} className="flex items-start gap-3 p-3 hover:bg-canvas hover:no-underline">
@@ -153,7 +153,7 @@ export default async function ExplorePage({ searchParams }) {
           title="Lost & found"
           href="/campus/lost-found"
           icon="search"
-          items={lostFound?.map((item) => ({ id: item.id, label: item.title, href: `/campus/lost-found/${item.id}`, meta: `${item.kind} · ${item.location || 'location not given'}` }))}
+          items={lostFound?.map((item) => ({ id: item.id, label: item.title, href: `/campus/lost-found/${item.id}`, meta: `${item.kind === 'lost' ? 'Lost' : 'Found'} · ${item.location || 'location not given'}` }))}
           empty="Nothing lost or found right now."
         />
       </div>

@@ -15,7 +15,6 @@ import { ROUTES } from '@/lib/constants';
 export function ConversationActions({
   conversationId,
   otherProfileId = null,
-  otherUsername = null,
   canReport = true,
   canBlock = false,
 }) {
@@ -24,11 +23,19 @@ export function ConversationActions({
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
+      {/*
+        One report entry point for the whole thread (not one more for "the
+        other student" too, and not one per message in the thread below).
+        It also has to be "conversation", not "user": staff can only read
+        conversation/message rows while a report with target_type
+        'conversation' or 'message' is open against them
+        (messages_select_staff_on_report / conversations_select_staff_on_report
+        in migration 007) — a target_type 'user' report never unlocks that
+        window, so it would let someone report a DM without a moderator ever
+        being able to see what was actually said.
+      */}
       {canReport ? (
         <ReportDialog targetType="conversation" targetRef={conversationId} label="this conversation" />
-      ) : null}
-      {canReport && otherProfileId ? (
-        <ReportDialog targetType="user" targetRef={otherProfileId} label={otherUsername ? `@${otherUsername}` : 'this student'} />
       ) : null}
       {canBlock && otherProfileId ? (
         confirming ? (

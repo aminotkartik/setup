@@ -13,7 +13,13 @@ import { useState } from 'react';
 import { Button, Notice } from '@/components/ui';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { useFormAction } from '@/lib/forms';
-import { expressInterest, markListingSold, setListingStatus, rateCounterparty } from '@/lib/actions/marketplace';
+import {
+  expressInterest,
+  markListingSold,
+  setListingStatus,
+  rateCounterparty,
+  deleteListing,
+} from '@/lib/actions/marketplace';
 import { startConversation } from '@/lib/actions/messaging';
 import { ROUTES } from '@/lib/constants';
 
@@ -23,6 +29,7 @@ export function ListingActions({
   sellerUsername = null,
   isSeller = false,
   status = 'active',
+  isFree = false,
   canMessage = true,
   canReport = true,
   canRate = false,
@@ -32,6 +39,7 @@ export function ListingActions({
   const [note, setNote] = useState(initialNote || null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [ratingOpen, setRatingOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const interest = useFormAction(expressInterest, {
     onSuccess: (result) => setNote(result?.result?.contact_note || 'The seller has been notified.'),
@@ -40,6 +48,7 @@ export function ListingActions({
   const statusChange = useFormAction(setListingStatus, { onSuccess: () => setStatusOpen(false) });
   const sold = useFormAction(markListingSold);
   const rate = useFormAction(rateCounterparty, { onSuccess: () => setRatingOpen(false) });
+  const remove = useFormAction(deleteListing, { redirectTo: (result) => result?.href || ROUTES.market });
 
   return (
     <div className="flex flex-col gap-3">
@@ -70,7 +79,7 @@ export function ListingActions({
           </form>
         ) : null}
 
-        {isSeller ? (
+        {isSeller && status !== 'sold' ? (
           <>
             <Button variant="secondary" size="sm" onClick={() => setStatusOpen((value) => !value)}>
               Change status
@@ -85,9 +94,36 @@ export function ListingActions({
               }}
               disabled={sold.pending}
             >
-              {sold.pending ? 'Completing…' : 'Mark as sold'}
+              {sold.pending ? 'Completing…' : isFree ? 'Mark as given away' : 'Mark as sold'}
             </Button>
           </>
+        ) : null}
+
+        {isSeller && status !== 'sold' ? (
+          confirmingDelete ? (
+            <>
+              <span className="text-2xs text-muted">Delete this listing permanently?</span>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={remove.pending}
+                onClick={() => {
+                  const data = new FormData();
+                  data.set('id', listingId);
+                  remove.run(data);
+                }}
+              >
+                {remove.pending ? 'Deleting…' : 'Yes, delete'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button variant="ghost" size="sm" icon="close" onClick={() => setConfirmingDelete(true)}>
+              Delete listing
+            </Button>
+          )
         ) : null}
 
         {canRate && !isSeller ? (
@@ -187,7 +223,10 @@ export function ListingActions({
       {statusChange.error ? <Notice tone="danger">{statusChange.error}</Notice> : null}
       {sold.error ? <Notice tone="danger">{sold.error}</Notice> : null}
       {rate.error ? <Notice tone="danger">{rate.error}</Notice> : null}
-      {sold.success ? <Notice tone="success">Marked as sold. Both sides can leave a rating now.</Notice> : null}
+      {remove.error ? <Notice tone="danger">{remove.error}</Notice> : null}
+      {sold.success ? (
+        <Notice tone="success">{isFree ? 'Marked as given away.' : 'Marked as sold. Both sides can leave a rating now.'}</Notice>
+      ) : null}
     </div>
   );
 }

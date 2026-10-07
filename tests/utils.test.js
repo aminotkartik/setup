@@ -8,6 +8,10 @@ import {
   formatPrice,
   relativeTime,
   formatDateRange,
+  formatDate,
+  formatDateTime,
+  formatTime,
+  formatCalendarBadge,
   slugify,
   compactNumber,
   pluralize,
@@ -125,5 +129,66 @@ describe('gif references (the only media Campus+ accepts)', () => {
   it('treats an absent gif as "no gif" rather than an error', () => {
     expect(gifRefValidator(undefined).ok).toBe(true);
     expect(gifRefValidator('').ok).toBe(true);
+  });
+});
+
+describe('date/time formatting always reads as India Standard Time', () => {
+  // Campus+ has one campus, one timezone. `toLocaleDateString`/`toLocaleTimeString`
+  // without an explicit `timeZone` use the *host's* local zone, not IST — on a
+  // UTC server (confirmed to be this sandbox's and Vercel's default) a moment
+  // just after midnight IST is still "yesterday evening" in UTC, so every
+  // formatter must pin `timeZone: 'Asia/Kolkata'` or dates silently shift.
+  const runnerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  it('sanity-checks that this suite is actually exercising a non-IST host clock', () => {
+    // If this ever fails because the runner itself is IST, the midnight-boundary
+    // assertions below would pass even with the historical bug reintroduced —
+    // pin it explicitly instead of trusting the environment.
+    expect(runnerTz).not.toBe('Asia/Kolkata');
+  });
+
+  it('rolls a late-UTC moment forward onto the correct IST calendar day', () => {
+    // 2026-10-07T19:00:00Z = 2026-10-08T00:30 IST — after midnight, next day.
+    const midnightCrossing = '2026-10-07T19:00:00Z';
+    expect(formatDate(midnightCrossing)).toBe('8 Oct 2026');
+    expect(formatDateTime(midnightCrossing)).toBe('8 Oct 2026 · 12:30 am');
+    expect(formatTime(midnightCrossing)).toBe('12:30 am');
+    expect(formatCalendarBadge(midnightCrossing)).toEqual({ month: 'Oct', day: '8' });
+  });
+
+  it('keeps a same-day IST moment on the same day (no off-by-one in the other direction)', () => {
+    // 2026-10-07T10:00:00Z = 2026-10-07T15:30 IST — same calendar day.
+    const sameDay = '2026-10-07T10:00:00Z';
+    expect(formatDate(sameDay)).toBe('7 Oct 2026');
+    expect(formatDateTime(sameDay)).toBe('7 Oct 2026 · 3:30 pm');
+  });
+
+  it('renders a bare SQL `date` (parsed as UTC midnight) on its own IST day, never the previous day', () => {
+    // `new Date('2026-10-08')` is 2026-10-08T00:00:00Z = 05:30 IST the same day —
+    // IST is always ahead of UTC, so a bare date can never roll backwards.
+    expect(formatDate('2026-10-08')).toBe('8 Oct 2026');
+    expect(formatCalendarBadge('2026-10-08')).toEqual({ month: 'Oct', day: '8' });
+  });
+
+  it('produces identical output no matter what timezone the server process runs in', () => {
+    const original = process.env.TZ;
+    const midnightCrossing = '2026-10-07T19:00:00Z';
+    try {
+      process.env.TZ = 'America/New_York';
+      expect(formatDate(midnightCrossing)).toBe('8 Oct 2026');
+      expect(formatDateTime(midnightCrossing)).toBe('8 Oct 2026 · 12:30 am');
+
+      process.env.TZ = 'Asia/Kolkata';
+      expect(formatDate(midnightCrossing)).toBe('8 Oct 2026');
+      expect(formatDateTime(midnightCrossing)).toBe('8 Oct 2026 · 12:30 am');
+    } finally {
+      process.env.TZ = original;
+    }
+  });
+
+  it('India has no daylight-saving transitions, so there is no seasonal edge case to special-case', () => {
+    // Same offset (+05:30) in both the Indian winter and Indian summer.
+    expect(formatTime('2026-01-15T18:30:00Z')).toBe(formatTime('2026-07-15T18:30:00Z'));
+    expect(formatTime('2026-01-15T18:30:00Z')).toBe('12:00 am');
   });
 });

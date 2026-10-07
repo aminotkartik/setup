@@ -18,11 +18,11 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
   const pathname = usePathname();
   const active = (href) => pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
 
+  // Settings lives in the account menu (top-right, AppShell) — not duplicated
+  // here as a second nav entry.
   const secondary = [
     { href: ROUTES.chat, label: 'Messages', icon: 'chat' },
-    { href: ROUTES.random, label: 'Random', icon: 'sparkle' },
     { href: ROUTES.notifications, label: 'Notifications', icon: 'bell', count: unreadNotifications },
-    { href: ROUTES.settings, label: 'Settings', icon: 'settings' },
   ];
 
   return (

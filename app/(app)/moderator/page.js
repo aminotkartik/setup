@@ -284,7 +284,7 @@ export default async function ModeratorPage({ searchParams }) {
           {history.length === 0 ? (
             <EmptyState icon="archive" title="No moderation actions yet" description="Every staff action appears here with its author and outcome." />
           ) : null}
-          <ul className="card divide-y divide-[#E5E5E5]">
+          <ul className="card divide-y divide-line">
             {history.map((entry) => (
               <li key={entry.id} className="flex flex-col gap-1 p-3">
                 <span className="flex flex-wrap items-center gap-2">

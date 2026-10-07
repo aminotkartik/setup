@@ -71,7 +71,7 @@ export function NewConversation({ canMessage = true }) {
             <p className="text-2xs text-muted">No students found.</p>
           ) : null}
           {visibleResults.length ? (
-            <ul className="divide-y divide-[#E5E5E5]">
+            <ul className="divide-y divide-line">
               {visibleResults.map((person) => (
                 <li key={person.id} className="flex items-center justify-between gap-3 py-2">
                   <span className="min-w-0">

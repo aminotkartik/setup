@@ -15,6 +15,7 @@ import { ROUTES } from '@/lib/constants';
 import { PageHeader, Badge, Notice, EmptyState, Card, StaffDot } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { PostCard } from '@/components/posts/PostCard';
+import { PostComposer } from '@/components/posts/PostComposer';
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { CommunityActions } from '@/components/communities/CommunityActions';
 import { MessageButton } from '@/components/social/MessageButton';
@@ -60,6 +61,9 @@ export default async function CommunityPage({ params }) {
   const isMember = membership?.status === 'active';
   const isOwner = membership?.role === 'owner' || community.created_by === user.profile.id;
   const canManage = isOwner || membership?.role === 'moderator' || isStaff;
+  // Mirrors `can_post_in_community`: membership (or moderation power) plus the
+  // platform-wide posting permission the home composer already gates on.
+  const canPostHere = (isMember || isStaff) && can(actor, 'create_posts');
 
   const [posts, requests] = await Promise.all([
     getCommunityPosts(supabase, community.id, { limit: 20, currentProfileId: user.profile.id }),
@@ -136,6 +140,7 @@ export default async function CommunityPage({ params }) {
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <section aria-label="Community posts" className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold">Posts</h2>
+          {canPostHere ? <PostComposer communityId={community.id} compact /> : null}
           {posts.length === 0 ? (
             <EmptyState
               icon="comment"

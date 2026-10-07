@@ -606,7 +606,7 @@ export default async function AdminPage({ searchParams }) {
               {audit.map((entry) => (
                 <li key={entry.id} className="card flex flex-wrap items-center gap-2 p-3">
                   <span className="font-mono text-2xs text-muted">{entry.action}</span>
-                  <Badge>{entry.target_type || 'system'}</Badge>
+                  <Badge>{entry.target_type ? entry.target_type.replace(/_/g, ' ') : 'system'}</Badge>
                   {entry.visibility === 'sensitive' ? <Badge tone="danger">sensitive</Badge> : null}
                   <span className="text-2xs text-muted">
                     {entry.actor_username ? `@${entry.actor_username}` : 'system'} · {formatDateTime(entry.created_at)}

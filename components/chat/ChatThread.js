@@ -16,7 +16,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Textarea, Notice, Spinner } from '@/components/ui';
 import { GifAttachment, GifPicker } from '@/components/media/GifPicker';
-import { ReportDialog } from '@/components/social/ReportDialog';
 import { useFormAction } from '@/lib/forms';
 import { getBrowserClient, isBrowserConfigured } from '@/lib/supabase/client';
 import { sendMessage, editMessage, deleteMessage, markConversationRead } from '@/lib/actions/messaging';
@@ -38,7 +37,6 @@ export function ChatThread({
   members = [],
   reads: initialReads = [],
   canPost = true,
-  canReport = true,
 }) {
   // Server-rendered messages and realtime arrivals are merged during render —
   // no state synchronisation effects, no cascading renders.
@@ -219,30 +217,23 @@ export function ChatThread({
                 </div>
               )}
 
-              {!deleted && !isEditing ? (
+              {!deleted && !isEditing && mine ? (
                 <div className="flex items-center gap-2 text-2xs text-muted">
-                  {mine ? (
-                    <>
-                      <button type="button" className="hover:text-ink" onClick={() => setEditing(message)}>
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="hover:text-ink"
-                        onClick={() => {
-                          const data = new FormData();
-                          data.set('id', message.id);
-                          data.set('conversation_id', conversationId);
-                          remove.run(data);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : null}
-                  {!mine && canReport ? (
-                    <ReportDialog targetType="message" targetRef={message.id} label="this message" />
-                  ) : null}
+                  <button type="button" className="hover:text-ink" onClick={() => setEditing(message)}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="hover:text-ink"
+                    onClick={() => {
+                      const data = new FormData();
+                      data.set('id', message.id);
+                      data.set('conversation_id', conversationId);
+                      remove.run(data);
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               ) : null}
             </article>

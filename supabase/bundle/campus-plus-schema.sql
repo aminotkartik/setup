@@ -30,7 +30,7 @@
 --   that already has the schema is refused by Postgres rather than half-applied.
 --   Take a database backup from the dashboard before the first run.
 --
--- Contents (20 files):
+-- Contents (23 files):
 --   01  20261005000001_001_extensions_and_enums.sql  (117 lines)
 --   02  20261005000002_002_identity_roles.sql  (589 lines)
 --   03  20261005000003_003_blocks.sql  (143 lines)
@@ -51,9 +51,12 @@
 --   18  20261005000018_018_function_grants.sql  (111 lines)
 --   19  20261005000019_019_staff_visibility.sql  (72 lines)
 --   20  20261005000020_020_chat_inbox.sql  (90 lines)
+--   21  20261005000021_021_marketplace_and_security_fixes.sql  (334 lines)
+--   22  20261005000022_022_random_views_invoker_fix.sql  (69 lines)
+--   23  20261005000023_023_random_chat_flag_retired.sql  (26 lines)
 
 -- ==========================================================================
--- FILE 01/20  20261005000001_001_extensions_and_enums.sql
+-- FILE 01/23  20261005000001_001_extensions_and_enums.sql
 -- ==========================================================================
 
 -- Campus+ migration 001 — extensions and enums
@@ -174,7 +177,7 @@ comment on function public.touch_updated_at() is
   'BEFORE UPDATE trigger that stamps updated_at. Attached to every mutable table.';
 
 -- ==========================================================================
--- FILE 02/20  20261005000002_002_identity_roles.sql
+-- FILE 02/23  20261005000002_002_identity_roles.sql
 -- ==========================================================================
 
 -- Campus+ migration 002 — identity roles
@@ -766,7 +769,7 @@ create trigger user_roles_no_escalation
 -- very first version of the view.
 
 -- ==========================================================================
--- FILE 03/20  20261005000003_003_blocks.sql
+-- FILE 03/23  20261005000003_003_blocks.sql
 -- ==========================================================================
 
 -- Campus+ migration 003 — blocks
@@ -913,7 +916,7 @@ comment on view public.public_profiles is
   'Public projection of profiles. Institutional email, auth ids and moderation state are structurally absent.';
 
 -- ==========================================================================
--- FILE 04/20  20261005000004_004_communities.sql
+-- FILE 04/23  20261005000004_004_communities.sql
 -- ==========================================================================
 
 -- Campus+ migration 004 — communities
@@ -1320,7 +1323,7 @@ create policy community_join_requests_cancel on public.community_join_requests
   for delete to authenticated using (user_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 05/20  20261005000005_005_social.sql
+-- FILE 05/23  20261005000005_005_social.sql
 -- ==========================================================================
 
 -- Campus+ migration 005 — social
@@ -1943,7 +1946,7 @@ comment on function public.record_mentions(text, uuid, text[]) is
   'Records @mentions for a post/comment/message. Blocks and inactive accounts are filtered server-side.';
 
 -- ==========================================================================
--- FILE 06/20  20261005000006_006_moderation_core.sql
+-- FILE 06/23  20261005000006_006_moderation_core.sql
 -- ==========================================================================
 
 -- Campus+ migration 006 — moderation core
@@ -2418,7 +2421,7 @@ create trigger notifications_guard_update
   for each row execute function public.guard_notification_update();
 
 -- ==========================================================================
--- FILE 07/20  20261005000007_007_messaging.sql
+-- FILE 07/23  20261005000007_007_messaging.sql
 -- ==========================================================================
 
 -- Campus+ migration 007 — messaging
@@ -3007,7 +3010,7 @@ create policy message_reads_update_self on public.message_reads
   with check (user_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 08/20  20261005000008_008_marketplace.sql
+-- FILE 08/23  20261005000008_008_marketplace.sql
 -- ==========================================================================
 
 -- Campus+ migration 008 — marketplace
@@ -3529,7 +3532,7 @@ create policy ratings_delete_own on public.ratings
   for delete to authenticated using (rater_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 09/20  20261005000009_009_campus.sql
+-- FILE 09/23  20261005000009_009_campus.sql
 -- ==========================================================================
 
 -- Campus+ migration 009 — campus
@@ -4563,7 +4566,7 @@ create policy user_achievements_select on public.user_achievements
 -- Awarded rows are written by evaluate_achievements() only.
 
 -- ==========================================================================
--- FILE 10/20  20261005000010_010_random.sql
+-- FILE 10/23  20261005000010_010_random.sql
 -- ==========================================================================
 
 -- Campus+ migration 010 — random
@@ -5215,7 +5218,7 @@ comment on function public.sweep_random_state() is
   'Callable by any authenticated user (it only expires stale rows) and by the scheduled maintenance script.';
 
 -- ==========================================================================
--- FILE 11/20  20261005000011_011_platform.sql
+-- FILE 11/23  20261005000011_011_platform.sql
 -- ==========================================================================
 
 -- Campus+ migration 011 — platform
@@ -5955,7 +5958,7 @@ create policy feature_flags_manage on public.feature_flags
 -- rate_limits: intentionally no policies. Only the definer function touches it.
 
 -- ==========================================================================
--- FILE 12/20  20261005000012_012_auth_hooks.sql
+-- FILE 12/23  20261005000012_012_auth_hooks.sql
 -- ==========================================================================
 
 -- Campus+ migration 012 — auth hooks
@@ -6412,7 +6415,7 @@ create policy reserved_usernames_manage on public.reserved_usernames
   with check (public.has_permission('manage_platform_settings'));
 
 -- ==========================================================================
--- FILE 13/20  20261005000013_013_reference_data.sql
+-- FILE 13/23  20261005000013_013_reference_data.sql
 -- ==========================================================================
 
 -- Campus+ migration 013 — reference data
@@ -6686,7 +6689,7 @@ insert into public.platform_settings (key, value, description, category, is_publ
 on conflict (key) do nothing;
 
 -- ==========================================================================
--- FILE 14/20  20261005000014_014_realtime_and_grants.sql
+-- FILE 14/23  20261005000014_014_realtime_and_grants.sql
 -- ==========================================================================
 
 -- Campus+ migration 014 — realtime and grants
@@ -6899,7 +6902,7 @@ end;
 $$;
 
 -- ==========================================================================
--- FILE 15/20  20261005000015_015_column_privileges.sql
+-- FILE 15/23  20261005000015_015_column_privileges.sql
 -- ==========================================================================
 
 -- Campus+ migration 015 — column privileges
@@ -7127,7 +7130,7 @@ revoke update on public.reserved_usernames from authenticated, anon;
 grant all on all tables in schema public to service_role;
 
 -- ==========================================================================
--- FILE 16/20  20261005000016_016_staff_actions.sql
+-- FILE 16/23  20261005000016_016_staff_actions.sql
 -- ==========================================================================
 
 -- Campus+ migration 016 — staff actions
@@ -7834,7 +7837,7 @@ comment on function public.admin_set_platform_setting(text, jsonb) is
   'Admin/Super Admin entry point for platform configuration. Validates the value per key and writes an audit entry.';
 
 -- ==========================================================================
--- FILE 17/20  20261005000017_017_marketplace_hardening.sql
+-- FILE 17/23  20261005000017_017_marketplace_hardening.sql
 -- ==========================================================================
 
 -- Campus+ migration 017 — marketplace hardening
@@ -8032,7 +8035,7 @@ comment on view public.listing_interests_view is
   'Students who expressed interest in a listing. Visible only to the seller and staff (security_invoker + base-table RLS).';
 
 -- ==========================================================================
--- FILE 18/20  20261005000018_018_function_grants.sql
+-- FILE 18/23  20261005000018_018_function_grants.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8147,7 +8150,7 @@ grant select on public.random_session_view to authenticated;
 grant select on public.random_messages_view to authenticated;
 
 -- ==========================================================================
--- FILE 19/20  20261005000019_019_staff_visibility.sql
+-- FILE 19/23  20261005000019_019_staff_visibility.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8223,7 +8226,7 @@ comment on view public.public_profiles is
 grant select on public.public_profiles to authenticated;
 
 -- ==========================================================================
--- FILE 20/20  20261005000020_020_chat_inbox.sql
+-- FILE 20/23  20261005000020_020_chat_inbox.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8315,6 +8318,447 @@ $$;
 
 comment on function public.conversation_inbox(integer) is
   'Inbox read model (RLS-scoped): newest message plus the unread count within the newest 30 messages per visible conversation.';
+
+-- ==========================================================================
+-- FILE 21/23  20261005000021_021_marketplace_and_security_fixes.sql
+-- ==========================================================================
+
+-- Campus+ migration 021 — marketplace lifecycle fixes + security hardening
+-- Supabase CLI filename: 20261005000021_021_marketplace_and_security_fixes.sql
+-- This file is part of the single authoritative migration history in supabase/migrations/.
+-- =============================================================================
+-- This migration fixes two confirmed, root-caused marketplace bugs and closes
+-- three small, real gaps the security review found. Nothing here touches RLS
+-- in a way that widens access, converts a function away from the security
+-- posture it needs to work, or uses the secret key to bypass a policy.
+-- =============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. "Remove listing" silently did nothing, and a resolved listing never
+--    actually recorded its buyer.
+-- ----------------------------------------------------------------------------
+-- guard_listing_update() (migration 008) lets a seller move their own listing
+-- between 'active', 'reserved', 'sold' and 'expired' only — any other value is
+-- silently reverted to the old status (`new.status := old.status;`), with no
+-- error raised. 'removed' was missing from that list, so the "Remove listing"
+-- action in the UI ran its UPDATE, got a 200, and the listing stayed exactly
+-- as visible as before. This adds 'removed' to the seller-controlled set.
+--
+-- Separately, this trigger unconditionally reverts `sold_to`/`sold_at` back to
+-- their old values for any caller that is not `is_trusted_writer()` or a
+-- marketplace moderator. mark_listing_completed() is SECURITY DEFINER so it
+-- can legitimately set those two columns on the seller's behalf, but
+-- SECURITY DEFINER only changes which role's *table privileges* apply — the
+-- session's JWT claims (which is_trusted_writer() reads) are unchanged, so
+-- from this trigger's point of view an ordinary seller's resolve looked
+-- exactly like a student trying to edit sold_to directly, and it was silently
+-- reverted. The result: calling mark_listing_completed() as a regular student
+-- always left `sold_to`/`sold_at` untouched even when a buyer was found,
+-- regardless of the two bugs fixed below. This now also recognises
+-- `in_system_context()` (migration 002's existing marker for "a Campus+
+-- definer function is doing privileged work on the user's behalf", already
+-- used by prevent_privilege_escalation()) and mark_listing_completed() sets
+-- that marker before writing.
+-- ----------------------------------------------------------------------------
+
+create or replace function public.guard_listing_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    new.view_count := (
+      select count(*) from public.marketplace_interactions i
+      where i.listing_id = old.id and i.kind = 'view'
+    );
+    new.contact_count := (
+      select count(*) from public.marketplace_interactions i
+      where i.listing_id = old.id and i.kind = 'contact'
+    );
+  end if;
+
+  if public.is_trusted_writer() or public.in_system_context()
+     or public.has_permission('moderate_marketplace') or public.has_permission('moderate_all') then
+    return new;
+  end if;
+  new.seller_id         := old.seller_id;
+  new.category_id       := old.category_id;
+  new.is_official       := old.is_official;
+  new.moderated_by      := old.moderated_by;
+  new.moderated_at      := old.moderated_at;
+  new.moderation_reason := old.moderation_reason;
+  new.sold_at           := old.sold_at;
+  new.sold_to           := old.sold_to;
+  -- A seller may only move a listing between the student-controlled states.
+  -- 'removed' is the self-service "take this down" state (delete_own_content /
+  -- restore_own_content toggle it); a hard delete is a separate RLS-governed
+  -- DELETE, not a status transition.
+  if new.status is distinct from old.status
+     and new.status not in ('active', 'reserved', 'sold', 'expired', 'removed') then
+    new.status := old.status;
+  end if;
+  return new;
+end;
+$$;
+
+-- ----------------------------------------------------------------------------
+-- 2. Generic "Something went wrong" on resolving a listing with no recorded
+--    interest.
+-- ----------------------------------------------------------------------------
+-- mark_listing_completed() raised when it could not infer a buyer (nobody had
+-- tapped "I'm interested" first) and the UI's "Mark as sold" button never
+-- collects one, so the seller could never resolve such a listing. sold_to is
+-- nullable (migration 008: `references profiles(id) on delete set null`) and
+-- on_listing_completed() (migration 008) only counts completions — it does not
+-- require a buyer — so completing with sold_to = null is safe. The matching
+-- fromPostgresError() fix lives in lib/errors.js: it previously had no mapping
+-- for the 22023 errcode these business-rule messages use, so this and ~50
+-- other deliberately-written, user-safe messages across the app were being
+-- swallowed into a generic "internal error" string.
+-- ----------------------------------------------------------------------------
+
+create or replace function public.mark_listing_completed(p_listing uuid, p_buyer uuid default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_me uuid := public.current_profile_id();
+  v_buyer uuid := p_buyer;
+  v_seller uuid;
+begin
+  if v_me is null then
+    raise exception 'Not authenticated' using errcode = '42501';
+  end if;
+
+  select seller_id into v_seller from public.marketplace_listings where id = p_listing;
+  if v_seller is null then
+    raise exception 'That listing could not be found.' using errcode = '22023';
+  end if;
+  if v_seller <> v_me and not public.has_permission('moderate_marketplace') then
+    raise exception 'Only the seller can mark a listing as sold.' using errcode = '42501';
+  end if;
+
+  if v_buyer is null then
+    -- Default to the student who most recently showed interest, if any.
+    select i.user_id into v_buyer
+    from public.marketplace_interactions i
+    where i.listing_id = p_listing and i.kind = 'contact'
+    order by i.created_at desc
+    limit 1;
+  end if;
+  -- No interest was ever recorded (e.g. handed off outside the app): complete
+  -- the listing without a buyer rather than blocking the seller from ever
+  -- resolving it. A buyer is still never allowed to be the seller.
+  if v_buyer is not null and v_buyer = v_seller then
+    raise exception 'The buyer cannot be the seller.' using errcode = '22023';
+  end if;
+
+  -- Mark this as privileged, definer-driven work so guard_listing_update()
+  -- lets sold_to/sold_at through for an ordinary seller (see the comment on
+  -- guard_listing_update() above). Transaction-local: cleared automatically
+  -- once this call's transaction ends.
+  perform set_config('campus.system_context', 'on', true);
+
+  update public.marketplace_listings
+     set status = 'sold', sold_to = v_buyer, sold_at = now()
+   where id = p_listing;
+
+  if v_buyer is not null then
+    perform public.notify_user(
+      v_buyer, 'marketplace_rating',
+      'You can now rate this trade',
+      'The seller marked "' || left(coalesce((select title from public.marketplace_listings where id = p_listing), 'a listing'), 80)
+        || '" as completed. Leave a rating to help other students.',
+      'marketplace_listing', p_listing::text, '/market/listing/' || p_listing::text
+    );
+  end if;
+
+  perform public.log_audit('marketplace.completed', 'marketplace_listing', p_listing::text,
+    jsonb_build_object('buyer_id', v_buyer), false, null, 'private');
+
+  return jsonb_build_object('ok', true, 'buyer_id', v_buyer);
+end;
+$$;
+
+-- ----------------------------------------------------------------------------
+-- 2b. mark_listing_completed() could never finish for an ordinary student.
+-- ----------------------------------------------------------------------------
+-- Independently of the missing-buyer bug above, log_audit() (migration 006)
+-- only allows a non-staff caller to write 'account.%', 'user.%' or
+-- 'content.self_%' actions — anything else raises 42501 "You do not have
+-- permission to write audit entries." mark_listing_completed() logs
+-- 'marketplace.completed', which matches none of those, so the perform
+-- public.log_audit(...) call at the end of a successful resolve would ALWAYS
+-- fail with that 42501 for a regular student seller (it never surfaced before
+-- because every student request hit the missing-buyer 22023 first — a
+-- moderator-driven resolve worked, since v_is_staff short-circuits the check,
+-- which is why this stayed hidden). 'marketplace.completed' is a self-service
+-- action on the caller's own listing, the same category as content.self_*, so
+-- it is added to the allowed set rather than loosening the check generally.
+-- ----------------------------------------------------------------------------
+
+create or replace function public.log_audit(
+  p_action text,
+  p_target_type text default null,
+  p_target_id text default null,
+  p_metadata jsonb default null,
+  p_also_moderation boolean default false,
+  p_reason text default null,
+  p_visibility public.moderation_visibility default 'staff'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_id uuid;
+  v_is_staff boolean;
+begin
+  if v_actor is null and not public.is_trusted_writer() then
+    raise exception 'Not authenticated' using errcode = '42501';
+  end if;
+
+  v_is_staff := public.is_staff() or public.is_trusted_writer();
+
+  -- Non-staff may only record their own account-lifecycle events and a small,
+  -- explicit allow-list of other self-service actions, never moderation or
+  -- administration entries.
+  if not v_is_staff
+     and p_action not like 'account.%'
+     and p_action not like 'user.%'
+     and p_action not like 'content.self_%'
+     and p_action <> 'marketplace.completed' then
+    raise exception 'You do not have permission to write audit entries.' using errcode = '42501';
+  end if;
+
+  insert into public.audit_logs (actor_user_id, action, target_type, target_id, metadata, visibility)
+  values (
+    v_actor,
+    left(p_action, 80),
+    left(p_target_type, 60),
+    case when p_target_id ~ '^[0-9a-f-]{36}$' then p_target_id::uuid else null end,
+    coalesce(p_metadata, '{}'::jsonb) || jsonb_build_object(
+      'reason', p_reason,
+      'actor_username', (select username from public.profiles where id = v_actor)
+    ),
+    case when v_is_staff then p_visibility else 'private'::public.moderation_visibility end
+  )
+  returning id into v_id;
+
+  if p_also_moderation and v_is_staff then
+    insert into public.moderation_actions (
+      moderator_id, report_id, action, target_type, target_id, note
+    ) values (
+      v_actor,
+      nullif(p_metadata->>'report_id', '')::uuid,
+      left(p_action, 60),
+      left(p_target_type, 60),
+      case when p_target_id ~ '^[0-9a-f-]{36}$' then p_target_id::uuid else null end,
+      left(p_reason, 1000)
+    );
+  end if;
+
+  return v_id;
+end;
+$$;
+
+comment on function public.log_audit is
+  'Append-only audit writer. Students are limited to their own account.* / user.* / content.self_* events plus the marketplace.completed self-service action; moderation entries require staff.';
+
+-- ----------------------------------------------------------------------------
+-- 3. conversation_inbox() was callable by anon.
+-- ----------------------------------------------------------------------------
+-- Migration 020 created this function after migration 018's blanket
+-- revoke/grant loop and relied on `alter default privileges` to keep new
+-- functions off PUBLIC. That did not take effect for this function, so it
+-- kept PostgreSQL's built-in "EXECUTE to PUBLIC" default and `anon` could call
+-- it. The function is `security invoker` and every row is still filtered by
+-- RLS (an anon caller has no profile, so current_profile_id() is null and the
+-- query returns nothing) — there is no data exposure — but an unauthenticated
+-- caller should not be able to reach an application RPC at all. Fixed
+-- explicitly here rather than re-relying on the default.
+-- ----------------------------------------------------------------------------
+
+revoke all on function public.conversation_inbox(integer) from public, anon;
+grant execute on function public.conversation_inbox(integer) to authenticated, service_role;
+
+-- ----------------------------------------------------------------------------
+-- 4. messages_update_staff allowed `with check (true)`.
+-- ----------------------------------------------------------------------------
+-- Column privileges already confine every authenticated UPDATE on `messages`
+-- to the `body`/`gif` columns (migration 015), so this was never a path to
+-- changing `sender_id`, `deleted_at`, etc. But `with check (true)` means a
+-- moderator's update is accepted no matter what the row looks like afterwards,
+-- so the same re-check used for `using` now also runs for `with check`: the
+-- message must still belong to a conversation/message under an active
+-- pending/reviewing report after the edit, matching the condition that let
+-- the moderator reach the row in the first place.
+-- ----------------------------------------------------------------------------
+
+drop policy if exists messages_update_staff on public.messages;
+create policy messages_update_staff on public.messages
+  for update to authenticated
+  using ((public.has_permission('review_reports') or public.has_permission('moderate_all'))
+         and exists (select 1 from public.reports r
+                     where r.status in ('pending', 'reviewing')
+                       and ((r.target_type = 'message' and r.target_id = messages.id)
+                            or (r.target_type = 'conversation' and r.target_id = messages.conversation_id))))
+  with check ((public.has_permission('review_reports') or public.has_permission('moderate_all'))
+         and exists (select 1 from public.reports r
+                     where r.status in ('pending', 'reviewing')
+                       and ((r.target_type = 'message' and r.target_id = messages.id)
+                            or (r.target_type = 'conversation' and r.target_id = messages.conversation_id))));
+
+-- ----------------------------------------------------------------------------
+-- 5. Mutable search_path on a handful of helper functions this repo owns.
+-- ----------------------------------------------------------------------------
+-- Every SECURITY DEFINER function already pins search_path. These few small
+-- SECURITY INVOKER helpers predate that convention; pinning them is a
+-- metadata-only change (no behavioural difference — none of them reference an
+-- unqualified relation) that silences the Advisor's "Function Search Path
+-- Mutable" lint for the functions this project actually authored. The
+-- remaining functions the lint can flag (pgcrypto, pg_trgm) are vendored
+-- extension functions installed into `public`; they are intentionally left
+-- alone — the fix for those is moving extensions to a dedicated schema, which
+-- is a deploy-time decision for whoever owns the Supabase project, not a
+-- migration that should be forced through here.
+-- ----------------------------------------------------------------------------
+
+alter function public.touch_updated_at() set search_path = public, pg_temp;
+alter function public.request_claims() set search_path = public, pg_temp;
+alter function public.jwt_role() set search_path = public, pg_temp;
+alter function public.jwt_sub() set search_path = public, pg_temp;
+alter function public.is_trusted_writer() set search_path = public, pg_temp;
+alter function public.in_system_context() set search_path = public, pg_temp;
+alter function public.safe_uuid(text) set search_path = public, pg_temp;
+alter function public.content_moderation_permission(text) set search_path = public, pg_temp;
+
+-- ----------------------------------------------------------------------------
+-- Note on random_session_view / random_messages_view (not changed here)
+-- ----------------------------------------------------------------------------
+-- These two views are intentionally NOT `security_invoker`. random_sessions,
+-- random_session_participants and random_messages have no participant-facing
+-- SELECT policy on purpose (migration 010: "No participant policies on
+-- purpose: participants read random_session_state() and random_session_view,
+-- which contain no identities.") — the views themselves do the privacy
+-- filtering (`p.user_id = current_profile_id()`) and intentionally run with
+-- the view owner's privileges to assemble that projection across both
+-- participants' rows. Setting `security_invoker = true` would make the views
+-- subject to RLS as the calling student, who has no SELECT policy on the
+-- underlying tables at all — every participant would get zero rows and
+-- Random Chat's message/session reads would break outright. This is kept as
+-- designed; the earlier assumption that these views already had
+-- `security_invoker = true` set does not match the migration history and the
+-- correct fix is not to add it.
+
+-- ==========================================================================
+-- FILE 22/23  20261005000022_022_random_views_invoker_fix.sql
+-- ==========================================================================
+
+-- Campus+ migration 022 — restore random_session_view / random_messages_view
+-- Supabase CLI filename: 20261005000022_022_random_views_invoker_fix.sql
+-- This file is part of the single authoritative migration history in supabase/migrations/.
+-- =============================================================================
+-- These two views were reported as having been manually switched to
+-- `security_invoker = true` directly against a live project during an earlier
+-- debugging session (outside of this migration history, so no prior migration
+-- file shows it). This migration verifies that claim against real behaviour
+-- and, since it is correct, restores the configuration the application
+-- actually requires — explicitly, so a future "harden this view" pass does
+-- not flip it back without re-reading this comment.
+--
+-- Verified empirically (not by inspection alone) against a disposable
+-- Postgres instance with every migration through 021 applied and real
+-- session/message rows:
+--
+--   default view (security definer semantics, as migration 010 created it):
+--     a participant querying random_session_view / random_messages_view for
+--     their own session sees their session row and their message — correct.
+--
+--   same query, same data, with `security_invoker = true` set on both views:
+--     the same participant gets ZERO rows back from both views.
+--
+-- Why: random_sessions, random_session_participants and random_messages have
+-- NO participant-facing SELECT policy at all — migration 010 says so in so
+-- many words ("No participant policies on purpose: participants read
+-- random_session_state() and random_session_view, which contain no
+-- identities."). Access control for a participant's own session is enforced
+-- by the view body (`p.user_id = current_profile_id()`) and by
+-- random_session_state()'s own has_permission/ownership check, not by RLS on
+-- the base tables — participant RLS was deliberately never built for these
+-- tables. `security_invoker = true` makes a view subject to RLS as the
+-- calling role; with no participant policy to pass, every participant query
+-- returns nothing. Staff (who do have a `view_random_sessions`-gated SELECT
+-- policy on the base tables) would not notice this change — the lobby and
+-- message list silently stop working for every real participant, while admin
+-- testing still looks fine. That matches a change that can go unnoticed.
+--
+-- lib/actions/random.js confirms the application depends on exactly this
+-- definer behaviour: it queries `random_session_view` / `random_messages_view`
+-- directly with no extra ownership filter, trusting the view to scope the
+-- rows to the caller. (The `/random` UI route that called these actions was
+-- since removed — see migration 023 — but the actions module and this view
+-- behaviour are both kept, unreferenced, per the same retention decision.)
+--
+-- This does not weaken RLS: RLS stays enabled and unchanged on every base
+-- table. It restores two views to the access-control design they were built
+-- with, which is documented, narrow (no identity columns, no cross-session
+-- reads) and already audited (`npm run audit:db` — "Definer views are limited
+-- to the two audited Random projections").
+-- =============================================================================
+
+alter view public.random_session_view set (security_invoker = false);
+alter view public.random_messages_view set (security_invoker = false);
+
+comment on view public.random_session_view is
+  'Participant-safe session projection: no participant ids, no usernames, no profile data. '
+  'Deliberately NOT security_invoker — see migration 022. The base tables have no participant '
+  'SELECT policy on purpose; this view''s own `p.user_id = current_profile_id()` filter is the '
+  'access control. Do not add security_invoker to this view without also adding participant-safe '
+  'RLS policies to random_sessions and random_session_participants, or every participant query '
+  'will silently return zero rows.';
+
+comment on view public.random_messages_view is
+  'Participant-safe message stream. `sender_user_id` is mapped to a boolean `mine` flag so the '
+  'other student cannot be identified. Deliberately NOT security_invoker — see migration 022; the '
+  'same reasoning as random_session_view applies, since random_messages has no participant SELECT '
+  'policy either.';
+
+-- ==========================================================================
+-- FILE 23/23  20261005000023_023_random_chat_flag_retired.sql
+-- ==========================================================================
+
+-- 023: Random Chat removed from the UI — reflect it in the feature flag.
+--
+-- Random Chat has no nav link, no /random route and no composer anywhere in
+-- the app (see lib/constants.js FEATURE_FLAGS for the full rationale). This
+-- migration only flips the admin-visible `feature_flags` row so staff see an
+-- accurate state in the Admin > Feature flags panel; it is a one-row UPDATE,
+-- not a deletion:
+--   - random_sessions, random_session_participants, random_messages and their
+--     views/functions/RLS policies are all left exactly as they are;
+--   - the `use_random_chat`, `moderate_random` and `view_random_sessions`
+--     permissions are untouched — moderators still need them to review
+--     reports already filed against past sessions;
+--   - the moderator "Random reports" queue keeps working against existing data.
+-- Nothing in the application currently reads this flag to gate anything (the
+-- /random page checked the `use_random_chat` permission directly and no
+-- longer exists at all), so this update has no functional effect beyond the
+-- admin panel's own display — it exists purely so the control panel doesn't
+-- claim a retired feature is still enabled.
+
+update public.feature_flags
+set
+  label = 'Random (retired — no UI entry point)',
+  description = 'Anonymous paired conversations between verified students. Removed from navigation; data and moderation tools are retained.',
+  enabled = false
+where key = 'random_chat';
 
 -- ==========================================================================
 -- VERIFICATION — reports whether the install is complete (no changes made)

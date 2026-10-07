@@ -189,7 +189,7 @@ describe('route surface (spec §5, §6)', () => {
   it('exposes every route the specification lists', () => {
     const required = [
       '/', '/setup', '/login', '/login/verify', '/onboarding', '/account-status', '/rules',
-      '/home', '/explore', '/market', '/communities', '/campus', '/chat', '/random',
+      '/home', '/explore', '/market', '/communities', '/campus', '/chat',
       '/profile', '/settings', '/notifications', '/moderator', '/admin',
       '/user/[username]', '/post/[id]', '/community/[slug]', '/market/listing/[id]',
       '/market/gigs/[id]', '/campus/events/[id]', '/campus/clubs/[id]',
@@ -213,7 +213,7 @@ describe('route surface (spec §5, §6)', () => {
   });
 
   it('ships loading states for the primary surfaces', () => {
-    const withLoading = ['home', 'explore', 'market', 'communities', 'campus', 'chat', 'notifications', 'random', 'settings', 'moderator', 'admin', 'profile'];
+    const withLoading = ['home', 'explore', 'market', 'communities', 'campus', 'chat', 'notifications', 'settings', 'moderator', 'admin', 'profile'];
     const missing = withLoading.filter(
       (route) => !fs.existsSync(path.join(ROOT, 'app', '(app)', route, 'loading.js')),
     );

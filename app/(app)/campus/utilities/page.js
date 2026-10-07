@@ -18,6 +18,29 @@ const SECTIONS = {
   help: { label: 'Help hub', description: 'Who to contact when something goes wrong.' },
 };
 
+// `academic_calendar.entry_type` (supabase/migrations/009_campus.sql). Fixed DB
+// enum — must never leak its snake_case spelling (e.g. "semester_start") to users.
+const ENTRY_TYPE_LABELS = {
+  exam: 'Exam',
+  semester_start: 'Semester start',
+  semester_end: 'Semester end',
+  holiday: 'Holiday',
+  deadline: 'Deadline',
+  academic_event: 'Academic event',
+  other: 'Other',
+};
+
+// `help_contacts.category` (same migration). Same reasoning — "anti_ragging"
+// must render as "Anti-ragging", not with a raw underscore.
+const HELP_CATEGORY_LABELS = {
+  emergency: 'Emergency',
+  medical: 'Medical',
+  security: 'Security',
+  counselling: 'Counselling',
+  anti_ragging: 'Anti-ragging',
+  other: 'Other',
+};
+
 /**
  * Campus utilities (spec §43–§46).
  *
@@ -76,8 +99,8 @@ export default async function UtilitiesPage({ searchParams }) {
           <Card key={item.id} className="flex flex-col gap-2 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-[0.9375rem] font-medium">{item.name || item.title || item.route_name}</h2>
-              {item.category ? <Badge>{item.category}</Badge> : null}
-              {item.entry_type ? <Badge tone="accent">{item.entry_type}</Badge> : null}
+              {item.category ? <Badge>{HELP_CATEGORY_LABELS[item.category] || item.category}</Badge> : null}
+              {item.entry_type ? <Badge tone="accent">{ENTRY_TYPE_LABELS[item.entry_type] || item.entry_type}</Badge> : null}
               {item.audience ? <Badge>{item.audience}</Badge> : null}
               {item.service_status ? <Badge>{item.service_status}</Badge> : null}
             </div>

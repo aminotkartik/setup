@@ -99,7 +99,7 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
         </Button>
       </div>
 
-      <ul className={cn('card divide-y divide-[#E5E5E5]', pending && 'opacity-70')}>
+      <ul className={cn('card divide-y divide-line', pending && 'opacity-70')}>
         {items.map((item) => {
           const body = (
             <span className="flex min-w-0 items-start gap-3 p-3">

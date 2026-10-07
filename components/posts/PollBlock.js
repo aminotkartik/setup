@@ -14,7 +14,9 @@ export function PollBlock({ postId, poll, canVote = true }) {
   const options = poll.options || [];
   const total = options.reduce((sum, option) => sum + (option.vote_count || 0), 0);
   const myOption = options.find((option) => option.mine)?.id || null;
-  // Evaluated once when the component mounts: a render must stay pure.
+  // Evaluated once when the component mounts: a render must stay pure. The
+  // server also enforces `poll_closes_at` on every vote (migration 005), so a
+  // stale `closed` flag here is a display nicety, never a way to vote late.
   const [closed] = useState(() => (poll.closes_at ? new Date(poll.closes_at).getTime() < Date.now() : false));
   const showResults = Boolean(myOption) || closed;
 

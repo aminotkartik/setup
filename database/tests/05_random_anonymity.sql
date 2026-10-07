@@ -400,6 +400,101 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- 7. random_session_view / random_messages_view must stay non-invoker
+-- ---------------------------------------------------------------------------
+-- random_sessions, random_session_participants and random_messages have no
+-- participant-facing SELECT policy on purpose (see migration 010's own
+-- comment). These two views are the only read path a participant has to
+-- their own session and messages, and they work by running with the view
+-- owner's privileges and filtering on current_profile_id() themselves. If a
+-- future change sets `security_invoker = true` on either view, every
+-- participant query against it will silently return zero rows (confirmed
+-- empirically — see migration 022) while staff, who do have a
+-- permission-gated SELECT policy on the base tables, would see no difference
+-- at all. This regression would be easy to ship unnoticed, so it is pinned
+-- here at both the configuration level and with a real read.
+-- ---------------------------------------------------------------------------
+
+reset role;
+select set_config('request.jwt.claim.role', 'service_role', false);
+
+do $$
+declare
+  v_invoker boolean;
+begin
+  select (reloptions is not null and 'security_invoker=true' = any(reloptions))
+    into v_invoker
+  from pg_class where relname = 'random_session_view' and relnamespace = 'public'::regnamespace;
+  perform public.test_assert(coalesce(v_invoker, false) = false,
+    '7. random_session_view must not be security_invoker (see migration 022)');
+
+  select (reloptions is not null and 'security_invoker=true' = any(reloptions))
+    into v_invoker
+  from pg_class where relname = 'random_messages_view' and relnamespace = 'public'::regnamespace;
+  perform public.test_assert(coalesce(v_invoker, false) = false,
+    '7. random_messages_view must not be security_invoker (see migration 022)');
+end;
+$$;
+
+-- Fresh fixture, independent of the session state left by earlier sections
+-- (section 5 ends the Aakash/Bela session).
+insert into auth.users (id, email) values
+  ('e0000000-0000-4000-a000-000000000007', 'eshan@pccoepune.org'),
+  ('e0000000-0000-4000-a000-000000000008', 'falguni@pccoepune.org')
+on conflict (id) do nothing;
+
+do $$
+declare
+  r record;
+begin
+  for r in
+    select * from (values
+      ('e0000000-0000-4000-a000-000000000007', 'eshan', 'Eshan Jadhav'),
+      ('e0000000-0000-4000-a000-000000000008', 'falguni', 'Falguni Shinde')
+    ) as t(id, username, name)
+  loop
+    perform set_config('request.jwt.claim.sub', r.id, false);
+    perform public.complete_profile(r.username, r.name);
+  end loop;
+end;
+$$;
+
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', false);
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-a000-000000000007', false);
+select public.join_random_queue();
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-a000-000000000008', false);
+select public.join_random_queue();
+
+do $$
+declare
+  v_session uuid;
+begin
+  -- random_sessions itself has no participant SELECT policy (by design), so
+  -- the session id is read the same way the application reads it: through
+  -- the view.
+  select id into v_session from public.random_session_view where status = 'active' limit 1;
+
+  if v_session is null then
+    raise exception 'test setup: the fresh Eshan/Falguni match did not produce an active session';
+  end if;
+
+  perform public.send_random_message(v_session, 'regression check: can I read my own session?', null);
+
+  perform public.test_assert(
+    (select count(*) from public.random_session_view where id = v_session) = 1,
+    '7. a real participant must be able to read their own session through random_session_view'
+  );
+  perform public.test_assert(
+    (select count(*) from public.random_messages_view where session_id = v_session) >= 1,
+    '7. a real participant must be able to read their own messages through random_messages_view'
+  );
+end;
+$$;
+
 reset role;
 select set_config('request.jwt.claim.role', 'service_role', false);
 select set_config('request.jwt.claim.sub', '', false);
+

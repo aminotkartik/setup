@@ -61,15 +61,17 @@ export default async function ConversationPage({ params, searchParams }) {
         title={title}
         back={{ href: ROUTES.chat, label: 'Messages' }}
         action={
-          isDirect ? (
-            <ConversationActions
-              conversationId={conversation.id}
-              otherProfileId={other?.user_id || null}
-              otherUsername={other?.username || null}
-              canReport={can(actor, 'report_content')}
-              canBlock={can(actor, 'block_users')}
-            />
-          ) : null
+          // Rendered for every conversation kind, not only direct ones: a
+          // group/community chat has no header affordance otherwise, and
+          // "report this conversation" is the one entry point the thread
+          // relies on (block and the per-other-student report only make
+          // sense — and only render — once there is a single other person).
+          <ConversationActions
+            conversationId={conversation.id}
+            otherProfileId={isDirect ? other?.user_id || null : null}
+            canReport={can(actor, 'report_content')}
+            canBlock={isDirect && can(actor, 'block_users')}
+          />
         }
       />
 
@@ -78,7 +80,7 @@ export default async function ConversationPage({ params, searchParams }) {
           <span>
             Direct message with{' '}
             <Link href={ROUTES.user(other.username)} className="text-ink underline">
-              {other.display_name || `@${other.username}`}
+              {other.display_name || (other.username ? `@${other.username}` : 'Student')}
             </Link>
           </span>
           {other.is_staff ? <StaffDot label="Campus+ staff" /> : null}
@@ -127,7 +129,6 @@ export default async function ConversationPage({ params, searchParams }) {
         members={members}
         reads={reads}
         canPost={can(actor, 'send_messages')}
-        canReport={can(actor, 'report_content')}
       />
 
       <p className="pb-2 text-center text-2xs text-muted">
