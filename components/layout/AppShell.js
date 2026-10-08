@@ -22,7 +22,7 @@ export function AppShell({
   canModerate = false,
   canAdmin = false,
   createItems = [],
-  theme = 'light',
+  theme = 'dark',
   children,
 }) {
   const isStaff = Boolean(user?.roles?.some((role) => ['moderator', 'admin', 'super_admin'].includes(role)));
