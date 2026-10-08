@@ -1,0 +1,187 @@
+/* ==========================================================================
+   Campus+ cinematic launch intro
+   --------------------------------------------------------------------------
+   The launch screen keeps its own deep-blue atmospheric palette on purpose:
+   it is the one screen that is *not* the interface — a dark sky, white light
+   and luminous blues that make the warm, glassy product feel like morning
+   when the scene fades. Every colour the `CampusIntroLoader` SVG paints is
+   defined here (components hold no colour literals), and the overlay is
+   deliberately not glassy: flat, cinematic, atmospheric.
+   ========================================================================== */
+
+.campus-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #010207;
+  /* The scene is a passive, ambient surface until the user moves on. */
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.campus-intro__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Keep the scene smooth and edge-to-edge on small screens. */
+@media (max-width: 640px) {
+  .campus-intro__svg {
+    min-width: 100%;
+    min-height: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sky — deep blue atmosphere, brightest behind the mark
+   -------------------------------------------------------------------------- */
+
+.campus-intro__sky-1 {
+  stop-color: #203f98;
+}
+
+.campus-intro__sky-2 {
+  stop-color: #10255e;
+}
+
+.campus-intro__sky-3 {
+  stop-color: #050c29;
+}
+
+.campus-intro__sky-4 {
+  stop-color: #010207;
+}
+
+/* --------------------------------------------------------------------------
+   The glowing curve — white heart, blue shoulders
+   -------------------------------------------------------------------------- */
+
+.campus-intro__arc-1 {
+  stop-color: #4d7cff;
+  stop-opacity: 0.15;
+}
+
+.campus-intro__arc-2 {
+  stop-color: #6594ff;
+}
+
+.campus-intro__arc-3 {
+  stop-color: #ffffff;
+}
+
+.campus-intro__arc-4 {
+  stop-color: #78a5ff;
+}
+
+.campus-intro__arc-5 {
+  stop-color: #6c9aff;
+  stop-opacity: 0.8;
+}
+
+.campus-intro__arc-glow {
+  stroke: rgba(83, 132, 255, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   Comet and trail
+   -------------------------------------------------------------------------- */
+
+.campus-intro__comet-1 {
+  stop-color: #ffffff;
+}
+
+.campus-intro__comet-2 {
+  stop-color: #c4d8ff;
+  stop-opacity: 0.9;
+}
+
+.campus-intro__comet-3 {
+  stop-color: #6794ff;
+  stop-opacity: 0.4;
+}
+
+.campus-intro__comet-4 {
+  stop-color: #3c6eff;
+  stop-opacity: 0;
+}
+
+.campus-intro__trail-1 {
+  stop-color: #ffffff;
+  stop-opacity: 0;
+}
+
+.campus-intro__trail-2 {
+  stop-color: #8bb2ff;
+  stop-opacity: 0.2;
+}
+
+.campus-intro__trail-3 {
+  stop-color: #ffffff;
+  stop-opacity: 0.95;
+}
+
+/* --------------------------------------------------------------------------
+   Endpoint flare — the anamorphic cross at the end of the path
+   -------------------------------------------------------------------------- */
+
+.campus-intro__flare-1 {
+  stop-color: #ffffff;
+  stop-opacity: 0;
+}
+
+.campus-intro__flare-2 {
+  stop-color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Light cores, stars, particles — white on deep blue
+   -------------------------------------------------------------------------- */
+
+.campus-intro__core-soft {
+  fill: #dbe8ff;
+}
+
+.campus-intro__core-hot {
+  fill: #ffffff;
+}
+
+.campus-intro__star {
+  fill: #ffffff;
+}
+
+.campus-intro__particle {
+  fill: #ffffff;
+}
+
+.campus-intro__sweep {
+  fill: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   The mark — the Campus+ wordmark and plus, in the product's own typography
+   -------------------------------------------------------------------------- */
+
+.campus-intro__word {
+  fill: #ffffff;
+  font-family: var(--font-sans, 'Inter', 'Geist', ui-sans-serif, system-ui, sans-serif);
+  font-weight: 800;
+}
+
+.campus-intro__plus-bar {
+  fill: #ffffff;
+}
+
+/* Reduced motion: no ambient CSS motion on top of the simplified reveal. */
+@media (prefers-reduced-motion: reduce) {
+  .campus-intro,
+  .campus-intro__svg {
+    animation: none;
+    transition: none;
+  }
+}

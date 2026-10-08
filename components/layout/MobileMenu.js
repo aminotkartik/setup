@@ -34,7 +34,7 @@ function SheetLink({ href, icon, label, count = 0, onNavigate }) {
   );
 }
 
-export function MobileMenu({ user = null, isStaff = false, canModerate = false, canAdmin = false, theme = 'light', createItems = [] }) {
+export function MobileMenu({ user = null, isStaff = false, canModerate = false, canAdmin = false, theme = 'dark', createItems = [] }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 

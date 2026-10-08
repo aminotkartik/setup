@@ -2,8 +2,11 @@
  * Campus+ buttons.
  *
  * One visual language, four materials:
- *   - primary  → the animated edge-light (the signature CTAs)
- *   - sheen    → layered reflective light (hero-level secondary actions)
+ *   - primary  → the Campus+ action button: animated gradient frame around a
+ *                deep navy face that reveals the gradient on hover and presses
+ *                with a tactile scale. The default for ordinary actions.
+ *   - sheen    → layered reflective light (hero-level actions: Home's Explore
+ *                and featured cards) — deliberately dark text on bright light.
  *   - calm     → secondary / quiet / subtle (everything else)
  *   - tactile  → delete and keycap, used only for destructive or confirmatory
  *                actions
@@ -34,6 +37,7 @@ const SHEEN_LAYERS = [
 const VARIANT = {
   secondary: 'btn-secondary',
   ghost: 'btn-quiet',
+  quiet: 'btn-quiet',
   subtle: 'btn-subtle',
   danger: 'btn-danger',
 };
@@ -62,7 +66,7 @@ export function Button({
   const classes = cn(
     'btn',
     SIZE[size] || SIZE.md,
-    variant === 'primary' ? 'btn-primary' : null,
+    variant === 'primary' ? 'cp-btn' : null,
     variant === 'sheen' ? 'btn-sheen' : null,
     VARIANT[variant] || null,
     block ? 'btn-block' : null,
@@ -73,37 +77,36 @@ export function Button({
   const isDisabled = disabled || loading;
   const glyph = iconSize(size);
 
-  const content = (
+  const label = (
     <>
-      {variant === 'primary' ? (
-        <>
-          <span className="btn-light" aria-hidden="true" />
-          <span className="btn-spin btn-spin-soft" aria-hidden="true" />
-          <span className="btn-spin btn-spin-intense" aria-hidden="true" />
-          <span className="btn-spin btn-spin-core" aria-hidden="true" />
-          <span className="btn-face" aria-hidden="true" />
-        </>
-      ) : null}
-      {variant === 'sheen' ? (
-        <>
-          <span className="btn-light" aria-hidden="true" />
-          {SHEEN_LAYERS.map((layer) => (
-            <span
-              key={layer.duration + layer.delay}
-              className="btn-sheen-layer"
-              style={{ animationDelay: layer.delay, animationDuration: layer.duration }}
-              aria-hidden="true"
-            />
-          ))}
-        </>
-      ) : null}
-      <span className="btn-label">
-        {loading ? <span className="dot-spin" aria-hidden="true" /> : icon ? <Icon name={icon} size={glyph} /> : null}
-        {children ? <span>{children}</span> : null}
-        {!loading && iconRight ? <Icon name={iconRight} size={glyph} /> : null}
-      </span>
+      {loading ? <span className="dot-spin" aria-hidden="true" /> : icon ? <Icon name={icon} size={glyph} /> : null}
+      {children ? <span>{children}</span> : null}
+      {!loading && iconRight ? <Icon name={iconRight} size={glyph} /> : null}
     </>
   );
+
+  const content =
+    variant === 'primary' ? (
+      // The supplied structure: a gradient frame with the dark face inside.
+      <span className="cp-btn-face">
+        <span className="btn-label">{label}</span>
+      </span>
+    ) : variant === 'sheen' ? (
+      <>
+        <span className="btn-light" aria-hidden="true" />
+        {SHEEN_LAYERS.map((layer) => (
+          <span
+            key={layer.duration + layer.delay}
+            className="btn-sheen-layer"
+            style={{ animationDelay: layer.delay, animationDuration: layer.duration }}
+            aria-hidden="true"
+          />
+        ))}
+        <span className="btn-label">{label}</span>
+      </>
+    ) : (
+      <span className="btn-label">{label}</span>
+    );
 
   const common = {
     className: classes,

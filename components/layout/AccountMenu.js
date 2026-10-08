@@ -11,7 +11,7 @@ import { Dropdown, IdentityMark, MenuLink, StaffDot, ThemeSwitch } from '@/compo
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { Icon } from '@/components/ui/icons';
 
-export function AccountMenu({ user = null, isStaff = false, theme = 'light' }) {
+export function AccountMenu({ user = null, isStaff = false, theme = 'dark' }) {
   if (!user) {
     return (
       <Link href="/login" className="btn btn-secondary btn-sm hover:no-underline">

@@ -3,19 +3,30 @@
 /**
  * Settings → Appearance.
  *
- * Two controls, two genuinely different jobs:
- *   - the day/night switch: flip this device between the light and dark campus;
+ * Two controls, two genuinely different jobs — but ONE state:
+ *   - the moon/sun pill: flip this device between the light and dark campus;
  *   - the wheel: choose Light, Dark or System once, with the weight the choice
  *     deserves (System follows the operating system, including when it changes
  *     mid-session).
  *
- * The preference is stored on this device (cookie + `data-theme` on <html>), so
- * the server renders the correct palette on the first byte — no flash of the
- * wrong theme, and no invented account setting the database would not honour.
+ * Both read the same module store (components/ui/theme.js) as the header and
+ * account-menu switches, so there is no second toggle state anywhere: the
+ * controls cannot disagree, and this page stays a view over the one truth.
+ * The preference is stored on this device (cookie + `data-theme` on <html>),
+ * so the server renders the correct palette on the first byte — no flash of
+ * the wrong theme, and no invented account setting the database would not
+ * honour.
  */
 
-import { useState, useSyncExternalStore } from 'react';
-import { THEME_COOKIE, ThemeSwitch, WheelSelector, applyTheme } from '@/components/ui';
+import { useSyncExternalStore } from 'react';
+import {
+  ThemeSwitch,
+  WheelSelector,
+  applyTheme,
+  subscribeTheme,
+  readThemeSnapshot,
+  readThemePreference,
+} from '@/components/ui';
 
 const OPTIONS = [
   { value: 'light', label: 'Light', note: 'Warm daylight' },
@@ -23,7 +34,7 @@ const OPTIONS = [
   { value: 'system', label: 'System', note: 'Follow this device' },
 ];
 
-/** Live OS preference — server snapshot is light, so hydration is stable. */
+/** Live OS preference — server snapshot is dark, so hydration is stable. */
 function subscribeToSystem(onChange) {
   const query = window.matchMedia('(prefers-color-scheme: dark)');
   query.addEventListener('change', onChange);
@@ -38,23 +49,14 @@ function useSystemPrefersDark() {
   );
 }
 
-export function AppearancePanel({ theme = 'light' }) {
-  const [current, setCurrent] = useState(theme === 'dark' ? 'dark' : theme === 'system' ? 'system' : 'light');
+export function AppearancePanel({ theme = 'dark' }) {
+  const current = useSyncExternalStore(subscribeTheme, readThemePreference, () =>
+    theme === 'light' || theme === 'system' ? theme : 'dark',
+  );
+  const resolved = useSyncExternalStore(subscribeTheme, readThemeSnapshot, () =>
+    theme === 'light' ? 'light' : 'dark',
+  );
   const systemDark = useSystemPrefersDark();
-
-  const resolved = current === 'system' ? (systemDark ? 'dark' : 'light') : current;
-
-  const choose = (value) => {
-    setCurrent(value);
-    if (value === 'system') {
-      // Paint the OS palette now, but keep the cookie saying "system" so the
-      // server keeps following the device on the next request.
-      applyTheme(systemDark ? 'dark' : 'light');
-      writeSystemCookie();
-      return;
-    }
-    applyTheme(value);
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,13 +69,7 @@ export function AppearancePanel({ theme = 'light' }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 rounded-[var(--radius-lg)] border border-line bg-surface-2 p-4">
-          <ThemeSwitch
-            key={resolved}
-            theme={resolved}
-            size="lg"
-            className="mx-auto"
-            onChange={(next) => setCurrent(next)}
-          />
+          <ThemeSwitch theme={resolved} size="lg" className="mx-auto" />
           <div className="min-w-0 flex-1">
             <p className="text-[0.875rem] font-semibold">
               {current === 'system'
@@ -91,19 +87,14 @@ export function AppearancePanel({ theme = 'light' }) {
           legend="Appearance preference"
           options={OPTIONS}
           value={current}
-          onChange={choose}
+          onChange={(value) => applyTheme(value)}
         />
 
         <p className="text-2xs text-muted-soft">
           Saved on this device only. A different phone or browser keeps its own choice.
+          {current === 'system' ? ` This device is ${systemDark ? 'dark' : 'light'} right now.` : ''}
         </p>
       </section>
     </div>
   );
-}
-
-/** Keeps the cookie saying "system" while the palette follows the OS right now. */
-function writeSystemCookie() {
-  const year = 60 * 60 * 24 * 365;
-  document.cookie = `${THEME_COOKIE}=system; path=/; max-age=${year}; samesite=lax`;
 }

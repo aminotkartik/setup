@@ -51,7 +51,11 @@ export function PostComposer({ communityId = null, defaultKind = 'post', compact
     <form
       ref={formRef}
       action={run}
-      className={cn('card overflow-hidden transition-shadow', focused ? 'shadow-[var(--shadow-raised)]' : null)}
+      className={cn(
+        // Level-3 featured glass: the one surface on the feed allowed to glow.
+        'glass-featured rounded-[var(--radius-lg)] overflow-hidden transition-shadow',
+        focused ? 'shadow-[var(--shadow-raised)]' : null,
+      )}
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);

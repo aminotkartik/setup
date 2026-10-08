@@ -37,9 +37,10 @@ function NotificationBell({ unreadNotifications = 0 }) {
   );
 }
 
-export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = false, canModerate = false, canAdmin = false, theme = 'light', createItems = [] }) {
+export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = false, canModerate = false, canAdmin = false, theme = 'dark', createItems = [] }) {
   return (
-    <GlassSurface as="header" rounded={false} tone="soft" className="sticky top-0 z-30 border-b border-line/70">
+    /* Level-2 floating glass — the header is chrome, not a page surface. */
+    <GlassSurface as="header" rounded={false} tone="floating" className="sticky top-0 z-30 border-b border-line/70">
       {/* Mobile */}
       <div className="flex h-14 items-center gap-1.5 px-3 lg:hidden">
         <MobileMenu

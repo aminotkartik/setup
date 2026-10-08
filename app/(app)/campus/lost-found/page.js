@@ -63,13 +63,15 @@ export default async function LostFoundPage({ searchParams }) {
           return (
             <ContentCard
               key={item.id}
+              href={`/campus/lost-found/${item.id}`}
               title={item.title}
               description={item.description}
               icon={item.kind === 'lost' ? 'search' : 'check'}
               timestamp={item.created_at}
               badges={[
-                { label: item.kind === 'lost' ? 'Lost' : 'Found', tone: item.kind === 'lost' ? 'warning' : 'accent' },
-                ...(item.resolved_at ? [{ label: 'Resolved', tone: 'success' }] : []),
+                // The kind leads every card — the distinction is the feature.
+                { label: item.kind === 'lost' ? 'Lost item' : 'Found item', tone: item.kind === 'lost' ? 'warning' : 'success' },
+                ...(item.resolved_at ? [{ label: 'Resolved', tone: 'accent' }] : []),
               ]}
               meta={[item.location, item.occurred_on ? formatDate(item.occurred_on) : null, creator ? `@${creator.username}` : null]}
               footer={
