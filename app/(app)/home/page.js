@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/icons';
 import { PostComposer } from '@/components/posts/PostComposer';
 import { PostCard } from '@/components/posts/PostCard';
 import { SearchEntry } from '@/components/search/SearchEntry';
+import { HomeReadySignal } from '@/components/layout/HomeLaunchGate';
 import { formatDate, formatTime, formatCalendarBadge } from '@/lib/utils';
 
 export const metadata = { title: 'Home' };
@@ -94,6 +95,9 @@ export default async function HomePage() {
 
   return (
     <div className="page-grid" data-rail={events?.length || pinnedNotices?.length ? 'true' : undefined}>
+      {/* Loading-layer probe (renders nothing): tells the launch intro that
+          Home content has committed so it can complete its reveal and fade. */}
+      <HomeReadySignal />
       <div className="flex min-w-0 flex-col gap-5">
         {header}
 
