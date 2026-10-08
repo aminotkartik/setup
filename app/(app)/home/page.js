@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/icons';
 import { PostComposer } from '@/components/posts/PostComposer';
 import { PostCard } from '@/components/posts/PostCard';
 import { SearchEntry } from '@/components/search/SearchEntry';
+import { ParticleField } from '@/components/atmosphere/ParticleField';
 import { HomeReadySignal } from '@/components/layout/HomeLaunchGate';
 import { formatDate, formatTime, formatCalendarBadge } from '@/lib/utils';
 
@@ -31,8 +32,11 @@ const QUICK_LINKS = [
  * Reads the unified campus feed plus the next few official events. Nothing is
  * invented: an empty database produces empty states, not placeholder content.
  *
- * Layout: one readable feed column and — on wide screens only — a contextual
- * rail built entirely from data this page already fetched.
+ * Layout: a cinematic hero — the subtle blue particle sky behind the greeting,
+ * search and the black-label Explore button — then one readable feed column
+ * and, on wide screens only, a contextual rail built entirely from data this
+ * page already fetched. The atmosphere is exactly that: background, never in
+ * the way of reading.
  */
 export default async function HomePage() {
   const user = await requireUser();
@@ -87,6 +91,8 @@ export default async function HomePage() {
             : 'Everything happening around campus right now'}
         </p>
       </div>
+      {/* The Explore button keeps its own bright sheen — its label is hard
+          black on purpose. */}
       <LinkButton href={ROUTES.explore} size="md" variant="sheen" icon="search">
         Explore campus
       </LinkButton>
@@ -99,9 +105,15 @@ export default async function HomePage() {
           Home content has committed so it can complete its reveal and fade. */}
       <HomeReadySignal />
       <div className="flex min-w-0 flex-col gap-5">
-        {header}
-
-        <SearchEntry />
+        {/* Cinematic hero: a subtle particle sky behind the greeting and
+            search. Atmospheric only — a canvas layer, no layout weight. */}
+        <div className="home-hero cinematic-stage rounded-[var(--radius-xl)]">
+          <ParticleField density={0.55} />
+          <div className="home-hero__inner login-sky">
+            {header}
+            <SearchEntry />
+          </div>
+        </div>
 
         {canPost ? (
           <PostComposer authorName={user.profile.display_name || user.profile.username} />

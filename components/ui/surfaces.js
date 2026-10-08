@@ -14,12 +14,15 @@ export function Card({ className = '', as: Tag = 'div', interactive = false, chi
   );
 }
 
-/** Glass is a material accent: navigation, sheets, composers, floating bars. */
+/** Glass is a material accent, in four deliberate levels (see surfaces.css). */
 export function GlassSurface({ className = '', tone = 'default', as: Tag = 'div', rounded = true, children, ...props }) {
   const tones = {
     default: 'glass',
     soft: 'glass-soft',
     strong: 'glass-strong',
+    floating: 'glass-floating',
+    featured: 'glass-featured',
+    cinematic: 'glass-cinematic',
   };
   return (
     <Tag className={cn(tones[tone] || tones.default, rounded ? 'rounded-[var(--radius-lg)]' : null, className)} {...props}>

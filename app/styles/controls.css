@@ -5,9 +5,9 @@
    state that moves *into* the surface, a visible focus ring, a disabled state
    and (where it does work) a loading state.
 
-   The primary button carries the animated edge-light derived from the supplied
-   Uiverse implementation: layered gradients, an unopaque SVG filter stack and a
-   rotating light that only moves while the control is hovered or focused.
+   The default action button is the supplied gradient-frame button: an
+   animated blue gradient frame around a deep navy face, the face sliding
+   away on hover to reveal the gradient, and a tactile pressed scale.
    ========================================================================== */
 
 @layer components {
@@ -15,6 +15,8 @@
 
   .btn {
     --btn-radius: var(--radius-md);
+    /* Hard black label for the bright sheen materials (Home Explore). */
+    --c-btn-on-sheen: #16120c;
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -136,141 +138,129 @@
     background-color: color-mix(in oklab, var(--c-danger) 18%, var(--c-surface));
   }
 
-  /* --- primary: animated edge light -------------------------------------
-     Faithful to the supplied Uiverse button, with one deliberate adaptation:
-     the source hard-codes a 120x60 superellipse through clip-path: path(),
-     which cannot follow a control whose width depends on its label. Campus+
-     buttons are variable-width, so the same silhouette (radius = half the
-     height, slightly squared caps) is expressed as a pill radius and the
-     bezel ring the source paints with .button-border becomes a real ring.
+  /* --- primary: the Campus+ action button -------------------------------
+     The supplied gradient-frame button, adapted to the warm vibrant blue
+     identity: an animated gradient frame (sky-blue to primary to cyan-blue)
+     around a deep navy face. Hover slides the face away to reveal the
+     gradient; pressing scales the whole control down tactilely. The source's
+     fixed 8px/6px radii ride the Campus+ shape scale. */
 
-     Everything else is the source's behaviour: the dotted grain backdrop at
-     inset -9900%, three stacked rotating gradients behind the face at
-     decreasing blur and increasing opacity, opacity stepping 0.5 -> 1 while
-     pressed, and the rotation running only on hover/focus. */
-
-  .btn-primary {
-    --btn-radius: 999px;
-    --btn-base-a: #1c2436;
-    --btn-base-b: #0e131e;
-    --btn-light-a: var(--c-accent);
-    --btn-light-b: #a9c4ff;
-    --btn-light-core: #e9f0ff;
-    --btn-bezel: rgba(0, 0, 0, 0.34);
-    background: linear-gradient(180deg, var(--btn-base-a), var(--btn-base-b));
-    color: #fff;
-    box-shadow:
-      0 0 0 3px var(--btn-bezel),
-      inset 0 1px 0 rgba(255, 255, 255, 0.14),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-      0 2px 3px rgba(10, 16, 30, 0.25),
-      0 12px 26px -16px color-mix(in oklab, var(--btn-light-a) 70%, transparent);
-  }
-
-  .btn-primary[data-tone='accent'] {
-    --btn-base-a: color-mix(in oklab, var(--c-accent) 92%, #fff);
-    --btn-base-b: var(--c-accent-hover);
-    --btn-light-a: var(--c-accent-pale);
-    --btn-light-b: #eef4ff;
-    --btn-light-core: #ffffff;
-    --btn-bezel: color-mix(in oklab, var(--c-accent-press) 55%, transparent);
+  .btn.cp-btn {
+    --btn-radius: var(--radius-sm);
+    --btn-frame: 3px;
+    --btn-face: #0b1226;
+    padding: var(--btn-frame);
+    border: 0;
+    background-image: linear-gradient(
+      144deg,
+      var(--c-accent-highlight),
+      var(--c-accent) 50%,
+      var(--c-accent-cyan)
+    );
+    background-size: 130% 130%;
+    background-position: 0% 0%;
     color: var(--c-on-accent);
+    box-shadow:
+      0 12px 30px -8px color-mix(in oklab, var(--c-accent) 38%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    animation: cp-btn-drift 7s ease-in-out infinite alternate;
+    transition:
+      transform 0.3s var(--ease-out-soft),
+      box-shadow 0.3s ease,
+      filter 0.3s ease;
   }
 
-  /* The grain backdrop: a 3px dot field, technically a radial-gradient. */
-  .btn-primary .btn-light {
-    position: absolute;
-    inset: -9900%;
-    z-index: -1;
-    background-image: radial-gradient(circle at 50% 50%, transparent 0 22%, rgba(10, 14, 22, 0.66) 52%);
-    background-size: 3px 3px;
-    pointer-events: none;
+  .btn.cp-btn[data-tone='accent'] {
+    background-image: linear-gradient(
+      144deg,
+      var(--c-accent),
+      var(--c-accent-hover) 50%,
+      var(--c-accent-cyan)
+    );
   }
 
-  .btn-spin {
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    opacity: 0.5;
-    overflow: hidden;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+  /* The deep navy face — the source's inner surface. */
+  .btn.cp-btn .cp-btn-face {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    padding-inline: 0.85rem;
+    border-radius: calc(var(--btn-radius) - var(--btn-frame) + 1px);
+    background-color: var(--btn-face);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 46%);
+    transition: 300ms ease;
   }
 
-  .btn-spin::before {
-    content: '';
-    position: absolute;
-    inset: -150%;
-    animation:
-      campus-spin 8s cubic-bezier(0.56, 0.15, 0.28, 0.86) infinite,
-      campus-spin-breathe 4s ease-in-out infinite;
+  .btn.cp-btn .btn-label {
+    gap: 0.45rem;
+  }
+
+  /* Hover reveal: the face slides away, the gradient shows through. */
+  .btn.cp-btn:hover:not(:disabled) .cp-btn-face,
+  .btn.cp-btn:focus-visible:not(:disabled) .cp-btn-face {
+    background-color: transparent;
+    background-image: none;
+  }
+
+  .btn.cp-btn:hover:not(:disabled) .btn-label,
+  .btn.cp-btn:focus-visible:not(:disabled) .btn-label {
+    text-shadow: 0 1px 2px rgba(8, 12, 30, 0.55);
+  }
+
+  .btn.cp-btn:hover:not(:disabled) {
+    box-shadow:
+      0 16px 36px -8px color-mix(in oklab, var(--c-accent) 52%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    filter: saturate(1.08) brightness(1.03);
+  }
+
+  /* Tactile active scale — the supplied pressed behaviour. */
+  .btn.cp-btn:active:not(:disabled) {
+    transform: scale(0.9);
     animation-play-state: paused;
   }
 
-  .btn-spin-soft {
-    filter: blur(2em) url(#campus-unopaq);
+  .btn.cp-btn:disabled {
+    filter: saturate(0.55);
+    box-shadow: none;
+    animation: none;
   }
 
-  .btn-spin-soft::before {
-    background: linear-gradient(90deg, var(--btn-light-a) 30%, transparent 50%, var(--btn-light-b) 70%);
+  .btn.cp-btn.btn-icon {
+    padding: var(--btn-frame);
+    width: 2.375rem;
   }
 
-  .btn-spin-intense {
-    inset: -0.125em;
-    border-radius: 0.75em;
-    filter: blur(0.25em) url(#campus-unopaq-2);
+  .btn.cp-btn.btn-icon .cp-btn-face {
+    padding-inline: 0;
+    aspect-ratio: 1;
   }
 
-  .btn-spin-intense::before {
-    background: linear-gradient(
-      90deg,
-      var(--btn-light-a) 20%,
-      transparent 45%,
-      transparent 55%,
-      var(--btn-light-b) 80%
-    );
+  .btn.cp-btn.btn-block {
+    width: 100%;
   }
 
-  .btn-spin-core {
-    inset: -2px;
-    border-radius: inherit;
-    z-index: 0;
-    filter: blur(2px) url(#campus-unopaq-3);
+  /* Minimum CTA width (the source uses 140px); icons-only stay square. */
+  .btn.cp-btn.btn-md:not(.btn-icon) {
+    min-width: 6.5rem;
   }
 
-  .btn-spin-core::before {
-    background: linear-gradient(
-      90deg,
-      var(--btn-light-core) 30%,
-      transparent 45%,
-      transparent 55%,
-      var(--btn-light-core) 70%
-    );
+  .btn.cp-btn.btn-lg:not(.btn-icon) {
+    min-width: 8.75rem;
   }
 
-  .btn-primary .btn-face {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 46%);
-    pointer-events: none;
+  @keyframes cp-btn-drift {
+    from {
+      background-position: 0% 0%;
+    }
+    to {
+      background-position: 100% 100%;
+    }
   }
 
-  .btn-primary:hover:not(:disabled) .btn-spin::before,
-  .btn-primary:focus-visible:not(:disabled) .btn-spin::before {
-    animation-play-state: running;
-  }
-
-  /* The source raises the stack to full opacity only while pressed. */
-  .btn-primary:active:not(:disabled) .btn-spin {
-    opacity: 1;
-  }
-
-  .btn-primary:disabled {
-    --btn-bezel: rgba(0, 0, 0, 0.18);
-    box-shadow: 0 0 0 3px var(--btn-bezel), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
 
   .btn-label {
     position: relative;
@@ -354,10 +344,13 @@
     animation: campus-sheen-pulse 3s ease-in-out infinite;
   }
 
-  /* The metallic text: letterpress shadow over the sheen, multiplying into it. */
+  /* The label: hard black on the bright sheen — the Home Explore button's
+     text must read at a glance in both themes. No blend modes: contrast is
+     not a texture. */
   .btn-sheen .btn-label {
-    mix-blend-mode: multiply;
-    text-shadow: 0 1px 3px color-mix(in oklab, var(--c-highlight) 80%, transparent);
+    color: var(--c-btn-on-sheen);
+    font-weight: 650;
+    text-shadow: 0 1px 2px color-mix(in oklab, var(--c-highlight) 70%, transparent);
     animation: campus-sheen-text 5s ease infinite;
     transition: transform 0.3s ease;
   }
@@ -690,6 +683,170 @@
     cursor: pointer;
   }
 
+  /* --- the Campus+ search pill ------------------------------------------
+     The supplied soft-blue search: a gradient frame around a lighter
+     gradient field, an offset highlight edge above and a glowing blue edge
+     below, closed by a round magnifier button. Scoped (`search-pill*`) so it
+     can live anywhere in the app, and drawn from the blue tokens so the same
+     liquid-glass light works in both themes. */
+
+  .search-pill {
+    position: relative;
+    display: block;
+    width: 100%;
+    z-index: 0;
+  }
+
+  .search-pill__shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: 50px;
+    padding: 5px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--c-accent) 22%, var(--c-surface)),
+      color-mix(in oklab, var(--c-accent) 12%, var(--c-surface)) 100%
+    );
+  }
+
+  .search-pill__shell::before,
+  .search-pill__shell::after {
+    content: '';
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .search-pill__shell::before {
+    top: -1px;
+    left: -1px;
+    background: linear-gradient(
+      0deg,
+      color-mix(in oklab, var(--c-accent) 8%, var(--c-surface)) 0%,
+      var(--c-highlight) 100%
+    );
+    z-index: -1;
+  }
+
+  .search-pill__shell::after {
+    bottom: -1px;
+    right: -1px;
+    background: linear-gradient(
+      0deg,
+      color-mix(in oklab, var(--c-accent) 34%, var(--c-surface)) 0%,
+      color-mix(in oklab, var(--c-accent) 14%, var(--c-surface)) 100%
+    );
+    box-shadow:
+      color-mix(in oklab, var(--c-accent) 55%, transparent) 3px 3px 5px 0px,
+      color-mix(in oklab, var(--c-accent) 45%, transparent) 5px 5px 20px 0px;
+    z-index: -2;
+  }
+
+  .search-pill__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.625rem 0.875rem;
+    background: transparent;
+    border: none;
+    color: var(--c-ink);
+    font-size: 0.9375rem;
+    border-radius: 50px;
+    appearance: none;
+    transition: background-color 0.25s ease;
+  }
+
+  .search-pill__input::placeholder {
+    color: color-mix(in oklab, var(--c-muted) 92%, transparent);
+  }
+
+  .search-pill__input:focus {
+    outline: none;
+    background-color: color-mix(in oklab, var(--c-highlight) 40%, transparent);
+  }
+
+  .search-pill__input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  .search-pill__icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    aspect-ratio: 1;
+    flex: none;
+    border: 0;
+    border-left: 2px solid var(--c-highlight);
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition:
+      border-left-width 0.18s ease,
+      transform 0.18s var(--ease-out-soft);
+  }
+
+  .search-pill__icon:hover {
+    border-left-width: 3px;
+    transform: scale(1.05);
+  }
+
+  .search-pill__icon:active {
+    transform: scale(0.94);
+  }
+
+  .search-pill__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: 0.25rem;
+  }
+
+  .search-pill__icon path {
+    fill: var(--c-accent-ink);
+  }
+
+  .search-pill__kbd {
+    flex: none;
+    margin-right: 0.125rem;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--c-line);
+    background: var(--c-surface-2);
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--c-muted-soft);
+    pointer-events: none;
+  }
+
+  .search-pill[data-size='sm'] .search-pill__shell {
+    padding: 3px;
+  }
+
+  .search-pill[data-size='sm'] .search-pill__input {
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .search-pill[data-size='sm'] .search-pill__icon {
+    width: 2.125rem;
+  }
+
+  .search-pill[data-size='sm'] .search-pill__icon svg {
+    width: 1.0625rem;
+    height: 1.0625rem;
+  }
+
+  @media (max-width: 640px) {
+    .search-pill__kbd {
+      display: none;
+    }
+  }
+
   .field-label {
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1017,7 +1174,7 @@
     scroll-behavior: auto !important;
   }
 
-  .btn-primary .btn-spin::before,
+  .cp-btn,
   .btn-sheen .btn-sheen-layer {
     animation: none !important;
   }

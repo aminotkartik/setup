@@ -43,10 +43,37 @@ function isPublic(pathname) {
 }
 
 /**
+ * Old explore-era URLs, kept alive as real HTTP redirects.
+ *
+ * The Explore page used to link to `/explore/team-finder` and the like; those
+ * links were the root cause of "team finder opens the wrong page" (they 404'd
+ * or fell through to another screen). The links themselves now point at the
+ * canonical routes — `/campus/teams`, `/campus/lost-found` — and these
+ * redirects rescue bookmarks and shares made along the way. Both spellings of
+ * team finder are accepted because both circulated.
+ */
+const LEGACY_PATHS = {
+  '/explore/team-finder': '/campus/teams',
+  '/explore/teamfinder': '/campus/teams',
+  '/explore/teams': '/campus/teams',
+  '/explore/lost-found': '/campus/lost-found',
+};
+
+function legacyPathRedirect(request) {
+  const { pathname, search } = request.nextUrl;
+  const target = LEGACY_PATHS[pathname];
+  if (!target) return null;
+  const origin = originFromHeaders(request.headers, request.nextUrl.origin);
+  const url = new URL(target, origin);
+  url.search = search;
+  return NextResponse.redirect(url);
+}
+
+/**
  * @param {import('next/server').NextRequest} request
  */
 export async function proxy(request) {
-  const legacy = legacyCodeStep(request);
+  const legacy = legacyCodeStep(request) || legacyPathRedirect(request);
   if (legacy) return legacy;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

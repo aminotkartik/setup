@@ -38,5 +38,12 @@ export {
   BackHomeLink,
 } from '@/components/ui/states';
 export { Modal, Sheet, Dropdown, MenuItem, MenuLink, Toast } from '@/components/ui/overlays';
-export { ThemeSwitch, applyTheme, THEME_COOKIE } from '@/components/ui/theme';
+export {
+  ThemeSwitch,
+  applyTheme,
+  THEME_COOKIE,
+  subscribeTheme,
+  readThemeSnapshot,
+  readThemePreference,
+} from '@/components/ui/theme';
 export { TiltCard, WheelSelector } from '@/components/ui/interactive';

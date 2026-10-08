@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { SEARCH_SCOPES } from '@/lib/constants';
 import { Badge, Button, EmptyState, Notice, SkeletonList, WordLoader } from '@/components/ui';
+import { SearchField } from '@/components/ui/SearchField';
 import { Icon } from '@/components/ui/icons';
 
 /**
@@ -77,17 +78,12 @@ export function SearchResults({ initialQuery = '', initialScope = 'all' }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-soft">
-          <Icon name="search" size={17} />
-        </span>
-        <input
-          type="search"
+        <SearchField
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search people, posts, communities, events, listings…"
-          aria-label="Search Campus+"
+          onChange={setQuery}
+          onSubmit={(term) => run(term, scope, 0)}
+          hint="Search people, posts, communities, events, listings…"
           autoFocus
-          className="control control-search h-12 rounded-[var(--radius-lg)] bg-surface/80 pl-10 pr-4 backdrop-blur-md"
         />
       </div>
 

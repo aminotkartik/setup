@@ -5,6 +5,7 @@
 @import './styles/theme-switch.css';
 @import './styles/interactive.css';
 @import './styles/navigation.css';
+@import './styles/atmosphere.css';
 @import './styles/intro.css';
 
 /* ==========================================================================
@@ -53,6 +54,8 @@
   --c-accent-tint: #f1f6ff;
   --c-accent-pale: #cddcff;
   --c-accent-highlight: #7ea3ff;
+  --c-accent-sky: #7ea3ff;
+  --c-accent-cyan: #21b8e0;
   --c-accent-glass: rgba(53, 102, 232, 0.14);
   --c-accent-ink: #1b3d9c;
   --c-on-accent: #ffffff;
@@ -110,6 +113,8 @@
   --c-accent-tint: rgba(111, 155, 255, 0.09);
   --c-accent-pale: rgba(111, 155, 255, 0.3);
   --c-accent-highlight: #a9c4ff;
+  --c-accent-sky: #a9c4ff;
+  --c-accent-cyan: #4fd4f0;
   --c-accent-glass: rgba(111, 155, 255, 0.12);
   --c-accent-ink: #c3d6ff;
   --c-on-accent: #0d1730;
@@ -221,6 +226,8 @@
   --color-accent-deep: var(--c-accent-deep);
   --color-accent-pale: var(--c-accent-pale);
   --color-accent-highlight: var(--c-accent-highlight);
+  --color-accent-sky: var(--c-accent-sky);
+  --color-accent-cyan: var(--c-accent-cyan);
   --color-on-accent: var(--c-on-accent);
   --color-danger: var(--c-danger);
   --color-danger-soft: var(--c-danger-soft);

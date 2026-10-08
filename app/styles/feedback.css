@@ -560,3 +560,80 @@
 .animate-rise {
   animation: campus-rise 0.24s var(--ease-out-soft) both;
 }
+
+/* ------------------------------------------------- lost & found choice */
+
+/* The explicit "What are you reporting?" cards and the kind banner that
+   follows a report everywhere — the lost/found distinction is a product
+   requirement, not a badge afterthought. */
+
+.lf-choice {
+  background-color: var(--c-surface);
+  border-color: var(--c-line);
+  text-decoration: none;
+}
+
+.lf-choice:hover {
+  border-color: color-mix(in oklab, var(--c-accent) 40%, var(--c-line));
+  box-shadow: var(--shadow-raised);
+}
+
+.lf-choice:focus-visible {
+  outline: 2px solid var(--c-focus, var(--c-accent));
+  outline-offset: 2px;
+}
+
+.lf-choice__badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lf-choice__badge[data-kind='lost'] {
+  background-color: color-mix(in oklab, var(--c-warning) 18%, transparent);
+  color: var(--c-warning);
+}
+
+.lf-choice__badge[data-kind='found'] {
+  background-color: color-mix(in oklab, var(--c-success) 18%, transparent);
+  color: var(--c-success);
+}
+
+.lf-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-radius: var(--radius-md);
+  border-left: 4px solid currentColor;
+  padding: 0.875rem 1rem;
+  background-color: var(--c-surface-2);
+}
+
+.lf-banner--lost {
+  color: var(--c-warning);
+  background-color: color-mix(in oklab, var(--c-warning) 10%, var(--c-surface));
+}
+
+.lf-banner--found {
+  color: var(--c-success);
+  background-color: color-mix(in oklab, var(--c-success) 10%, var(--c-surface));
+}
+
+.lf-banner__kicker {
+  font-size: 0.6875rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lf-banner__line {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--c-ink);
+}

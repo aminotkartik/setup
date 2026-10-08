@@ -196,7 +196,7 @@ export default async function ExplorePage({ searchParams }) {
             <p className="mt-1 text-[0.8125rem] text-muted">
               Looking for teammates for a project or hackathon? Post what you need and students can message you directly.
             </p>
-            <Link href="/explore/team-finder" className="mt-3 inline-flex items-center gap-1 text-2xs text-ink underline">
+            <Link href="/campus/teams" className="mt-3 inline-flex items-center gap-1 text-2xs text-ink underline">
               Open the board <Icon name="chevronRight" size={13} />
             </Link>
           </Card>

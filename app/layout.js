@@ -2,7 +2,6 @@ import './globals.css';
 
 import { PLATFORM } from '@/lib/constants';
 import { readTheme } from '@/lib/theme';
-import { CampusFilters } from '@/components/ui/icons';
 
 /**
  * Campus+ — root layout.
@@ -50,8 +49,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" data-theme={theme} suppressHydrationWarning>
       <body className="min-h-dvh bg-canvas text-ink antialiased">
-        {/* The Uiverse-derived light stack used by the primary button. */}
-        <CampusFilters />
         {children}
       </body>
     </html>
