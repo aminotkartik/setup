@@ -172,8 +172,8 @@ export function Dropdown({ label, trigger, children, align = 'right', className 
 
 export function MenuItem({ icon = null, children, className = '', ...props }) {
   return (
-    <button type="button" role="menuitem" className={cn('flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem] text-ink transition-colors hover:bg-surface-2', className)} {...props}>
-      {icon ? <Icon name={icon} size={16} className="text-muted" /> : null}
+    <button type="button" role="menuitem" className={cn('cp-menu-item flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem]', className)} {...props}>
+      {icon ? <Icon name={icon} size={16} className="cp-menu-item__icon" /> : null}
       {children}
     </button>
   );
@@ -184,10 +184,10 @@ export function MenuLink({ href, icon = null, children, className = '', ...props
     <Link
       href={href}
       role="menuitem"
-      className={cn('flex w-full items-center gap-2.5 px-3 py-2 text-[0.8125rem] text-ink transition-colors hover:bg-surface-2 hover:no-underline', className)}
+      className={cn('cp-menu-item flex w-full items-center gap-2.5 px-3 py-2 text-[0.8125rem] hover:no-underline', className)}
       {...props}
     >
-      {icon ? <Icon name={icon} size={16} className="text-muted" /> : null}
+      {icon ? <Icon name={icon} size={16} className="cp-menu-item__icon" /> : null}
       {children}
     </Link>
   );

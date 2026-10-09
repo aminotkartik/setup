@@ -29,7 +29,8 @@
     "perf:measure": "node scripts/dev/perf/measure.mjs",
     "perf:smoke": "node scripts/dev/perf/smoke.mjs",
     "verify": "npm run lint && npm run verify:db && npm run audit:db && npm run test",
-    "verify:security": "node scripts/verify-security.mjs"
+    "verify:security": "node scripts/verify-security.mjs",
+    "test:contrast": "node scripts/dev/contrast/audit.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -40,9 +41,13 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.0",
     "eslint-config-next": "^16.3.8",
+    "playwright": "^1.64.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4.3.3",
     "vitest": "^5.0.3"
   }

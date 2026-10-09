@@ -33,3 +33,7 @@ tracks the cockpit being replaced.
 - Secondary-page sweep (Chat, Communities, Marketplace, Forms) through the new system
 - Responsive QA at 320 / 375 / 390 / 430 + tablet + desktop
 - End-to-end theme-toggle sync check in a live session (header ↔ account menu ↔ Appearance)
+
+## Readability and contrast follow-up
+
+See [CONTRAST-AUDIT.md](CONTRAST-AUDIT.md) for the paired semantic palettes, rendered state/route coverage, regression checks and preserved backend boundaries. [Captured evidence](contrast-evidence/README.md) includes both themes and narrow-screen examples.

@@ -1,0 +1,1045 @@
+{
+  "formatVersion": 1,
+  "baselineCommit": "8fdd2c78cd96b3d68ea30d00ffea1798f9b658bd",
+  "branch": "arena/060a3128-setup",
+  "nextVersion": "16.3.8",
+  "chromiumVersion": "153",
+  "paletteSHA256": "7d61334b610b76bf31d6347178f001db40998b29016bbb1a86f0f8ee81592ed3",
+  "policy": {
+    "normalText": 4.5,
+    "largeText": 3,
+    "meaningfulNonText": 3,
+    "outlineWidthPx": 2
+  },
+  "checks": {
+    "lint": "pass",
+    "productionBuild": "pass",
+    "unitTests": 159,
+    "unitFiles": 12,
+    "contrastGuards": 22,
+    "sqlSuites": 10,
+    "migrations": 23,
+    "databaseAuditChecks": 54,
+    "productionBackendSourceChanged": false
+  },
+  "reports": [
+    {
+      "name": "full-production-audit",
+      "startedAt": "2026-10-08T18:13:51.136Z",
+      "finishedAt": "2026-10-08T18:21:02.693Z",
+      "suite": "all",
+      "mode": "full",
+      "themes": "both",
+      "filters": {
+        "routes": [],
+        "role": "student"
+      },
+      "summary": {
+        "pageAudits": 198,
+        "paintAudits": 560,
+        "foregroundSamples": 37922,
+        "textSamples": 28728,
+        "iconSamples": 9194,
+        "focusStates": 58,
+        "layoutChecks": 22,
+        "failures": 0
+      },
+      "pageLabels": [
+        "dark-desktop-student-/home",
+        "dark-desktop-student-/explore",
+        "dark-desktop-student-/communities",
+        "dark-desktop-student-/chat",
+        "dark-desktop-student-/market",
+        "dark-desktop-student-/notifications",
+        "dark-desktop-student-/settings?tab=appearance",
+        "dark-desktop-student-/profile",
+        "dark-desktop-student-/campus",
+        "dark-desktop-student-/campus/noticeboard",
+        "dark-desktop-student-/campus/events",
+        "dark-desktop-student-/campus/clubs",
+        "dark-desktop-student-/campus/utilities",
+        "dark-desktop-student-/campus/lost-found",
+        "dark-desktop-student-/campus/lost-found?kind=lost",
+        "dark-desktop-student-/campus/lost-found?kind=found",
+        "dark-desktop-student-/campus/lost-found/new",
+        "dark-desktop-student-/campus/lost-found/new?kind=lost",
+        "dark-desktop-student-/campus/lost-found/new?kind=found",
+        "dark-desktop-student-/campus/housing",
+        "dark-desktop-student-/campus/housing/new",
+        "dark-desktop-student-/campus/rides",
+        "dark-desktop-student-/campus/rides/new",
+        "dark-desktop-student-/campus/teams",
+        "dark-desktop-student-/campus/teams/new",
+        "dark-desktop-student-/explore/resources",
+        "dark-desktop-student-/explore/resources/new",
+        "dark-desktop-student-/explore/opportunities",
+        "dark-desktop-student-/explore/opportunities/new",
+        "dark-desktop-student-/explore/projects",
+        "dark-desktop-student-/explore/projects/new",
+        "dark-desktop-student-/market?tab=gigs",
+        "dark-desktop-student-/market?tab=deals",
+        "dark-desktop-student-/market/new",
+        "dark-desktop-student-/market/new?type=gig",
+        "dark-desktop-student-/communities?tab=study_groups",
+        "dark-desktop-student-/communities/new",
+        "dark-desktop-student-/communities/new?kind=study_group",
+        "dark-desktop-student-/communities/placements-2027",
+        "dark-desktop-student-/user/aarav_p",
+        "dark-desktop-student-/chat/3eb75a36-59f1-4914-bc1b-8b428f441eb7",
+        "dark-desktop-student-/post/78bcacb4-d568-4fd9-bd54-c8f24e0b65ea",
+        "dark-desktop-student-/post/380b1efe-274c-46a0-ab73-b2c1694d9748",
+        "dark-desktop-student-/market/listing/8294f41d-3c7c-4bb7-b182-1fd42ac09424",
+        "dark-desktop-student-/market/gigs/c5aee756-0564-4341-9d81-9eb4ffa1487d",
+        "dark-desktop-student-/campus/events/90c4dd56-04c5-4598-b8d0-c30c73fa0855",
+        "dark-desktop-student-/campus/noticeboard/8525f5f3-14eb-4413-98a0-9037910e0bda",
+        "dark-desktop-student-/campus/clubs/f0ab4ade-8245-42ae-a5b2-16526b8521d2",
+        "dark-desktop-student-/explore/resources/c0d41930-a522-4d24-bd5a-e4aa05da3968",
+        "dark-desktop-student-/explore/opportunities/34d4554c-a495-4ea4-83b3-ea22e03b33ac",
+        "dark-desktop-student-/explore/projects/de2d0539-ddc5-4a23-b1bf-a39194ac1b62",
+        "dark-desktop-student-/campus/lost-found/064c805a-a475-4e6a-bc7a-ec09283c6f9d",
+        "dark-desktop-student-/campus/lost-found/13d2d9b7-915c-4443-b50f-920772c68329",
+        "dark-desktop-student-/settings?tab=profile",
+        "dark-desktop-student-/settings?tab=username",
+        "dark-desktop-student-/settings?tab=notifications",
+        "dark-desktop-student-/settings?tab=privacy",
+        "dark-desktop-student-/settings?tab=blocked",
+        "dark-desktop-student-/settings?tab=account",
+        "dark-desktop-student-/explore?q=no_such_contrast_fixture_result",
+        "dark-desktop-student-/moderator",
+        "dark-desktop-student-/admin",
+        "dark-desktop-student-/post/00000000-0000-0000-0000-000000000001",
+        "dark-desktop-student-/a-missing-campus-page",
+        "dark-desktop-student-/market/listing/5d31d1df-1b5d-4131-9ace-b46004f114c3/edit",
+        "dark-desktop-student-/rules",
+        "dark-desktop-moderator-/moderator",
+        "dark-desktop-moderator-/moderator?tab=marketplace",
+        "dark-desktop-moderator-/moderator?tab=random",
+        "dark-desktop-moderator-/moderator?tab=content",
+        "dark-desktop-moderator-/moderator?tab=audit",
+        "dark-desktop-admin-/admin",
+        "dark-desktop-admin-/admin?tab=roles",
+        "dark-desktop-admin-/admin?tab=permissions",
+        "dark-desktop-admin-/admin?tab=reports",
+        "dark-desktop-admin-/admin?tab=content",
+        "dark-desktop-admin-/admin?tab=marketplace",
+        "dark-desktop-admin-/admin?tab=events",
+        "dark-desktop-admin-/admin?tab=settings",
+        "dark-desktop-admin-/admin?tab=flags",
+        "dark-desktop-admin-/admin?tab=audit",
+        "dark-desktop-admin-/admin?tab=counts",
+        "dark-desktop-anonymous-/login",
+        "dark-desktop-anonymous-/login?error=domain",
+        "dark-desktop-anonymous-/login?notice=google",
+        "dark-desktop-onboarding-/onboarding",
+        "dark-desktop-suspended-/account-status",
+        "dark-gallery",
+        "dark-dropdown",
+        "dark-modal",
+        "dark-mobile-student-/home",
+        "dark-mobile-student-/explore",
+        "dark-mobile-student-/chat",
+        "dark-mobile-student-/market",
+        "dark-mobile-student-/notifications",
+        "dark-mobile-student-/settings?tab=appearance",
+        "dark-mobile-student-/profile",
+        "dark-mobile-student-320px-/settings?tab=appearance",
+        "dark-mobile-anonymous-/login?error=domain",
+        "light-desktop-student-/home",
+        "light-desktop-student-/explore",
+        "light-desktop-student-/communities",
+        "light-desktop-student-/chat",
+        "light-desktop-student-/market",
+        "light-desktop-student-/notifications",
+        "light-desktop-student-/settings?tab=appearance",
+        "light-desktop-student-/profile",
+        "light-desktop-student-/campus",
+        "light-desktop-student-/campus/noticeboard",
+        "light-desktop-student-/campus/events",
+        "light-desktop-student-/campus/clubs",
+        "light-desktop-student-/campus/utilities",
+        "light-desktop-student-/campus/lost-found",
+        "light-desktop-student-/campus/lost-found?kind=lost",
+        "light-desktop-student-/campus/lost-found?kind=found",
+        "light-desktop-student-/campus/lost-found/new",
+        "light-desktop-student-/campus/lost-found/new?kind=lost",
+        "light-desktop-student-/campus/lost-found/new?kind=found",
+        "light-desktop-student-/campus/housing",
+        "light-desktop-student-/campus/housing/new",
+        "light-desktop-student-/campus/rides",
+        "light-desktop-student-/campus/rides/new",
+        "light-desktop-student-/campus/teams",
+        "light-desktop-student-/campus/teams/new",
+        "light-desktop-student-/explore/resources",
+        "light-desktop-student-/explore/resources/new",
+        "light-desktop-student-/explore/opportunities",
+        "light-desktop-student-/explore/opportunities/new",
+        "light-desktop-student-/explore/projects",
+        "light-desktop-student-/explore/projects/new",
+        "light-desktop-student-/market?tab=gigs",
+        "light-desktop-student-/market?tab=deals",
+        "light-desktop-student-/market/new",
+        "light-desktop-student-/market/new?type=gig",
+        "light-desktop-student-/communities?tab=study_groups",
+        "light-desktop-student-/communities/new",
+        "light-desktop-student-/communities/new?kind=study_group",
+        "light-desktop-student-/communities/placements-2027",
+        "light-desktop-student-/user/aarav_p",
+        "light-desktop-student-/chat/3eb75a36-59f1-4914-bc1b-8b428f441eb7",
+        "light-desktop-student-/post/78bcacb4-d568-4fd9-bd54-c8f24e0b65ea",
+        "light-desktop-student-/post/380b1efe-274c-46a0-ab73-b2c1694d9748",
+        "light-desktop-student-/market/listing/8294f41d-3c7c-4bb7-b182-1fd42ac09424",
+        "light-desktop-student-/market/gigs/c5aee756-0564-4341-9d81-9eb4ffa1487d",
+        "light-desktop-student-/campus/events/90c4dd56-04c5-4598-b8d0-c30c73fa0855",
+        "light-desktop-student-/campus/noticeboard/8525f5f3-14eb-4413-98a0-9037910e0bda",
+        "light-desktop-student-/campus/clubs/f0ab4ade-8245-42ae-a5b2-16526b8521d2",
+        "light-desktop-student-/explore/resources/c0d41930-a522-4d24-bd5a-e4aa05da3968",
+        "light-desktop-student-/explore/opportunities/34d4554c-a495-4ea4-83b3-ea22e03b33ac",
+        "light-desktop-student-/explore/projects/de2d0539-ddc5-4a23-b1bf-a39194ac1b62",
+        "light-desktop-student-/campus/lost-found/064c805a-a475-4e6a-bc7a-ec09283c6f9d",
+        "light-desktop-student-/campus/lost-found/13d2d9b7-915c-4443-b50f-920772c68329",
+        "light-desktop-student-/settings?tab=profile",
+        "light-desktop-student-/settings?tab=username",
+        "light-desktop-student-/settings?tab=notifications",
+        "light-desktop-student-/settings?tab=privacy",
+        "light-desktop-student-/settings?tab=blocked",
+        "light-desktop-student-/settings?tab=account",
+        "light-desktop-student-/explore?q=no_such_contrast_fixture_result",
+        "light-desktop-student-/moderator",
+        "light-desktop-student-/admin",
+        "light-desktop-student-/post/00000000-0000-0000-0000-000000000001",
+        "light-desktop-student-/a-missing-campus-page",
+        "light-desktop-student-/market/listing/5d31d1df-1b5d-4131-9ace-b46004f114c3/edit",
+        "light-desktop-student-/rules",
+        "light-desktop-moderator-/moderator",
+        "light-desktop-moderator-/moderator?tab=marketplace",
+        "light-desktop-moderator-/moderator?tab=random",
+        "light-desktop-moderator-/moderator?tab=content",
+        "light-desktop-moderator-/moderator?tab=audit",
+        "light-desktop-admin-/admin",
+        "light-desktop-admin-/admin?tab=roles",
+        "light-desktop-admin-/admin?tab=permissions",
+        "light-desktop-admin-/admin?tab=reports",
+        "light-desktop-admin-/admin?tab=content",
+        "light-desktop-admin-/admin?tab=marketplace",
+        "light-desktop-admin-/admin?tab=events",
+        "light-desktop-admin-/admin?tab=settings",
+        "light-desktop-admin-/admin?tab=flags",
+        "light-desktop-admin-/admin?tab=audit",
+        "light-desktop-admin-/admin?tab=counts",
+        "light-desktop-anonymous-/login",
+        "light-desktop-anonymous-/login?error=domain",
+        "light-desktop-anonymous-/login?notice=google",
+        "light-desktop-onboarding-/onboarding",
+        "light-desktop-suspended-/account-status",
+        "light-gallery",
+        "light-dropdown",
+        "light-modal",
+        "light-mobile-student-/home",
+        "light-mobile-student-/explore",
+        "light-mobile-student-/chat",
+        "light-mobile-student-/market",
+        "light-mobile-student-/notifications",
+        "light-mobile-student-/settings?tab=appearance",
+        "light-mobile-student-/profile",
+        "light-mobile-student-320px-/settings?tab=appearance",
+        "light-mobile-anonymous-/login?error=domain"
+      ],
+      "focus": [
+        {
+          "label": "dark-desktop-student-/home-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2802
+        },
+        {
+          "label": "dark-desktop-student-/home-nav-focus-aside .nav-item[aria-current=\"page\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 967
+        },
+        {
+          "label": "dark-desktop-student-/home-nav-focus-aside .nav-item[href=\"/explore\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 1008
+        },
+        {
+          "label": "dark-desktop-student-/explore-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2781
+        },
+        {
+          "label": "dark-primary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 697
+        },
+        {
+          "label": "dark-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 676
+        },
+        {
+          "label": "dark-sheen-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 300
+        },
+        {
+          "label": "dark-secondary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 709
+        },
+        {
+          "label": "dark-quiet-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 564
+        },
+        {
+          "label": "dark-subtle-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 601
+        },
+        {
+          "label": "dark-danger-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 622
+        },
+        {
+          "label": "dark-delete-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 245
+        },
+        {
+          "label": "dark-keycap-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 354
+        },
+        {
+          "label": "dark-keycap-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 263
+        },
+        {
+          "label": "dark-icon-button-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 151
+        },
+        {
+          "label": "dark-chip-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 254
+        },
+        {
+          "label": "dark-input-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2766
+        },
+        {
+          "label": "dark-textarea-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3042
+        },
+        {
+          "label": "dark-select-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3422
+        },
+        {
+          "label": "dark-checkbox-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 114
+        },
+        {
+          "label": "dark-switch-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 151
+        },
+        {
+          "label": "dark-celestial-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 284
+        },
+        {
+          "label": "dark-wheel-light-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 520
+        },
+        {
+          "label": "dark-wheel-dark-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 590
+        },
+        {
+          "label": "dark-wheel-system-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 594
+        },
+        {
+          "label": "dark-mobile-student-/home-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 1133
+        },
+        {
+          "label": "dark-mobile-student-/home-nav-focus-.tab-item[aria-current=\"page\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 186
+        },
+        {
+          "label": "dark-mobile-student-/home-nav-focus-.tab-item[href=\"/explore\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 189
+        },
+        {
+          "label": "dark-mobile-student-/explore-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 1331
+        },
+        {
+          "label": "light-desktop-student-/home-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2803
+        },
+        {
+          "label": "light-desktop-student-/home-nav-focus-aside .nav-item[aria-current=\"page\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 970
+        },
+        {
+          "label": "light-desktop-student-/home-nav-focus-aside .nav-item[href=\"/explore\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 1009
+        },
+        {
+          "label": "light-desktop-student-/explore-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2783
+        },
+        {
+          "label": "light-primary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 698
+        },
+        {
+          "label": "light-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 677
+        },
+        {
+          "label": "light-sheen-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 253
+        },
+        {
+          "label": "light-secondary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 709
+        },
+        {
+          "label": "light-quiet-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 564
+        },
+        {
+          "label": "light-subtle-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 601
+        },
+        {
+          "label": "light-danger-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 622
+        },
+        {
+          "label": "light-delete-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 244
+        },
+        {
+          "label": "light-keycap-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 357
+        },
+        {
+          "label": "light-keycap-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 265
+        },
+        {
+          "label": "light-icon-button-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 153
+        },
+        {
+          "label": "light-chip-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 255
+        },
+        {
+          "label": "light-input-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2766
+        },
+        {
+          "label": "light-textarea-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3042
+        },
+        {
+          "label": "light-select-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3422
+        },
+        {
+          "label": "light-checkbox-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 116
+        },
+        {
+          "label": "light-switch-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 153
+        },
+        {
+          "label": "light-celestial-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 284
+        },
+        {
+          "label": "light-wheel-light-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 532
+        },
+        {
+          "label": "light-wheel-dark-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 602
+        },
+        {
+          "label": "light-wheel-system-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 606
+        },
+        {
+          "label": "light-mobile-student-/home-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 1135
+        },
+        {
+          "label": "light-mobile-student-/home-nav-focus-.tab-item[aria-current=\"page\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 186
+        },
+        {
+          "label": "light-mobile-student-/home-nav-focus-.tab-item[href=\"/explore\"]",
+          "outlineWidth": 2,
+          "visiblePixels": 187
+        },
+        {
+          "label": "light-mobile-student-/explore-search-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 1334
+        }
+      ],
+      "layouts": [
+        {
+          "label": "dark-desktop-student-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "dark-desktop-student-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "dark-desktop-student-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "dark-mobile-student-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "dark-mobile-student-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "dark-mobile-student-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "dark-mobile-student-320px-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "dark-mobile-student-320px-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "dark-mobile-student-320px-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "dark-desktop-intro",
+          "markFits": true,
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        {
+          "label": "dark-portrait-intro",
+          "markFits": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          }
+        },
+        {
+          "label": "light-desktop-student-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "light-desktop-student-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "light-desktop-student-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 678
+        },
+        {
+          "label": "light-mobile-student-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "light-mobile-student-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "light-mobile-student-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 324
+        },
+        {
+          "label": "light-mobile-student-320px-/settings?tab=appearance-wheel-light",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "light-mobile-student-320px-/settings?tab=appearance-wheel-dark",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "light-mobile-student-320px-/settings?tab=appearance-wheel-system",
+          "noOverlap": true,
+          "noClipping": true,
+          "panelWidth": 254
+        },
+        {
+          "label": "light-desktop-intro",
+          "markFits": true,
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        {
+          "label": "light-portrait-intro",
+          "markFits": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          }
+        }
+      ],
+      "toastSamples": [],
+      "failures": []
+    },
+    {
+      "name": "components-follow-up",
+      "startedAt": "2026-10-08T18:25:49.578Z",
+      "finishedAt": "2026-10-08T18:26:53.757Z",
+      "suite": "components",
+      "mode": "full",
+      "themes": "both",
+      "filters": {
+        "routes": [],
+        "role": "student"
+      },
+      "summary": {
+        "pageAudits": 6,
+        "paintAudits": 176,
+        "foregroundSamples": 7356,
+        "textSamples": 5742,
+        "iconSamples": 1614,
+        "focusStates": 42,
+        "layoutChecks": 0,
+        "failures": 0
+      },
+      "pageLabels": [
+        "dark-gallery",
+        "dark-dropdown",
+        "dark-modal",
+        "light-gallery",
+        "light-dropdown",
+        "light-modal"
+      ],
+      "focus": [
+        {
+          "label": "dark-primary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 697
+        },
+        {
+          "label": "dark-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 676
+        },
+        {
+          "label": "dark-sheen-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 300
+        },
+        {
+          "label": "dark-secondary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 709
+        },
+        {
+          "label": "dark-quiet-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 564
+        },
+        {
+          "label": "dark-subtle-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 601
+        },
+        {
+          "label": "dark-danger-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 622
+        },
+        {
+          "label": "dark-delete-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 245
+        },
+        {
+          "label": "dark-keycap-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 354
+        },
+        {
+          "label": "dark-keycap-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 263
+        },
+        {
+          "label": "dark-icon-button-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 151
+        },
+        {
+          "label": "dark-chip-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 254
+        },
+        {
+          "label": "dark-input-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2766
+        },
+        {
+          "label": "dark-textarea-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3042
+        },
+        {
+          "label": "dark-select-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3422
+        },
+        {
+          "label": "dark-checkbox-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 114
+        },
+        {
+          "label": "dark-switch-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 151
+        },
+        {
+          "label": "dark-celestial-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 284
+        },
+        {
+          "label": "dark-wheel-light-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 520
+        },
+        {
+          "label": "dark-wheel-dark-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 590
+        },
+        {
+          "label": "dark-wheel-system-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 594
+        },
+        {
+          "label": "light-primary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 698
+        },
+        {
+          "label": "light-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 677
+        },
+        {
+          "label": "light-sheen-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 253
+        },
+        {
+          "label": "light-secondary-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 709
+        },
+        {
+          "label": "light-quiet-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 564
+        },
+        {
+          "label": "light-subtle-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 601
+        },
+        {
+          "label": "light-danger-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 622
+        },
+        {
+          "label": "light-delete-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 244
+        },
+        {
+          "label": "light-keycap-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 357
+        },
+        {
+          "label": "light-keycap-accent-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 265
+        },
+        {
+          "label": "light-icon-button-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 153
+        },
+        {
+          "label": "light-chip-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 255
+        },
+        {
+          "label": "light-input-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 2766
+        },
+        {
+          "label": "light-textarea-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3042
+        },
+        {
+          "label": "light-select-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 3422
+        },
+        {
+          "label": "light-checkbox-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 116
+        },
+        {
+          "label": "light-switch-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 153
+        },
+        {
+          "label": "light-celestial-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 284
+        },
+        {
+          "label": "light-wheel-light-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 532
+        },
+        {
+          "label": "light-wheel-dark-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 602
+        },
+        {
+          "label": "light-wheel-system-focus",
+          "outlineWidth": 2,
+          "visiblePixels": 606
+        }
+      ],
+      "layouts": [],
+      "toastSamples": [
+        {
+          "label": "dark-toast-neutral",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "dark"
+        },
+        {
+          "label": "dark-toast-success",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "dark"
+        },
+        {
+          "label": "dark-toast-danger",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "dark"
+        },
+        {
+          "label": "light-toast-neutral",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "light"
+        },
+        {
+          "label": "light-toast-success",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "light"
+        },
+        {
+          "label": "light-toast-danger",
+          "checked": 2,
+          "minimumObserved": 14.969,
+          "theme": "light"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "name": "chat-thread-spot-check",
+      "startedAt": "2026-10-08T18:33:22.103Z",
+      "finishedAt": "2026-10-08T18:33:26.575Z",
+      "suite": "routes",
+      "mode": "quick",
+      "themes": "both",
+      "filters": {
+        "routes": [
+          "/chat/3eb75a36-59f1-4914-bc1b-8b428f441eb7"
+        ],
+        "role": "student"
+      },
+      "summary": {
+        "pageAudits": 2,
+        "paintAudits": 2,
+        "foregroundSamples": 164,
+        "textSamples": 114,
+        "iconSamples": 50,
+        "focusStates": 0,
+        "layoutChecks": 0,
+        "failures": 0
+      },
+      "pageLabels": [
+        "dark-desktop-student-/chat/3eb75a36-59f1-4914-bc1b-8b428f441eb7",
+        "light-desktop-student-/chat/3eb75a36-59f1-4914-bc1b-8b428f441eb7"
+      ],
+      "focus": [],
+      "layouts": [],
+      "toastSamples": [],
+      "failures": []
+    }
+  ],
+  "notes": [
+    "Run totals are not unique screens or a WCAG certification.",
+    "Component follow-up covers click-through toast foreground and enforces non-empty samples.",
+    "Local auth/SQL fixtures do not validate deployed OAuth, realtime transport or production data.",
+    "Blocked-users relationship unsupported by local stub; existing error presentation, not normal list, was rendered."
+  ],
+  "images": [
+    "dark-account-status.png",
+    "dark-admin.png",
+    "dark-appearance.png",
+    "dark-chat-thread.png",
+    "dark-chat.png",
+    "dark-communities.png",
+    "dark-components.png",
+    "dark-dialog.png",
+    "dark-explore.png",
+    "dark-home.png",
+    "dark-intro-desktop.png",
+    "dark-intro-portrait.png",
+    "dark-login.png",
+    "dark-market.png",
+    "dark-moderator.png",
+    "dark-notifications.png",
+    "dark-onboarding.png",
+    "dark-profile.png",
+    "dark-wheel-320px.png",
+    "light-account-status.png",
+    "light-admin.png",
+    "light-appearance.png",
+    "light-chat-thread.png",
+    "light-chat.png",
+    "light-communities.png",
+    "light-components.png",
+    "light-dialog.png",
+    "light-explore.png",
+    "light-home.png",
+    "light-intro-desktop.png",
+    "light-intro-portrait.png",
+    "light-login.png",
+    "light-market.png",
+    "light-moderator.png",
+    "light-notifications.png",
+    "light-onboarding.png",
+    "light-profile.png",
+    "light-wheel-320px.png"
+  ]
+}

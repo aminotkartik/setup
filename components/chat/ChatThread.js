@@ -202,8 +202,8 @@ export function ChatThread({
               ) : (
                 <div
                   className={cn(
-                    'max-w-[85%] rounded-lg border px-3 py-2',
-                    mine ? 'border-line bg-accent-soft' : 'border-line bg-surface',
+                    'cp-chat-bubble max-w-[85%] rounded-lg border px-3 py-2',
+                    mine ? 'cp-chat-bubble--mine' : null,
                   )}
                 >
                   {deleted ? (

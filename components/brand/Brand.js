@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import pccoeCrest from '@/public/brand/pccoe-crest.webp';
 import { Icon } from '@/components/ui/icons';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -45,7 +46,9 @@ export const LOGO_PLATE = false;
  * roughly 44px the crest stops being an identity cue and becomes noise, so it
  * is only placed where it can be shown at or above that size.
  */
-export const CREST_SRC = '/brand/pccoe-crest.webp';
+// Static imports are served from /_next/static/media, including on the public
+// sign-in page. Do not relax the auth proxy just to expose a brand asset.
+export const CREST_SRC = pccoeCrest.src;
 export const MIN_SIZE = 44;
 
 export function CollegeCrest({ size = MIN_SIZE, className = '', label = 'PCCOE crest' }) {

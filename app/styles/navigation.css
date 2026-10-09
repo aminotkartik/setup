@@ -20,8 +20,8 @@
   }
 
   .nav-item:hover {
-    background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
-    color: var(--c-ink);
+    background-color: var(--cp-hover-bg);
+    color: var(--cp-hover-text);
     text-decoration: none;
   }
 
@@ -30,8 +30,8 @@
   }
 
   .nav-item[aria-current='page'] {
-    background-color: color-mix(in oklab, var(--c-accent) 13%, transparent);
-    color: var(--c-ink);
+    background-color: var(--cp-selected-bg);
+    color: var(--cp-selected-text);
     font-weight: 620;
     box-shadow: var(--shadow-inset-top);
   }
@@ -50,7 +50,7 @@
   }
 
   .nav-item .nav-icon {
-    color: var(--c-muted-soft);
+    color: var(--cp-icon-muted);
     transition: color 0.16s ease;
   }
 
@@ -59,7 +59,7 @@
   }
 
   .nav-item[aria-current='page'] .nav-icon {
-    color: var(--c-accent);
+    color: var(--cp-text-accent);
   }
 
   .nav-count {
@@ -98,8 +98,8 @@
   }
 
   .tab-item[aria-current='page'] {
-    color: var(--c-accent);
-    background-color: color-mix(in oklab, var(--c-accent) 12%, transparent);
+    background-color: var(--cp-selected-bg);
+    color: var(--cp-selected-text);
     box-shadow: inset 0 1px 0 color-mix(in oklab, var(--c-highlight) 22%, transparent);
   }
 
@@ -130,8 +130,8 @@
     width: 2.125rem;
     height: 2.125rem;
     border-radius: var(--radius-md);
-    background-image: linear-gradient(145deg, color-mix(in oklab, var(--c-accent) 92%, #fff), var(--c-accent-press));
-    color: var(--c-on-accent);
+    background-image: linear-gradient(145deg, var(--cp-brand-bg), var(--cp-brand-bg-end));
+    color: var(--cp-brand-mark);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.45),
       0 6px 14px -8px color-mix(in oklab, var(--c-accent) 80%, transparent);
@@ -166,7 +166,7 @@
      contrast in the dark theme, and it keeps the asset's own proportions. */
   .brand-mark-img[data-plate='true'] {
     padding: 0.125rem;
-    background-color: #fff;
+    background-color: var(--cp-brand-plate);
     box-shadow:
       inset 0 0 0 1px rgba(0, 0, 0, 0.06),
       0 4px 12px -6px color-mix(in oklab, var(--c-ink) 45%, transparent);
@@ -214,7 +214,7 @@
     width: var(--crest-size, 1.75rem);
     height: var(--crest-size, 1.75rem);
     border-radius: 999px;
-    background-color: #fff;
+    background-color: var(--cp-brand-plate);
     box-shadow:
       inset 0 0 0 1px rgba(0, 0, 0, 0.07),
       0 2px 8px -4px color-mix(in oklab, var(--c-ink) 40%, transparent);
@@ -258,8 +258,9 @@
     left: 0.75rem;
     top: 0.75rem;
     border-radius: var(--radius-md);
-    background-color: var(--c-surface);
-    border: 1px solid var(--c-line);
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
+    border: 1px solid var(--cp-border-control);
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
     box-shadow: var(--shadow-float);

@@ -11,7 +11,8 @@
 
   .card {
     position: relative;
-    background-color: var(--c-surface);
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
     border: 1px solid var(--c-line);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
@@ -44,7 +45,8 @@
 
   /* A card that reads as an inset well (timelines, nested rows). */
   .card-flush {
-    background-color: var(--c-surface-2);
+    background-color: var(--cp-bg-subtle);
+    color: var(--cp-text-primary);
     border: 1px solid var(--c-line);
     border-radius: var(--radius-md);
     box-shadow: none;
@@ -58,7 +60,8 @@
 
   /* Elevated: for the one card in a column that should sit above the rest. */
   .card-elevated {
-    background-color: var(--c-surface);
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
     border: 1px solid var(--c-line);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-raised);
@@ -77,7 +80,8 @@
   /* ---------------------------------------------------------- glass material */
 
   .glass {
-    background-color: var(--c-glass-bg);
+    background-color: var(--cp-bg-glass);
+    color: var(--cp-text-primary);
     /* The faint blue cast that keeps the material from reading as plain grey
        transparency — the "liquid" in the liquid glass. */
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 62%);
@@ -88,7 +92,8 @@
   }
 
   .glass-soft {
-    background-color: color-mix(in oklab, var(--c-surface) 86%, transparent);
+    background-color: var(--cp-bg-glass-soft);
+    color: var(--cp-text-primary);
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 70%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     backdrop-filter: blur(14px) saturate(140%);
@@ -96,7 +101,8 @@
   }
 
   .glass-strong {
-    background-color: color-mix(in oklab, var(--c-surface) 92%, transparent);
+    background-color: var(--cp-bg-glass-strong);
+    color: var(--cp-text-primary);
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 58%);
     -webkit-backdrop-filter: blur(26px) saturate(160%);
     backdrop-filter: blur(26px) saturate(160%);
@@ -107,7 +113,8 @@
   /* Level 2 — floating glass: headers, menus, sheets, dialogs. Crisper
      edges and more lift than the everyday card material. */
   .glass-floating {
-    background-color: color-mix(in oklab, var(--c-surface) 82%, transparent);
+    background-color: var(--cp-bg-glass-strong);
+    color: var(--cp-text-primary);
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 60%);
     -webkit-backdrop-filter: blur(22px) saturate(165%);
     backdrop-filter: blur(22px) saturate(165%);
@@ -120,11 +127,13 @@
      rest without shouting. */
   .glass-featured {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
-    background-color: color-mix(in oklab, var(--c-surface) 76%, transparent);
+    background-color: var(--cp-bg-glass-soft);
+    color: var(--cp-text-primary);
     background-image: linear-gradient(
       155deg,
-      color-mix(in oklab, var(--c-accent) 12%, transparent),
+      var(--cp-glass-tint),
       transparent 58%
     );
     -webkit-backdrop-filter: blur(20px) saturate(170%);
@@ -137,46 +146,35 @@
     content: '';
     position: absolute;
     inset: -40% -60%;
+    z-index: 0;
     pointer-events: none;
     background: linear-gradient(
       115deg,
       transparent 32%,
-      color-mix(in oklab, var(--c-highlight) 28%, transparent) 50%,
+      var(--cp-glass-reflection) 50%,
       transparent 68%
     );
     animation: glass-drift 11s ease-in-out infinite alternate;
     opacity: 0.55;
   }
 
-  /* Level 4 — cinematic glass: Login and Home atmospheric areas only. These
-     sit over the deep blue particle sky in *both* themes (the atmosphere is
-     the product's cinematic language), so the panel is warm light glass with
-     warm charcoal text — the "warm contrast" of the identity, fixed colors
-     so it never flips against the sky. */
+  /* Level 4 — cinematic glass: independently paired in each theme. The
+     cinematic sky remains blue, the content panel follows the user's theme. */
   .glass-cinematic {
-    background-color: rgba(250, 248, 244, 0.82);
-    background-image: linear-gradient(
-      160deg,
-      rgba(255, 255, 255, 0.55),
-      rgba(226, 236, 252, 0.28) 55%,
-      rgba(255, 255, 255, 0.12)
-    );
+    background-color: var(--cp-bg-cinematic-glass);
+    background-image: linear-gradient(160deg, var(--cp-glass-reflection), var(--cp-glass-tint) 55%, transparent);
+    color: var(--cp-text-primary);
     -webkit-backdrop-filter: blur(22px) saturate(150%);
     backdrop-filter: blur(22px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow:
-      0 32px 70px -32px rgba(4, 10, 28, 0.75),
-      inset 0 1px 0 rgba(255, 255, 255, 0.65);
-    color: #1c1b19;
+    border: 1px solid var(--cp-cinematic-border);
+    box-shadow: var(--shadow-float), var(--shadow-inset-top);
   }
 
-  /* Inside the cinematic panel, quiet text keeps warm-charcoal tones in both
-     themes — the panel owns its own micro-palette. */
-  .glass-cinematic .text-muted,
-  .glass-cinematic .t-secondary,
-  .glass-cinematic .t-caption,
-  .glass-cinematic .t-label {
-    color: #6b6459;
+  /* Reflections live underneath real content, even while drifting. */
+  .glass-featured > *,
+  .glass-sheen > * {
+    position: relative;
+    z-index: 1;
   }
 
   @keyframes glass-drift {
@@ -196,6 +194,7 @@
 
   .glass-sheen {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
   }
 
@@ -204,8 +203,9 @@
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 0;
     pointer-events: none;
-    background: linear-gradient(135deg, color-mix(in oklab, var(--c-highlight) 45%, transparent) 0%, transparent 42%);
+    background: linear-gradient(135deg, var(--cp-glass-reflection) 0%, transparent 42%);
     opacity: 0.5;
     border-radius: inherit;
   }
@@ -213,15 +213,54 @@
   /* ------------------------------------------------------------- notices */
 
   .notice {
+    --notice-bg: var(--cp-bg-subtle);
+    --notice-text: var(--cp-text-primary);
+    --notice-border: var(--cp-border-subtle);
+    --notice-icon: var(--cp-icon-muted);
     display: flex;
     align-items: flex-start;
     gap: 0.625rem;
     border-radius: var(--radius-md);
-    border: 1px solid var(--c-line);
-    background-color: var(--c-surface-2);
+    border: 1px solid var(--notice-border);
+    background-color: var(--notice-bg);
+    color: var(--notice-text);
     padding: 0.6875rem 0.8125rem;
     font-size: 0.8125rem;
     line-height: 1.5;
+  }
+
+  .notice__icon {
+    color: var(--notice-icon);
+  }
+
+  .notice-accent {
+    --notice-bg: var(--cp-bg-accent-soft);
+    --notice-border: var(--cp-selected-border);
+    --notice-icon: var(--cp-text-on-accent-soft);
+  }
+
+  .notice-danger {
+    --notice-bg: var(--cp-danger-bg);
+    --notice-border: var(--cp-danger-border);
+    --notice-icon: var(--cp-danger-text);
+  }
+
+  .notice-success {
+    --notice-bg: var(--cp-success-bg);
+    --notice-border: var(--cp-success-border);
+    --notice-icon: var(--cp-success-text);
+  }
+
+  .notice-warning {
+    --notice-bg: var(--cp-warning-bg);
+    --notice-border: var(--cp-warning-border);
+    --notice-icon: var(--cp-warning-text);
+  }
+
+  .notice-info {
+    --notice-bg: var(--cp-info-bg);
+    --notice-border: var(--cp-info-border);
+    --notice-icon: var(--cp-info-text);
   }
 
   /* -------------------------------------------------------------- divider */
@@ -252,7 +291,8 @@
   }
 
   .row-link:hover {
-    background-color: var(--c-surface-2);
+    background-color: var(--cp-bg-subtle);
+    color: var(--cp-text-primary);
     text-decoration: none;
   }
 
@@ -264,9 +304,10 @@
     justify-content: center;
     flex-shrink: 0;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--c-line);
+    border: 1px solid var(--cp-border-subtle);
+    background-color: var(--cp-bg-elevated);
     background-image: linear-gradient(150deg, var(--c-surface-3), var(--c-surface));
-    color: var(--c-muted);
+    color: var(--cp-text-muted);
     font-weight: 600;
     letter-spacing: -0.01em;
     box-shadow: var(--shadow-inset-top);
@@ -286,8 +327,9 @@
     gap: 0.25rem;
     border-radius: 999px;
     border: 1px solid var(--c-line);
-    background-color: var(--c-surface-2);
-    color: var(--c-muted);
+    background-color: var(--cp-bg-subtle);
+    color: var(--cp-text-primary);
+    color: var(--cp-text-muted);
     padding: 0.125rem 0.5rem;
     font-size: 0.6875rem;
     font-weight: 600;
@@ -298,39 +340,39 @@
 
   .badge-accent {
     border-color: color-mix(in oklab, var(--c-accent) 30%, transparent);
-    background-color: var(--c-accent-soft);
-    color: var(--c-accent-ink);
+    background-color: var(--cp-bg-accent-soft);
+    color: var(--cp-text-on-accent-soft);
   }
 
   .badge-danger {
-    border-color: color-mix(in oklab, var(--c-danger) 32%, transparent);
-    background-color: var(--c-danger-soft);
-    color: var(--c-danger);
+    border-color: var(--cp-danger-border);
+    background-color: var(--cp-danger-bg);
+    color: var(--cp-danger-text);
   }
 
   .badge-warning {
-    border-color: color-mix(in oklab, var(--c-warning) 32%, transparent);
-    background-color: var(--c-warning-soft);
-    color: var(--c-warning);
+    border-color: var(--cp-warning-border);
+    background-color: var(--cp-warning-bg);
+    color: var(--cp-warning-text);
   }
 
   .badge-success {
-    border-color: color-mix(in oklab, var(--c-success) 32%, transparent);
-    background-color: var(--c-success-soft);
-    color: var(--c-success);
+    border-color: var(--cp-success-border);
+    background-color: var(--cp-success-bg);
+    color: var(--cp-success-text);
   }
 
   .badge-info {
-    border-color: color-mix(in oklab, var(--c-info) 32%, transparent);
-    background-color: var(--c-info-soft);
-    color: var(--c-info);
+    border-color: var(--cp-info-border);
+    background-color: var(--cp-info-bg);
+    color: var(--cp-info-text);
   }
 
   /* Unread/priority marker: a claim, never decoration. */
   .badge-live {
     border-color: color-mix(in oklab, var(--c-unread) 38%, transparent);
-    background-color: var(--c-accent-soft);
-    color: var(--c-accent-ink);
+    background-color: var(--cp-bg-accent-soft);
+    color: var(--cp-text-on-accent-soft);
   }
 
   .unread-dot {
@@ -349,9 +391,9 @@
     align-items: center;
     gap: 0.375rem;
     border-radius: 999px;
-    border: 1px solid var(--c-line);
-    background-color: var(--c-surface);
-    color: var(--c-muted);
+    border: 1px solid var(--cp-border-control);
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-muted);
     padding: 0.3125rem 0.75rem;
     font-size: 0.6875rem;
     font-weight: 600;
@@ -367,17 +409,17 @@
      affordance — they are labels, not controls. */
   .chip-static {
     padding: 0.1875rem 0.625rem;
-    color: var(--c-muted);
+    color: var(--cp-text-muted);
     pointer-events: none;
   }
 
-  .chip:hover {
+  .chip:hover:not(:disabled):not([aria-disabled='true']) {
     color: var(--c-ink);
     border-color: var(--c-line-strong);
     text-decoration: none;
   }
 
-  .chip:active {
+  .chip:active:not(:disabled):not([aria-disabled='true']) {
     transform: translateY(1px);
   }
 
@@ -394,7 +436,7 @@
       transform 0.12s ease;
   }
 
-  .chip-toggle:active {
+  .chip-toggle:active:not(:disabled) {
     transform: scale(0.96);
   }
 
@@ -404,18 +446,79 @@
     background-color: transparent;
   }
 
-  .chip-plain:hover {
+  .chip-plain:hover:not(:disabled) {
     border-color: transparent;
-    background-color: color-mix(in oklab, var(--c-ink) 5%, transparent);
+    background-color: var(--cp-hover-bg);
   }
 
   .chip[aria-current='page'],
   .chip[data-active='true'],
   .chip[aria-selected='true'],
   .chip[aria-pressed='true'] {
-    border-color: color-mix(in oklab, var(--c-accent) 34%, transparent);
-    background-color: var(--c-accent-soft);
-    color: var(--c-accent-ink);
+    border-color: var(--cp-selected-border);
+    background-color: var(--cp-selected-bg);
+    color: var(--cp-selected-text);
     box-shadow: var(--shadow-inset-top);
   }
+  .chip:disabled,
+  .chip[aria-disabled='true'] {
+    background-color: var(--cp-disabled-bg);
+    color: var(--cp-disabled-text);
+    border-color: var(--cp-disabled-border);
+    border-style: dashed;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .chip:disabled[aria-pressed='true'] {
+    background-color: var(--cp-disabled-selected-bg);
+    color: var(--cp-disabled-selected-text);
+    border-color: var(--cp-selected-border);
+  }
+
+  .cp-chat-bubble {
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
+    border-color: var(--cp-border-subtle);
+  }
+
+  .cp-chat-bubble--mine {
+    background-color: var(--cp-bg-accent-soft);
+    border-color: var(--cp-selected-border);
+  }
+
+  /* A closed/voted poll is still content: disabled options keep their text
+     and percentages readable instead of inheriting generic disabled fading. */
+  .cp-poll-option {
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
+    border-color: var(--cp-border-control);
+  }
+
+  .cp-poll-option:hover:not(:disabled) {
+    background-color: var(--cp-hover-bg);
+  }
+
+  .cp-poll-option--selected,
+  .cp-poll-option[aria-pressed='true'] {
+    background-color: var(--cp-selected-bg);
+    border-color: var(--cp-selected-border);
+  }
+
+  .cp-poll-option:disabled {
+    cursor: default;
+  }
+
+  .cp-poll-track {
+    background-color: var(--cp-poll-track);
+  }
+
+  .cp-poll-fill {
+    background-color: var(--cp-poll-fill);
+  }
+
+  .cp-poll-fill--selected {
+    background-color: var(--cp-text-accent);
+  }
+
 }

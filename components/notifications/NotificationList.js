@@ -111,7 +111,7 @@ export function NotificationList({ items = [], emptyTitle = 'No notifications ye
         </Button>
       </div>
 
-      <ul className={cn('card divide-y divide-line overflow-hidden', pending && 'opacity-70')}>
+      <ul className="card divide-y divide-line overflow-hidden" aria-busy={pending || undefined}>
         {items.map((item) => {
           const tone = TONE_BY_TYPE[item.type];
           const body = (

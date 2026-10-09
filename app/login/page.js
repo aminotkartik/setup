@@ -22,7 +22,7 @@ export const metadata = { title: 'Sign in' };
  *
  * The layout is the product's front door: the brand, one blue call to action
  * and the three facts that matter. A cinematic stage — the blue particle sky
- * (atmosphere, paused whenever the tab hides) with a single warm light glass
+ * (atmosphere, paused whenever the tab hides) with a single theme-paired glass
  * panel floating over it. This is the only place besides Home allowed to run
  * the full atmosphere.
  */
@@ -44,9 +44,9 @@ export default async function LoginPage({ searchParams }) {
   return (
     <div className="cinematic-stage min-h-dvh">
       <ParticleField density={1} interactive />
-      <div className="login-sky relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10 sm:py-14">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10 sm:py-14">
       {/* Brand area — the logo carries the identity before a single word is read. */}
-      <div className="flex flex-col items-start">
+      <div className="login-sky flex flex-col items-start">
         <BrandLockup href="/" size="lg" className="login-halo w-fit" wordClass="text-[1.3125rem]" />
         <div className="mt-6 flex items-center gap-3">
           <CollegeCrest size={56} />
@@ -72,7 +72,7 @@ export default async function LoginPage({ searchParams }) {
         <LoginForm next={next} />
       </GlassSurface>
 
-      <ul className="mt-7 flex flex-col gap-2.5 text-[0.8125rem] text-muted">
+      <ul className="login-sky mt-7 flex flex-col gap-2.5 text-[0.8125rem] text-muted">
         <li className="flex items-start gap-2.5">
           <span className="login-fact">
             <Icon name="mail" size={15} />
@@ -95,7 +95,7 @@ export default async function LoginPage({ searchParams }) {
         </li>
       </ul>
 
-      <p className="mt-8 text-2xs leading-relaxed text-muted">
+      <p className="login-sky mt-8 text-2xs leading-relaxed text-muted">
         Campus+ is not affiliated with or endorsed by PCCOE. By continuing you agree to keep the space
         respectful and to follow the{' '}
         <Link href="/rules" className="font-semibold text-ink underline">
