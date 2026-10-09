@@ -17,6 +17,7 @@ import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
 import { IdentityMark, Sheet, StaffDot, ThemeSwitch } from '@/components/ui';
 import { SignOutButton } from '@/components/auth/SignOutButton';
+import { openCommandPalette } from '@/components/search/CommandPalette';
 
 function SheetLink({ href, icon, label, count = 0, onNavigate }) {
   return (
@@ -46,8 +47,23 @@ export function MobileMenu({ user = null, isStaff = false, canModerate = false, 
 
       <Sheet open={open} onClose={close} title="Menu" size="sm">
         <div className="mt-3 flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              openCommandPalette();
+            }}
+            className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-left text-[0.875rem] font-medium text-ink transition-colors hover:bg-surface-2"
+          >
+            <span className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] border border-line bg-surface text-muted">
+              <Icon name="grid" size={16} />
+            </span>
+            <span className="flex-1">Quick actions</span>
+            <span className="text-2xs text-muted-soft">⌘K</span>
+          </button>
           <SheetLink href={ROUTES.communities} icon="users" label="Communities" onNavigate={close} />
           <SheetLink href={ROUTES.campus} icon="building" label="Campus" onNavigate={close} />
+          <SheetLink href={ROUTES.study} icon="book" label="Study finder" onNavigate={close} />
           <SheetLink href={ROUTES.notifications} icon="bell" label="Notifications" onNavigate={close} />
           <SheetLink href={ROUTES.settings} icon="settings" label="Settings" onNavigate={close} />
           {canModerate ? <SheetLink href={ROUTES.moderator} icon="shield" label="Moderation" onNavigate={close} /> : null}

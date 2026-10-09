@@ -1,6 +1,6 @@
 import { requireUser } from '@/lib/auth/session';
 import { can, toActor } from '@/lib/permissions/authorization';
-import { PageHeader, Notice } from '@/components/ui';
+import { PageHeader, Notice, Card } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { submitResource } from '@/lib/actions/campus';
 import { BRANCHES, YEARS, SEMESTERS, RESOURCE_TYPES, LIMITS } from '@/lib/constants';
@@ -46,6 +46,15 @@ export default async function NewResourcePage() {
           { name: 'subject', label: 'Subject', maxLength: 120 },
         ]}
       />
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold">Contribution policy</h2>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-2xs text-muted">
+          <li>Share links you have the right to share — no pirated material or paywalled content.</li>
+          <li>Resources are text-first: a working link plus a short note about what it is.</li>
+          <li>Student submissions stay labelled community — staff approval never makes them official.</li>
+          <li>Flag broken or inappropriate entries with the report link on the resource page.</li>
+        </ul>
+      </Card>
     </div>
   );
 }

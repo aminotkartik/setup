@@ -8,6 +8,8 @@ import { UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Badge, Notice, Card, StaffDot } from '@/components/ui';
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { RsvpForm } from '@/components/campus/RsvpForm';
+import { EventReviewActions, EventWithdrawAction } from '@/components/campus/EventSubmissionActions';
+import { categoryLabel } from '@/components/campus/eventMeta';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { ExternalLink } from '@/components/content/ExternalLink';
@@ -39,7 +41,10 @@ export default async function EventPage({ params }) {
   if (!event) notFound();
 
   const isStaff = can(actor, 'manage_events') || can(actor, 'moderate_all');
-  if (event.status !== 'published' && !isStaff) notFound();
+  const isCreator = event.created_by === user.profile.id;
+  // Drafts are visible to staff (review) and to their own submitter (tracking);
+  // everyone else only ever sees published events.
+  if (event.status !== 'published' && !isStaff && !isCreator) notFound();
 
   const [rsvp, attendees] = await Promise.all([
     getEventRsvp(supabase, event.id, user.profile.id),
@@ -72,9 +77,26 @@ export default async function EventPage({ params }) {
 
       <div className="flex flex-wrap items-center gap-2">
         {event.is_official ? <Badge tone="accent">Official</Badge> : <Badge>Student-organized</Badge>}
-        {event.status !== 'published' ? <Badge tone="danger">{event.status}</Badge> : null}
+        {event.status !== 'published' ? <Badge tone={event.status === 'draft' ? 'warning' : 'danger'}>{event.status === 'draft' ? 'In review' : event.status}</Badge> : null}
         {event.club_id ? <Badge>Club event</Badge> : null}
+        {categoryLabel(event.category) ? <Badge>{categoryLabel(event.category)}</Badge> : null}
       </div>
+
+      {event.status === 'draft' && isStaff ? (
+        <Card className="flex flex-col gap-2 p-4">
+          <h2 className="text-sm font-semibold">Review this submission</h2>
+          <p className="text-2xs text-muted">Publishing keeps it labelled student-organized — never official.</p>
+          <EventReviewActions eventId={event.id} />
+        </Card>
+      ) : null}
+
+      {event.status === 'draft' && isCreator && !isStaff ? (
+        <Card className="flex flex-col gap-2 p-4">
+          <h2 className="text-sm font-semibold">Your submission is in review</h2>
+          <p className="text-2xs text-muted">Staff will publish or decline it. You can withdraw it any time before then.</p>
+          <EventWithdrawAction eventId={event.id} />
+        </Card>
+      ) : null}
 
       <Card className="flex flex-col gap-3 p-4">
         {event.description ? (

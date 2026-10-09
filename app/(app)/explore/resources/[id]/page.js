@@ -4,7 +4,7 @@ import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { getResource } from '@/lib/data/campus';
 import { UUID_REGEX } from '@/lib/constants';
-import { PageHeader, Badge, Notice, Card, StaffDot } from '@/components/ui';
+import { PageHeader, Badge, Notice, Card, StaffDot, LinkButton } from '@/components/ui';
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { ExternalLink } from '@/components/content/ExternalLink';
 import { ReportDialog } from '@/components/social/ReportDialog';
@@ -74,6 +74,15 @@ export default async function ResourcePage({ params }) {
             isStaff={submitter.is_staff}
             badge={submitter.is_staff ? <StaffDot label="Campus+ staff" /> : null}
           />
+        </Card>
+      ) : null}
+
+      {resource.subject ? (
+        <Card className="flex flex-wrap items-center justify-between gap-2 p-4">
+          <p className="text-2xs text-muted">More in <strong>{resource.subject}</strong></p>
+          <LinkButton href={`/explore/collections/${encodeURIComponent(resource.subject)}`} size="sm" variant="quiet">
+            Browse the collection
+          </LinkButton>
         </Card>
       ) : null}
 
