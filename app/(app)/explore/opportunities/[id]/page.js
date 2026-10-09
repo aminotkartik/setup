@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { getOpportunity } from '@/lib/data/campus';
-import { UUID_REGEX } from '@/lib/constants';
+import { OPPORTUNITY_CATEGORIES, UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Badge, Card, Notice } from '@/components/ui';
 import { ExternalLink } from '@/components/content/ExternalLink';
 import { ReportDialog } from '@/components/social/ReportDialog';
@@ -39,6 +39,7 @@ export default async function OpportunityPage({ params }) {
 
       <div className="flex flex-wrap items-center gap-2">
         {opportunity.source === 'official' ? <Badge tone="accent">Official</Badge> : <Badge>Community submitted</Badge>}
+        {opportunity.category ? <Badge>{OPPORTUNITY_CATEGORIES.find((c) => c.value === opportunity.category)?.label || opportunity.category}</Badge> : null}
         {opportunity.mode ? <Badge>{opportunity.mode}</Badge> : null}
         {expired ? <Badge tone="danger">Deadline passed</Badge> : null}
         {opportunity.status !== 'published' ? <Badge tone="danger">{opportunity.status}</Badge> : null}

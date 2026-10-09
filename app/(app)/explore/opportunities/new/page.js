@@ -1,5 +1,6 @@
 import { requireUser } from '@/lib/auth/session';
 import { can, toActor } from '@/lib/permissions/authorization';
+import { OPPORTUNITY_CATEGORIES } from '@/lib/constants';
 import { PageHeader, Notice } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { submitOpportunity } from '@/lib/actions/campus';
@@ -39,6 +40,7 @@ export default async function NewOpportunityPage() {
           { name: 'organization', label: 'Organization', required: true, maxLength: 140 },
           { name: 'url', label: 'Link', required: true, placeholder: 'https://…' },
           { name: 'description', label: 'Description', type: 'textarea', required: true, maxLength: 2000 },
+          { name: 'category', label: 'Category', type: 'select', options: OPPORTUNITY_CATEGORIES.map((option) => ({ value: option.value, label: option.label })) },
           { name: 'eligibility', label: 'Eligibility', type: 'textarea', maxLength: 1000 },
           { name: 'deadline', label: 'Deadline', type: 'date' },
           { name: 'location', label: 'Location', maxLength: 140 },

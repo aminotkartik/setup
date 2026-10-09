@@ -180,8 +180,8 @@ export default async function ExplorePage({ searchParams }) {
         )}
       </section>
 
-      <section aria-label="Study groups and team finder">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <section aria-label="Study groups, study partners and team finder">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="p-4">
             <h2 className="text-sm font-semibold">Study groups</h2>
             <p className="mt-1 text-[0.8125rem] text-muted">
@@ -189,6 +189,15 @@ export default async function ExplorePage({ searchParams }) {
             </p>
             <Link href="/communities?kind=study_group" className="mt-3 inline-flex items-center gap-1 text-2xs text-ink underline">
               Browse study groups <Icon name="chevronRight" size={13} />
+            </Link>
+          </Card>
+          <Card className="p-4">
+            <h2 className="text-sm font-semibold">Study partner finder</h2>
+            <p className="mt-1 text-[0.8125rem] text-muted">
+              Preparing for an exam or working through a subject? Find peers with matching rough availability.
+            </p>
+            <Link href={ROUTES.study} className="mt-3 inline-flex items-center gap-1 text-2xs text-ink underline">
+              Find a study partner <Icon name="chevronRight" size={13} />
             </Link>
           </Card>
           <Card className="p-4">

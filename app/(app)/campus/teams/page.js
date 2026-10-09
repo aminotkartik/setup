@@ -36,6 +36,11 @@ export default async function TeamsPage() {
 
       {unavailable ? <Notice tone="warning" icon="flag">Team posts could not be loaded right now.</Notice> : null}
 
+      <Notice tone="info" icon="book">
+        Studying for a subject or exam instead of building a project?{' '}
+        <LinkButton href={ROUTES.study} size="sm" variant="ghost">Try the study partner finder</LinkButton>
+      </Notice>
+
       {!unavailable && !items.length ? (
         <EmptyState
           icon="users"

@@ -124,7 +124,7 @@ export function SearchResults({ initialQuery = '', initialScope = 'all' }) {
         <EmptyState
           icon="search"
           title="Search Campus+"
-          description="People, posts, discussions, communities, events, listings, clubs, resources, opportunities and projects. Private messages are never searchable."
+          description="People, posts, discussions, communities, events, listings, clubs, resources, opportunities, projects and study requests. Private messages are never searchable."
         />
       ) : null}
 
@@ -215,6 +215,8 @@ function iconFor(scope) {
       return 'briefcase';
     case 'projects':
       return 'sparkle';
+    case 'study':
+      return 'book';
     default:
       return 'comment';
   }
