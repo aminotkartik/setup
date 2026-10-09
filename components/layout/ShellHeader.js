@@ -29,7 +29,7 @@ function NotificationBell({ unreadNotifications = 0 }) {
     >
       <Icon name="bell" size={19} />
       {unreadNotifications > 0 ? (
-        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.5625rem] font-bold text-on-accent">
+        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-fill px-1 text-[0.5625rem] font-bold text-on-accent">
           {unreadNotifications > 99 ? '99+' : unreadNotifications}
         </span>
       ) : null}

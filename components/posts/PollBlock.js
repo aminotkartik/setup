@@ -42,8 +42,8 @@ export function PollBlock({ postId, poll, canVote = true }) {
                   run(data);
                 }}
                 className={cn(
-                  'group w-full overflow-hidden rounded-[var(--radius-sm)] border px-3 py-2 text-left transition-all',
-                  mine ? 'border-accent/45 bg-accent-tint' : 'border-line bg-surface hover:border-line-strong',
+                  'cp-poll-option group w-full overflow-hidden rounded-[var(--radius-sm)] border px-3 py-2 text-left transition-all',
+                  mine ? 'cp-poll-option--selected' : null,
                   !canVote || myOption || closed ? 'cursor-default' : 'cursor-pointer active:scale-[0.995]',
                 )}
                 aria-pressed={mine}
@@ -56,9 +56,9 @@ export function PollBlock({ postId, poll, canVote = true }) {
                   {showResults ? <span className="shrink-0 text-2xs font-semibold text-muted t-numeric">{share}%</span> : null}
                 </span>
                 {showResults ? (
-                  <span className="mt-2 block h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
+                  <span className="cp-poll-track mt-2 block h-1.5 w-full overflow-hidden rounded-full">
                     <span
-                      className={cn('block h-full rounded-full transition-[width] duration-500', mine ? 'bg-accent' : 'bg-line-strong')}
+                      className={cn('cp-poll-fill block h-full rounded-full transition-[width] duration-500', mine ? 'cp-poll-fill--selected' : null)}
                       style={{ width: `${share}%` }}
                     />
                   </span>

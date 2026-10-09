@@ -35,7 +35,7 @@ export function TiltCard({ children, className = '', cardClassName = '', flat = 
         ))}
       </div>
       <div className={cn('tilt__card', cardClassName)}>
-        {children}
+        <div className="tilt__content">{children}</div>
         <span className="tilt-glass" aria-hidden="true" />
       </div>
     </div>
@@ -47,11 +47,11 @@ export function TiltCard({ children, className = '', cardClassName = '', flat = 
  * switch must agree), uncontrolled when it is not, so it can still be rendered
  * from a server component.
  *
- * @param {{ name: string, value: string, label: string, num?: string, note?: string }[]} options
+ * @param {{ value: string, label: string, num?: string, note?: string, disabled?: boolean }[]} options
  * @param {string} [value] currently selected value
  * @param {string} [defaultValue] initial value for uncontrolled use
  */
-export function WheelSelector({ name, options = [], value, defaultValue, legend = 'Choose one', className = '', onChange = null }) {
+export function WheelSelector({ name, options = [], value, defaultValue, legend = 'Choose one', className = '', onChange = null, disabled = false }) {
   const chosen = value === undefined ? defaultValue : value;
   const selected = options.findIndex((option) => option.value === chosen);
   const activeIndex = selected === -1 ? 0 : selected;
@@ -66,10 +66,10 @@ export function WheelSelector({ name, options = [], value, defaultValue, legend 
   });
 
   return (
-    <fieldset className={cn('wheel', className)} style={geometry}>
+    <fieldset className={cn('wheel', className)} style={geometry} data-layout={options.length === 3 ? 'dial' : 'list'}>
       <legend className="sr-only">{legend}</legend>
       <span className="wheel__hint" aria-hidden="true">
-        Pick one
+        {disabled ? 'Unavailable' : 'Pick one'}
       </span>
       <div className="wheel__panel">
         <div className="wheel__spin">
@@ -81,6 +81,7 @@ export function WheelSelector({ name, options = [], value, defaultValue, legend 
                 id={`${name}-${option.value}`}
                 name={name}
                 value={option.value}
+                disabled={disabled || option.disabled}
                 {...(onChange ? { checked: index === activeIndex } : { defaultChecked: index === activeIndex })}
                 onChange={onChange ? () => onChange(option.value) : undefined}
               />
@@ -89,9 +90,11 @@ export function WheelSelector({ name, options = [], value, defaultValue, legend 
                 htmlFor={`${name}-${option.value}`}
                 style={{ '--angle': `calc(var(--wheel-step) * ${index - centre})` }}
               >
-                <span className="wheel__num">{option.num || String(index + 1).padStart(2, '0')}</span>
-                <span className="wheel__label">{option.label}</span>
-                {option.note ? <span className="wheel__note">{option.note}</span> : null}
+                <span className="wheel__copy">
+                  <span className="wheel__num">{option.num || String(index + 1).padStart(2, '0')}</span>
+                  <span className="wheel__label">{option.label}</span>
+                  {option.note ? <span className="wheel__note">{option.note}</span> : null}
+                </span>
               </label>
             </Fragment>
           ))}

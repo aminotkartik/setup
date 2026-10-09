@@ -15,8 +15,6 @@
 
   .btn {
     --btn-radius: var(--radius-md);
-    /* Hard black label for the bright sheen materials (Home Explore). */
-    --c-btn-on-sheen: #16120c;
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -47,14 +45,13 @@
     text-decoration: none;
   }
 
-  .btn:active:not(:disabled) {
+  .btn:active:not(:disabled):not([aria-disabled='true']) {
     transform: translateY(1px) scale(0.994);
   }
 
   .btn:disabled,
   .btn[aria-disabled='true'] {
     cursor: not-allowed;
-    opacity: 0.55;
     transform: none;
   }
 
@@ -98,44 +95,45 @@
   /* --- calm variants (most of the product) ----------------------------- */
 
   .btn-secondary {
-    background-color: var(--c-surface);
-    border-color: var(--c-line);
-    color: var(--c-ink);
+    background-color: var(--cp-button-secondary-bg);
+    border-color: var(--cp-border-control);
+    color: var(--cp-button-secondary-text);
     box-shadow: var(--shadow-inset-top);
   }
 
-  .btn-secondary:hover:not(:disabled) {
-    border-color: var(--c-line-strong);
+  .btn-secondary:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: var(--cp-border-control);
     background-color: var(--c-surface-2);
   }
 
   .btn-quiet {
     background-color: transparent;
-    color: var(--c-ink-soft);
+    color: var(--cp-text-secondary);
   }
 
-  .btn-quiet:hover:not(:disabled) {
+  .btn-quiet:hover:not(:disabled):not([aria-disabled='true']) {
     background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
   }
 
   .btn-subtle {
-    background-color: var(--c-surface-2);
-    border-color: var(--c-line);
-    color: var(--c-ink);
+    background-color: var(--cp-bg-subtle);
+    border-color: var(--cp-border-control);
+    color: var(--cp-text-primary);
   }
 
-  .btn-subtle:hover:not(:disabled) {
+  .btn-subtle:hover:not(:disabled):not([aria-disabled='true']) {
     background-color: var(--c-surface-3);
   }
 
   .btn-danger {
-    background-color: var(--c-danger-soft);
-    border-color: color-mix(in oklab, var(--c-danger) 30%, transparent);
-    color: var(--c-danger);
+    background-color: var(--cp-danger-bg);
+    border-color: var(--cp-danger-border);
+    color: var(--cp-danger-text);
   }
 
-  .btn-danger:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--c-danger) 18%, var(--c-surface));
+  .btn-danger:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--cp-danger-bg);
+    border-color: var(--cp-danger-text);
   }
 
   /* --- primary: the Campus+ action button -------------------------------
@@ -148,18 +146,18 @@
   .btn.cp-btn {
     --btn-radius: var(--radius-sm);
     --btn-frame: 3px;
-    --btn-face: #0b1226;
+    --btn-face: var(--cp-button-bg);
     padding: var(--btn-frame);
-    border: 0;
+    border: 1px solid var(--cp-border-control);
     background-image: linear-gradient(
       144deg,
-      var(--c-accent-highlight),
-      var(--c-accent) 50%,
-      var(--c-accent-cyan)
+      var(--cp-button-gradient-start),
+      var(--cp-button-gradient-mid) 50%,
+      var(--cp-button-gradient-end)
     );
     background-size: 130% 130%;
     background-position: 0% 0%;
-    color: var(--c-on-accent);
+    color: var(--cp-button-text);
     box-shadow:
       0 12px 30px -8px color-mix(in oklab, var(--c-accent) 38%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
@@ -173,9 +171,9 @@
   .btn.cp-btn[data-tone='accent'] {
     background-image: linear-gradient(
       144deg,
-      var(--c-accent),
-      var(--c-accent-hover) 50%,
-      var(--c-accent-cyan)
+      var(--cp-button-gradient-mid),
+      var(--cp-button-gradient-start) 50%,
+      var(--cp-button-gradient-end)
     );
   }
 
@@ -199,32 +197,31 @@
   }
 
   /* Hover reveal: the face slides away, the gradient shows through. */
-  .btn.cp-btn:hover:not(:disabled) .cp-btn-face,
-  .btn.cp-btn:focus-visible:not(:disabled) .cp-btn-face {
+  .btn.cp-btn:hover:not(:disabled):not([aria-disabled='true']) .cp-btn-face,
+  .btn.cp-btn:focus-visible:not(:disabled):not([aria-disabled='true']) .cp-btn-face {
     background-color: transparent;
     background-image: none;
   }
 
-  .btn.cp-btn:hover:not(:disabled) .btn-label,
-  .btn.cp-btn:focus-visible:not(:disabled) .btn-label {
-    text-shadow: 0 1px 2px rgba(8, 12, 30, 0.55);
+  .btn.cp-btn:hover:not(:disabled):not([aria-disabled='true']) .btn-label,
+  .btn.cp-btn:focus-visible:not(:disabled):not([aria-disabled='true']) .btn-label {
+    text-shadow: none;
   }
 
-  .btn.cp-btn:hover:not(:disabled) {
+  .btn.cp-btn:hover:not(:disabled):not([aria-disabled='true']) {
     box-shadow:
       0 16px 36px -8px color-mix(in oklab, var(--c-accent) 52%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    filter: saturate(1.08) brightness(1.03);
+    /* The gradient stops already meet contrast; do not brighten the label. */
   }
 
   /* Tactile active scale — the supplied pressed behaviour. */
-  .btn.cp-btn:active:not(:disabled) {
+  .btn.cp-btn:active:not(:disabled):not([aria-disabled='true']) {
     transform: scale(0.9);
     animation-play-state: paused;
   }
 
   .btn.cp-btn:disabled {
-    filter: saturate(0.55);
     box-shadow: none;
     animation: none;
   }
@@ -292,11 +289,22 @@
     --btn-radius: 999px;
     --sheen-layer-a: color-mix(in oklab, var(--c-highlight) 88%, var(--c-accent-pale));
     --sheen-layer-b: var(--c-accent);
-    background-color: var(--c-surface);
-    border-color: var(--c-line);
-    color: var(--c-ink);
+    background-color: var(--cp-button-sheen-bg);
+    border-color: var(--cp-border-control);
+    color: var(--cp-button-sheen-text);
     box-shadow: var(--shadow-inset-top);
-    filter: saturate(0.92) brightness(1.06);
+  }
+
+  /* A pearl-blue backing bounds the blended layers' luminance in every
+     animation frame. The liquid reflection is visible, but never becomes ink. */
+  .btn-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: var(--cp-button-sheen-backing);
+    pointer-events: none;
   }
 
   .btn-sheen-layer {
@@ -344,29 +352,25 @@
     animation: campus-sheen-pulse 3s ease-in-out infinite;
   }
 
-  /* The label: hard black on the bright sheen — the Home Explore button's
-     text must read at a glance in both themes. No blend modes: contrast is
-     not a texture. */
+  /* The label is solid ink on the bounded pearl-blue material. Only the
+     reflections animate; foreground opacity never changes. */
   .btn-sheen .btn-label {
-    color: var(--c-btn-on-sheen);
+    color: var(--cp-button-sheen-text);
     font-weight: 650;
-    text-shadow: 0 1px 2px color-mix(in oklab, var(--c-highlight) 70%, transparent);
-    animation: campus-sheen-text 5s ease infinite;
     transition: transform 0.3s ease;
   }
 
-  .btn-sheen:hover:not(:disabled) .btn-label {
+  .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) .btn-label {
     transform: scale(1.08);
   }
 
-  .btn-sheen:active:not(:disabled) .btn-label {
+  .btn-sheen:active:not(:disabled):not([aria-disabled='true']) .btn-label {
     transform: scale(0.96);
   }
 
   /* The metal flows only while the button is engaged, the same trade the
      primary button makes. The source animates these seven layers (and the
-     label's opacity) forever; across a page of secondary buttons that is
-     constant compositing, and a label whose contrast never settles. At rest the
+     label's opacity) forever; Campus+ animates only decorative layers. At rest the
      stack is one frame of the same flow, so the button still reads as liquid
      metal — it simply holds still until you reach for it. */
   .btn-sheen-layer,
@@ -375,16 +379,16 @@
     animation-play-state: paused;
   }
 
-  .btn-sheen:hover:not(:disabled) .btn-sheen-layer,
-  .btn-sheen:focus-visible:not(:disabled) .btn-sheen-layer,
-  .btn-sheen:hover:not(:disabled) .btn-light,
-  .btn-sheen:focus-visible:not(:disabled) .btn-light,
-  .btn-sheen:hover:not(:disabled) .btn-label,
-  .btn-sheen:focus-visible:not(:disabled) .btn-label {
+  .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) .btn-sheen-layer,
+  .btn-sheen:focus-visible:not(:disabled):not([aria-disabled='true']) .btn-sheen-layer,
+  .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) .btn-light,
+  .btn-sheen:focus-visible:not(:disabled):not([aria-disabled='true']) .btn-light,
+  .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) .btn-label,
+  .btn-sheen:focus-visible:not(:disabled):not([aria-disabled='true']) .btn-label {
     animation-play-state: running;
   }
 
-  .btn-sheen:hover:not(:disabled) {
+  .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) {
     border-color: color-mix(in oklab, var(--c-accent) 32%, var(--c-line));
   }
 
@@ -402,16 +406,16 @@
     justify-content: center;
     gap: 0.4rem;
     padding: 0.5rem 0.875rem 0.5625rem;
-    border: 0.5px solid rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--cp-button-delete-border);
     border-radius: 0.9rem 0.9rem 0.75rem 0.75rem;
-    background-color: #1a1420;
+    background-color: var(--cp-button-delete-bg);
     background-image:
       linear-gradient(to right, rgba(0, 0, 0, 0.75), transparent),
       linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
     background-position: bottom right, bottom right;
     background-size: 100% 100%, 100% 100%;
     background-repeat: no-repeat;
-    color: #fff;
+    color: var(--cp-button-delete-text);
     font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1;
@@ -438,13 +442,13 @@
     width: 50%;
     height: 80%;
     border-radius: 0.5rem;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--cp-glass-reflection);
     opacity: 0;
     pointer-events: none;
     z-index: 1;
   }
 
-  .btn-delete:active:not(:disabled)::before,
+  .btn-delete:active:not(:disabled):not([aria-disabled='true'])::before,
   .btn-delete[data-pressed='true']::before {
     opacity: 1;
     animation: campus-press-flash 0.1s ease-in-out 0s;
@@ -462,23 +466,23 @@
       inset 2px -5px 0 rgba(0, 0, 0, 0.3);
   }
 
-  .btn-delete:hover:not(:disabled) {
-    filter: brightness(1.08);
+  .btn-delete:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: var(--cp-danger-text);
   }
 
-  .btn-delete:active:not(:disabled),
+  .btn-delete:active:not(:disabled):not([aria-disabled='true']),
   .btn-delete[data-pressed='true'] {
     transform: perspective(80px) rotateX(5deg) rotateY(1deg) translateY(3px) scale(0.96);
-    border-width: 0.25px;
+    border-width: 1px;
     box-shadow:
       inset -2px -4px 0 rgba(255, 255, 255, 0.12),
       inset -2px -3px 0 rgba(0, 0, 0, 0.8),
       0 1px 0 rgba(0, 0, 0, 0.85);
   }
 
-  .btn-delete:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn-delete > * {
+    position: relative;
+    z-index: 2;
   }
 
   /* --- keycap: small, deliberate confirmation control ------------------ */
@@ -492,8 +496,8 @@
     padding: 0.5rem 0.7rem 0.5625rem;
     border: 0;
     border-radius: 0.625rem;
-    background: linear-gradient(180deg, #2a3346, #1b2334);
-    color: #eef1f8;
+    background: linear-gradient(180deg, var(--cp-keycap-face), var(--cp-keycap-bg));
+    color: var(--cp-keycap-text);
     font-size: 0.75rem;
     font-weight: 650;
     letter-spacing: 0.02em;
@@ -519,7 +523,7 @@
     right: 9px;
     bottom: 9px;
     border-radius: 0.5rem;
-    background: linear-gradient(90deg, #313b52, #4b5878);
+    background: linear-gradient(90deg, var(--cp-keycap-bg), var(--cp-keycap-face));
     border-left: 1px solid rgba(0, 0, 0, 0.28);
     border-bottom: 1px solid rgba(0, 0, 0, 0.28);
     border-top: 1px solid rgba(0, 0, 0, 0.55);
@@ -534,7 +538,7 @@
     z-index: 1;
   }
 
-  .keycap:active:not(:disabled) {
+  .keycap:active:not(:disabled):not([aria-disabled='true']) {
     transform: translateY(2px);
     box-shadow:
       inset -2px 0 3px rgba(0, 0, 0, 0.14),
@@ -543,7 +547,7 @@
       2px 4px 6px rgba(0, 0, 0, 0.24);
   }
 
-  .keycap:active:not(:disabled)::before {
+  .keycap:active:not(:disabled):not([aria-disabled='true'])::before {
     top: 3px;
     left: 4px;
     right: 8px;
@@ -553,14 +557,9 @@
       3px 2px 4px rgba(0, 0, 0, 0.12);
   }
 
-  .keycap:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
   .keycap-accent {
-    background: linear-gradient(180deg, color-mix(in oklab, var(--c-accent) 88%, #fff), var(--c-accent-press));
-    color: var(--c-on-accent);
+    background: linear-gradient(180deg, var(--cp-button-gradient-start), var(--cp-button-gradient-mid));
+    color: var(--cp-button-text);
     box-shadow:
       inset -3px 0 4px rgba(0, 0, 0, 0.16),
       inset 0 -3px 4px rgba(0, 0, 0, 0.26),
@@ -569,7 +568,7 @@
   }
 
   .keycap-accent::before {
-    background: linear-gradient(90deg, color-mix(in oklab, var(--c-accent) 80%, #000 6%), color-mix(in oklab, var(--c-accent) 55%, #fff));
+    background: linear-gradient(90deg, var(--cp-button-gradient-mid), var(--cp-button-gradient-end));
   }
 
   /* --- icon-only control ---------------------------------------------- */
@@ -583,7 +582,7 @@
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     background-color: transparent;
-    color: var(--c-muted);
+    color: var(--cp-icon-muted);
     cursor: pointer;
     transition:
       background-color 0.15s ease,
@@ -592,33 +591,29 @@
       transform 0.14s var(--ease-out-soft);
   }
 
-  .icon-btn:hover:not(:disabled) {
+  .icon-btn:hover:not(:disabled):not([aria-disabled='true']) {
     background-color: color-mix(in oklab, var(--c-ink) 6%, transparent);
     color: var(--c-ink);
   }
 
-  .icon-btn:active:not(:disabled) {
+  .icon-btn:active:not(:disabled):not([aria-disabled='true']) {
     transform: scale(0.94);
   }
 
   .icon-btn-outline {
-    border-color: var(--c-line);
-    background-color: var(--c-surface);
-  }
-
-  .icon-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
+    border-color: var(--cp-border-control);
+    background-color: var(--cp-button-secondary-bg);
   }
 
   /* =============================================================== inputs */
 
   .control {
     width: 100%;
-    border: 1px solid var(--c-line);
+    border: 1px solid var(--cp-border-control);
     border-radius: var(--radius-md);
-    background-color: var(--c-surface);
-    color: var(--c-ink);
+    background-color: var(--cp-input-bg);
+    color: var(--cp-input-text);
+    caret-color: var(--cp-input-text);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.5;
@@ -629,27 +624,57 @@
       background-color 0.16s ease;
   }
 
-  .control:hover:not(:disabled) {
-    border-color: var(--c-line-strong);
+  .control:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: var(--cp-border-control);
   }
 
   .control:focus {
-    outline: none;
-    border-color: color-mix(in oklab, var(--c-accent) 55%, var(--c-line));
-    box-shadow:
-      inset 0 1px 2px var(--c-shade),
-      0 0 0 3px color-mix(in oklab, var(--c-accent) 16%, transparent);
+    outline: 2px solid var(--cp-focus);
+    outline-offset: 2px;
+    border-color: var(--cp-focus);
+    background-color: var(--cp-input-focus-bg);
+    box-shadow: inset 0 1px 2px var(--c-shade);
+  }
+
+  .control::placeholder {
+    color: var(--cp-input-placeholder);
+    opacity: 1;
+  }
+
+  .control-select option {
+    background-color: var(--cp-input-bg);
+    color: var(--cp-input-text);
   }
 
   .control:disabled {
-    opacity: 0.6;
+    color: var(--cp-disabled-text);
+    -webkit-text-fill-color: var(--cp-disabled-text);
     cursor: not-allowed;
-    background-color: var(--c-surface-2);
+    background-color: var(--cp-disabled-bg);
+    border-color: var(--cp-disabled-border);
+  }
+
+  .control:disabled::placeholder {
+    color: var(--cp-disabled-text);
+  }
+
+  .control:autofill {
+    background-color: var(--cp-input-bg);
+    color: var(--cp-input-text);
+  }
+
+  .control:-webkit-autofill {
+    -webkit-text-fill-color: var(--cp-input-text);
+    box-shadow: inset 0 0 0 1000px var(--cp-input-bg);
   }
 
   .control[aria-invalid='true'] {
-    border-color: color-mix(in oklab, var(--c-danger) 60%, var(--c-line));
+    border-color: var(--cp-danger-text);
     box-shadow: inset 0 1px 2px var(--c-shade), 0 0 0 3px color-mix(in oklab, var(--c-danger) 14%, transparent);
+  }
+
+  .cp-composer-input {
+    box-shadow: none;
   }
 
   .control-input {
@@ -661,7 +686,7 @@
     padding-right: 2rem;
     -webkit-appearance: none;
     appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--c-muted) 50%), linear-gradient(135deg, var(--c-muted) 50%, transparent 50%);
+    background-image: linear-gradient(45deg, transparent 50%, var(--cp-input-icon) 50%), linear-gradient(135deg, var(--cp-input-icon) 50%, transparent 50%);
     background-position:
       calc(100% - 1.05rem) calc(50% + 1px),
       calc(100% - 0.7rem) calc(50% + 1px);
@@ -704,14 +729,17 @@
     width: 100%;
     border-radius: 50px;
     padding: 5px;
+    border: 1px solid var(--cp-border-control);
     background: linear-gradient(
       135deg,
-      color-mix(in oklab, var(--c-accent) 22%, var(--c-surface)),
-      color-mix(in oklab, var(--c-accent) 12%, var(--c-surface)) 100%
+      var(--cp-search-bg-start),
+      var(--cp-search-bg-end) 100%
     );
   }
 
   .search-pill__shell::before,
+  /* The blue edge remains luminous, but cannot wash out a label as content
+     scrolls directly beneath the sticky header. This glow has a contrast budget. */
   .search-pill__shell::after {
     content: '';
     width: 100%;
@@ -732,6 +760,8 @@
     z-index: -1;
   }
 
+  /* The blue edge remains luminous, but cannot wash out a label as content
+     scrolls directly beneath the sticky header. This glow has a contrast budget. */
   .search-pill__shell::after {
     bottom: -1px;
     right: -1px;
@@ -741,8 +771,8 @@
       color-mix(in oklab, var(--c-accent) 14%, var(--c-surface)) 100%
     );
     box-shadow:
-      color-mix(in oklab, var(--c-accent) 55%, transparent) 3px 3px 5px 0px,
-      color-mix(in oklab, var(--c-accent) 45%, transparent) 5px 5px 20px 0px;
+      0 2px 4px var(--cp-search-glow),
+      0 3px 8px var(--cp-search-glow-soft);
     z-index: -2;
   }
 
@@ -752,7 +782,8 @@
     padding: 0.625rem 0.875rem;
     background: transparent;
     border: none;
-    color: var(--c-ink);
+    color: var(--cp-input-text);
+    caret-color: var(--cp-input-text);
     font-size: 0.9375rem;
     border-radius: 50px;
     appearance: none;
@@ -760,12 +791,28 @@
   }
 
   .search-pill__input::placeholder {
-    color: color-mix(in oklab, var(--c-muted) 92%, transparent);
+    color: var(--cp-input-placeholder);
+    opacity: 1;
   }
 
   .search-pill__input:focus {
     outline: none;
-    background-color: color-mix(in oklab, var(--c-highlight) 40%, transparent);
+    background-color: var(--cp-input-focus-bg);
+  }
+
+  .search-pill__shell:focus-within {
+    outline: 2px solid var(--cp-focus);
+    outline-offset: 3px;
+  }
+
+  .search-pill__input:disabled {
+    color: var(--cp-disabled-text);
+    background-color: var(--cp-disabled-bg);
+    cursor: not-allowed;
+  }
+
+  .search-pill__input:disabled::placeholder {
+    color: var(--cp-disabled-text);
   }
 
   .search-pill__input::-webkit-search-cancel-button {
@@ -780,19 +827,21 @@
     aspect-ratio: 1;
     flex: none;
     border: 0;
-    border-left: 2px solid var(--c-highlight);
+    border-left: 2px solid var(--cp-border-control);
     border-top: 3px solid transparent;
     border-bottom: 3px solid transparent;
     border-radius: 50%;
     background: transparent;
+    color: var(--cp-input-icon);
     cursor: pointer;
     transition:
       border-left-width 0.18s ease,
       transform 0.18s var(--ease-out-soft);
   }
 
-  .search-pill__icon:hover {
+  .search-pill__icon:hover:not(:disabled):not([aria-disabled='true']) {
     border-left-width: 3px;
+    background-color: var(--cp-input-focus-bg);
     transform: scale(1.05);
   }
 
@@ -807,7 +856,7 @@
   }
 
   .search-pill__icon path {
-    fill: var(--c-accent-ink);
+    fill: currentColor;
   }
 
   .search-pill__kbd {
@@ -819,7 +868,7 @@
     padding: 0.125rem 0.375rem;
     font-size: 0.625rem;
     font-weight: 600;
-    color: var(--c-muted-soft);
+    color: var(--cp-input-placeholder);
     pointer-events: none;
   }
 
@@ -896,7 +945,7 @@
     width: 1.25rem;
     height: 1.25rem;
     margin-top: 0.0625rem;
-    border: 1.5px solid var(--c-line-strong);
+    border: 1.5px solid var(--cp-border-control);
     border-radius: var(--radius-xs);
     background-color: var(--c-surface);
     box-shadow: inset 0 1px 2px var(--c-shade);
@@ -916,26 +965,47 @@
   }
 
   .check-input:focus-visible + .check-box {
-    outline: 2px solid var(--c-accent);
+    outline: 2px solid var(--cp-focus);
     outline-offset: 2px;
   }
 
   .check-input:checked + .check-box {
-    background-color: var(--c-accent);
-    border-color: var(--c-accent);
+    background-color: var(--cp-check-bg);
+    border-color: var(--cp-check-bg);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),
       0 2px 6px -2px color-mix(in oklab, var(--c-accent) 60%, transparent);
   }
 
   .check-input:disabled + .check-box {
-    opacity: 0.5;
+    background-color: var(--cp-disabled-bg);
+    border-color: var(--cp-disabled-border);
+  }
+
+  .check-input:disabled:checked + .check-box {
+    background-color: var(--cp-disabled-selected-bg);
+  }
+
+  .check-input:disabled:checked + .check-box .check-mark {
+    color: var(--cp-disabled-selected-text);
+  }
+
+  .check:has(.check-input:disabled),
+  .switch:has(.switch-input:disabled) {
+    cursor: not-allowed;
+  }
+
+  .check-input:disabled ~ .check-copy .check-title,
+  .check-input:disabled ~ .check-copy .check-note,
+  .switch-input:disabled ~ .switch-copy .check-title,
+  .switch-input:disabled ~ .switch-copy .check-note {
+    color: var(--cp-disabled-text);
   }
 
   .check-mark {
     width: 0.875rem;
     height: 0.875rem;
-    color: var(--c-on-accent);
+    color: var(--cp-check-mark);
   }
 
   /* The source's reveal: a long decorative path drawn by animating
@@ -1013,9 +1083,9 @@
     flex-shrink: 0;
     width: var(--switch-w);
     height: var(--switch-h);
-    border: 1.5px solid var(--c-line-strong);
+    border: 1.5px solid var(--cp-border-control);
     border-radius: 999px;
-    background-color: var(--c-surface-3);
+    background-color: var(--cp-switch-track);
     box-shadow: inset 0 2px 4px var(--c-shade);
     margin-block: 0.35rem 0.1rem;
     transition:
@@ -1035,7 +1105,7 @@
     height: 1.0625rem;
     border: 1.5px solid color-mix(in oklab, var(--c-ink) 42%, transparent);
     border-radius: 999px;
-    background-color: var(--c-surface);
+    background-color: var(--cp-switch-thumb);
     transform: translateY(calc(-50% - 0.2rem));
     box-shadow: 0 0.2rem 0 color-mix(in oklab, var(--c-ink) 42%, transparent);
     transition:
@@ -1055,7 +1125,7 @@
   }
 
   .switch-input:focus-visible + .switch-track {
-    outline: 2px solid var(--c-accent);
+    outline: 2px solid var(--cp-focus);
     outline-offset: 2px;
   }
 
@@ -1066,6 +1136,7 @@
   }
 
   .switch-input:checked + .switch-track .switch-thumb {
+    background-color: var(--cp-switch-thumb-checked);
     transform: translateX(calc(var(--switch-w) - 1.0625rem - 0.28rem)) translateY(calc(-50% - 0.2rem));
     border-color: color-mix(in oklab, var(--c-accent-press) 55%, transparent);
   }
@@ -1079,7 +1150,16 @@
   }
 
   .switch-input:disabled + .switch-track {
-    opacity: 0.55;
+    background-color: var(--cp-disabled-bg);
+    border-color: var(--cp-disabled-border);
+  }
+
+  .switch-input:disabled:checked + .switch-track {
+    background-color: var(--cp-disabled-selected-bg);
+  }
+
+  .switch-input:disabled + .switch-track .switch-thumb {
+    background-color: var(--cp-disabled-text);
   }
 
   .switch-copy {
@@ -1087,6 +1167,50 @@
     flex-direction: column;
     gap: 0.125rem;
     min-width: 0;
+  }
+
+  /* Disabled remains legible. Native disabled semantics, cursor and the
+     material change communicate state; text is not faded into the backdrop. */
+  .btn:disabled,
+  .btn[aria-disabled='true'],
+  .icon-btn:disabled,
+  .btn-delete:disabled,
+  .keycap:disabled,
+  .search-pill__icon:disabled {
+    color: var(--cp-disabled-text);
+    background: var(--cp-disabled-bg);
+    border: 1px dashed var(--cp-disabled-border);
+    box-shadow: none;
+    cursor: not-allowed;
+    animation: none;
+    transform: none;
+  }
+
+  .btn.cp-btn:disabled .cp-btn-face,
+  .btn.cp-btn[aria-disabled='true'] .cp-btn-face {
+    background: var(--cp-disabled-bg);
+  }
+
+  .btn-sheen:disabled .btn-label,
+  .btn-sheen[aria-disabled='true'] .btn-label {
+    color: var(--cp-disabled-text);
+  }
+
+  .btn-sheen:disabled::after,
+  .btn-sheen[aria-disabled='true']::after,
+  .keycap:disabled::before {
+    background: var(--cp-disabled-bg);
+  }
+
+  .btn-sheen:disabled .btn-light,
+  .btn-sheen:disabled .btn-sheen-layer,
+  .btn-sheen[aria-disabled='true'] .btn-light,
+  .btn-sheen[aria-disabled='true'] .btn-sheen-layer {
+    visibility: hidden;
+  }
+
+  .btn[aria-disabled='true'] {
+    pointer-events: none;
   }
 
   /* ========================================================== segmented */
@@ -1145,16 +1269,6 @@
   }
   50% {
     opacity: 0.1;
-  }
-}
-
-@keyframes campus-sheen-text {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.62;
   }
 }
 

@@ -33,7 +33,7 @@ const QUICK_LINKS = [
  * invented: an empty database produces empty states, not placeholder content.
  *
  * Layout: a cinematic hero — the subtle blue particle sky behind the greeting,
- * search and the black-label Explore button — then one readable feed column
+ * search and the pearl-blue Explore button — then one readable feed column
  * and, on wide screens only, a contextual rail built entirely from data this
  * page already fetched. The atmosphere is exactly that: background, never in
  * the way of reading.
@@ -91,8 +91,7 @@ export default async function HomePage() {
             : 'Everything happening around campus right now'}
         </p>
       </div>
-      {/* The Explore button keeps its own bright sheen — its label is hard
-          black on purpose. */}
+      {/* Theme-paired pearl-blue ink over the bounded liquid reflection. */}
       <LinkButton href={ROUTES.explore} size="md" variant="sheen" icon="search">
         Explore campus
       </LinkButton>

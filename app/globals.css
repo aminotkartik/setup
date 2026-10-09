@@ -9,196 +9,226 @@
 @import './styles/intro.css';
 
 /* ==========================================================================
-   Campus+ design system — foundation
+   Campus+ semantic color system
    --------------------------------------------------------------------------
-   Layer 1 (raw palette):  --c-*   theme-dependent, defined for light, for
-                                   [data-theme="dark"], and for
-                                   [data-theme="system"] + dark OS preference.
-   Layer 2 (semantic):     --color-* consumable both by Tailwind utilities
-                                   (`bg-surface`, `text-muted`, …) and directly
-                                   from component CSS.
+   Dark is the default, including before a theme attribute is available.
+   light-dark() keeps the two designed palettes in ONE declaration; System
+   changes only color-scheme, so it cannot drift from the explicit themes.
 
-   Everything visible is drawn from these tokens: no component hardcodes a
-   colour. The theme is chosen on the server (cookie) so the first paint has
-   the right palette — no flash, no inline bootstrap script.
+   --cp-* tokens are paired by role, not brightness. Text accents are NOT
+   button fills; input ink is NOT sky ink. All normal text (including muted,
+   placeholders and disabled labels) targets >= 4.5:1 on its named surface.
+   Meaningful control edges/icons and focus indicators target >= 3:1.
+   Subtle separators are decorative, never the sole boundary of a control.
+
+   --c-* are compatibility aliases for existing semantic Tailwind utilities.
+   New component CSS should consume the explicit --cp-* role pairs.
    ========================================================================== */
 
-/* Raw palette — one warm neutral family, one full blue tonal family.
-   Blues carry the identity; the warm neutrals keep the product cozy rather
-   than clinical. Everything below is defined for light, for the explicit
-   dark attribute and for "system" + a dark OS preference. */
-:root {
-  color-scheme: light;
-
-  /* Warm neutral family — warm white canvas, charcoal ink. */
-  --c-canvas: #f7f5f1;
-  --c-canvas-deep: #efebe4;
-  --c-surface: #ffffff;
-  --c-surface-2: #fbf9f6;
-  --c-surface-3: #f2eee8;
-  --c-ink: #1c1b19;
-  --c-ink-soft: #474440;
-  --c-muted: #767065;
-  --c-muted-soft: #a19a8d;
-  --c-line: #e8e4dd;
-  --c-line-strong: #d7d2c8;
-
-  /* Blue tonal system — the Campus+ identity.
-     primary → hover → pressed → deep, then the soft/pale/tint surfaces that
-     carry active states, badges, glass reflections and focus. */
-  --c-accent: #3566e8;
-  --c-accent-hover: #2754cf;
-  --c-accent-press: #1d42a6;
-  --c-accent-deep: #16307a;
-  --c-accent-soft: #e6eeff;
-  --c-accent-tint: #f1f6ff;
-  --c-accent-pale: #cddcff;
-  --c-accent-highlight: #7ea3ff;
-  --c-accent-sky: #7ea3ff;
-  --c-accent-cyan: #21b8e0;
-  --c-accent-glass: rgba(53, 102, 232, 0.14);
-  --c-accent-ink: #1b3d9c;
-  --c-on-accent: #ffffff;
-
-  --c-success: #0f7a4d;
-  --c-success-soft: #e7f6ee;
-  --c-warning: #96650a;
-  --c-warning-soft: #fdf3e0;
-  --c-danger: #c02f34;
-  --c-danger-soft: #fdeceb;
-  --c-info: #10708f;
-  --c-info-soft: #e6f3f7;
-  --c-unread: #3566e8;
-
-  /* Material accents used by the tactile + glass surfaces. */
-  --c-highlight: #ffffff;
-  --c-highlight-soft: rgba(255, 255, 255, 0.65);
-  --c-shade: rgba(28, 27, 25, 0.06);
-  --c-ink-surface: #151a26;
-  --c-ink-surface-2: #212838;
-
-  --c-glass-bg: color-mix(in oklab, var(--c-surface) 74%, transparent);
-  --c-glass-tint: color-mix(in oklab, var(--c-accent) 5%, transparent);
-  --c-glass-border: color-mix(in oklab, var(--c-line) 78%, transparent);
-  --c-scrim: rgba(18, 24, 36, 0.44);
-
-  --shadow-card: 0 1px 1px rgba(24, 28, 42, 0.03), 0 12px 28px -24px rgba(24, 28, 42, 0.45);
-  --shadow-raised: 0 2px 4px -2px rgba(24, 28, 42, 0.08), 0 18px 40px -28px rgba(24, 28, 42, 0.5);
-  --shadow-float: 0 6px 16px -8px rgba(24, 28, 42, 0.16), 0 32px 64px -40px rgba(24, 28, 42, 0.55);
-  --shadow-inset-top: inset 0 1px 0 var(--c-highlight-soft);
-}
-
-/* Dark theme — a second, deliberately designed theme: deep blue-tinted ink
-   rather than pure black, with luminous blue accents. */
+:root,
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --c-canvas: #121824;
-  --c-canvas-deep: #0d111b;
-  --c-surface: #1a2130;
-  --c-surface-2: #1f2737;
-  --c-surface-3: #273143;
-  --c-ink: #f0f1f4;
-  --c-ink-soft: #ccd2de;
-  --c-muted: #98a1b3;
-  --c-muted-soft: #79839a;
-  --c-line: #2b3446;
-  --c-line-strong: #3d4860;
+  /* Reading surfaces: warm daylight / deep navy, not an inverted theme. */
+  --cp-bg-page: light-dark(#f7f5f1, #121824);
+  --cp-bg-page-deep: light-dark(#efebe4, #0d111b);
+  --cp-bg-elevated: light-dark(#ffffff, #1a2130);
+  --cp-bg-subtle: light-dark(#fbf9f6, #1f2737);
+  --cp-bg-strong: light-dark(#ece8e1, #273143);
+  --cp-text-primary: light-dark(#1c1b19, #f0f1f4);
+  --cp-text-secondary: light-dark(#474440, #ccd2de);
+  --cp-text-muted: light-dark(#625c53, #afb9cc);
+  --cp-text-subtle: light-dark(#686156, #a8b3c8);
+  --cp-text-inverse: #edf3ff;
+  --cp-bg-inverse: #151e30;
+  --cp-icon: light-dark(#474440, #ccd2de);
+  --cp-icon-muted: light-dark(#625c53, #afb9cc);
+  --cp-border: light-dark(#b9b2a7, #626f86);
+  --cp-border-subtle: light-dark(#d8d2c8, #3d4960);
+  --cp-border-control: light-dark(#82796c, #7b89a2);
+  --cp-focus: light-dark(#2754cf, #a9c4ff);
+  --cp-focus-gap: var(--cp-bg-elevated);
 
-  --c-accent: #6f9bff;
-  --c-accent-hover: #8db1ff;
-  --c-accent-press: #5b89f5;
-  --c-accent-deep: #3f6ce0;
-  --c-accent-soft: rgba(111, 155, 255, 0.16);
-  --c-accent-tint: rgba(111, 155, 255, 0.09);
-  --c-accent-pale: rgba(111, 155, 255, 0.3);
-  --c-accent-highlight: #a9c4ff;
-  --c-accent-sky: #a9c4ff;
-  --c-accent-cyan: #4fd4f0;
-  --c-accent-glass: rgba(111, 155, 255, 0.12);
-  --c-accent-ink: #c3d6ff;
-  --c-on-accent: #0d1730;
+  /* Accent text vs. accent fill, each with its own intentional ink. */
+  --cp-text-accent: light-dark(#2754cf, #9abbff);
+  --cp-text-on-accent-soft: light-dark(#1b3d9c, #d0e0ff);
+  --cp-bg-accent: light-dark(#3566e8, #6f9bff);
+  --cp-text-on-accent: light-dark(#f8faff, #0d1730);
+  --cp-bg-accent-hover: light-dark(#2754cf, #8db1ff);
+  --cp-bg-accent-pressed: light-dark(#1d42a6, #5b89f5);
+  --cp-bg-accent-deep: light-dark(#16307a, #3f6ce0);
+  --cp-bg-accent-soft: light-dark(#e6eeff, #293c5c);
+  --cp-bg-accent-tint: light-dark(#f1f6ff, #23334e);
+  --cp-accent-pale: light-dark(#cddcff, #365582);
+  --cp-accent-highlight: light-dark(#7ea3ff, #a9c4ff);
+  --cp-accent-cyan: light-dark(#21b8e0, #4fd4f0);
 
-  --c-success: #4fd39b;
-  --c-success-soft: rgba(79, 211, 155, 0.14);
-  --c-warning: #f0bd57;
-  --c-warning-soft: rgba(240, 189, 87, 0.14);
-  --c-danger: #ff8b86;
-  --c-danger-soft: rgba(255, 139, 134, 0.14);
-  --c-info: #6fc7e8;
-  --c-info-soft: rgba(111, 199, 232, 0.14);
-  --c-unread: #6f9bff;
+  /* Status text/icons and opaque tinted fills: safe even over glass/images. */
+  --cp-success-text: light-dark(#08613c, #75e4b4);
+  --cp-success-bg: light-dark(#e7f6ee, #1d3c33);
+  --cp-success-border: light-dark(#4c8569, #528e76);
+  --cp-warning-text: light-dark(#754b06, #f8cf7a);
+  --cp-warning-bg: light-dark(#fdf3e0, #403622);
+  --cp-warning-border: light-dark(#967329, #a18a51);
+  --cp-danger-text: light-dark(#a5232c, #ffaba7);
+  --cp-danger-bg: light-dark(#fdeceb, #442d37);
+  --cp-danger-border: light-dark(#b66065, #b37481);
+  --cp-info-text: light-dark(#095f79, #93daf1);
+  --cp-info-bg: light-dark(#e6f3f7, #213d4d);
+  --cp-info-border: light-dark(#4e8293, #578eaa);
 
-  --c-highlight: #ffffff;
-  --c-highlight-soft: rgba(255, 255, 255, 0.08);
-  --c-shade: rgba(0, 0, 0, 0.3);
-  --c-ink-surface: #0b0f18;
-  --c-ink-surface-2: #151b28;
+  /* Stateful controls: no whole-element opacity to fade their labels. */
+  --cp-hover-bg: light-dark(#e9e4dc, #303c51);
+  --cp-hover-text: var(--cp-text-primary);
+  --cp-selected-bg: var(--cp-bg-accent-soft);
+  --cp-selected-text: var(--cp-text-on-accent-soft);
+  --cp-selected-border: light-dark(#4169b5, #96b9ff);
+  --cp-disabled-bg: light-dark(#e9e4dc, #293347);
+  --cp-disabled-text: light-dark(#615a50, #acb7cc);
+  --cp-disabled-border: light-dark(#92897b, #77859e);
+  --cp-disabled-selected-bg: light-dark(#dae4f5, #344c6b);
+  --cp-disabled-selected-text: light-dark(#3c526f, #c1d5f2);
 
-  --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
-  --c-glass-tint: color-mix(in oklab, var(--c-accent) 8%, transparent);
-  --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
-  --c-scrim: rgba(5, 8, 14, 0.62);
+  /* Buttons: deep-navy rest face, blue reveal, one readable light label.
+     Every reveal stop is dark enough for normal-size light text. */
+  --cp-button-bg: #101c35;
+  --cp-button-text: #edf3ff;
+  --cp-button-gradient-start: light-dark(#3052b7, #344fa3);
+  --cp-button-gradient-mid: light-dark(#264fbc, #264ba0);
+  --cp-button-gradient-end: light-dark(#136781, #175f80);
+  --cp-button-secondary-bg: var(--cp-bg-elevated);
+  --cp-button-secondary-text: var(--cp-text-primary);
+  --cp-button-sheen-bg: light-dark(#e8effd, #ccdafa);
+  --cp-button-sheen-text: light-dark(#173052, #162641);
+  --cp-button-sheen-backing: light-dark(rgba(232, 239, 253, 0.94), rgba(204, 218, 250, 0.94));
+  --cp-button-delete-bg: light-dark(#4a2433, #351f31);
+  --cp-button-delete-text: #fbeef1;
+  --cp-button-delete-border: light-dark(#864d63, #bc829b);
+  --cp-keycap-bg: light-dark(#e5e0d9, #263348);
+  --cp-keycap-face: light-dark(#f5f1eb, #33425d);
+  --cp-keycap-text: light-dark(#39352f, #e6edf9);
 
-  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
-  --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
-  --shadow-float: 0 8px 20px -10px rgba(0, 0, 0, 0.6), 0 36px 68px -40px rgba(0, 0, 0, 0.95);
+  /* Fields own their foregrounds; a field on a sky is still a field. */
+  --cp-input-bg: light-dark(#ffffff, #1a2130);
+  --cp-input-text: light-dark(#1c1b19, #f0f1f4);
+  --cp-input-placeholder: light-dark(#625c53, #afb9cc);
+  --cp-input-focus-bg: light-dark(#f7f9ff, #1b2940);
+  --cp-search-bg-start: light-dark(#e8effc, #223047);
+  --cp-search-bg-end: light-dark(#f3f6fc, #1c293e);
+  --cp-search-glow: light-dark(rgba(53, 102, 232, 0.08), rgba(111, 155, 255, 0.12));
+  --cp-search-glow-soft: light-dark(rgba(53, 102, 232, 0.04), rgba(111, 155, 255, 0.08));
+  --cp-input-icon: light-dark(#244eac, #c3d6ff);
+  --cp-check-bg: var(--cp-bg-accent);
+  --cp-check-mark: var(--cp-text-on-accent);
+  --cp-switch-thumb: light-dark(#faf8f3, #d4e1f8);
+  --cp-switch-thumb-checked: light-dark(#faf8f3, #102340);
+  --cp-switch-track: light-dark(#817565, #465671);
+
+  /* Glass is backed, not merely blurred. Opacity bounds the worst case
+     over both a white image and the dark sky. Effects stay behind content. */
+  --cp-bg-glass: light-dark(rgba(255, 255, 255, 0.96), rgba(26, 33, 48, 0.97));
+  --cp-bg-glass-soft: light-dark(rgba(255, 255, 255, 0.97), rgba(26, 33, 48, 0.98));
+  --cp-bg-glass-strong: light-dark(rgba(255, 255, 255, 0.98), rgba(26, 33, 48, 0.99));
+  --cp-glass-tint: light-dark(rgba(53, 102, 232, 0.025), rgba(111, 155, 255, 0.035));
+  --cp-glass-border: var(--cp-border-subtle);
+  --cp-glass-reflection: light-dark(rgba(255, 255, 255, 0.16), rgba(159, 192, 255, 0.045));
+  --cp-scrim: light-dark(rgba(18, 24, 36, 0.5), rgba(5, 8, 14, 0.7));
+  --cp-toast-bg: #151e30;
+  --cp-toast-text: #edf3ff;
+  --cp-toast-border: #8a99b3;
+
+  /* Cinematic contexts keep a dark sky in BOTH themes. This is a named
+     inverse pairing, never a descendant override of .text-* utilities. */
+  --cp-sky-bg: #0c1526;
+  --cp-sky-text: #f2f6ff;
+  --cp-sky-secondary: #c7d5ef;
+  --cp-sky-muted: #b0c2df;
+  --cp-sky-icon-bg: #21334d;
+  --cp-sky-border: #7a90b2;
+  --cp-sky-wash: rgba(8, 17, 33, 0.42);
+  --cp-bg-cinematic-glass: light-dark(rgba(250, 248, 244, 0.97), rgba(23, 34, 56, 0.98));
+  --cp-cinematic-border: light-dark(#abb9d0, #6d82a6);
+  --cp-brand-plate: #fffdf9;
+  --cp-brand-bg: light-dark(#305bbf, #87abff);
+  --cp-brand-bg-end: light-dark(#25489f, #6f9bff);
+  --cp-brand-mark: light-dark(#edf3ff, #102240);
+
+  /* Celestial bodies stay warm; the day sky is deep cyan so the sun reads. */
+  --cp-theme-night: light-dark(#4353d8, #4353d8);
+  --cp-theme-night-deep: light-dark(#2c39ab, #2c39ab);
+  --cp-theme-day: light-dark(#126c86, #126c86);
+  --cp-theme-day-deep: light-dark(#255d91, #255d91);
+  --cp-theme-moon: #ffd365;
+  --cp-theme-sun: #ffedab;
+  --cp-theme-star: #f2f6ff;
+  --cp-loader-track: light-dark(#ded8cf, #3a4962);
+  --cp-loader-active: var(--cp-text-accent);
+  --cp-poll-track: light-dark(#e2ded7, #2d3b51);
+  --cp-poll-fill: light-dark(#626e86, #a2b3d3);
+
+  /* Material highlights/shading are decorative, never foreground ink. */
+  --cp-highlight: #ffffff;
+  --cp-highlight-soft: light-dark(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.08));
+  --cp-shade: light-dark(rgba(28, 27, 25, 0.06), rgba(0, 0, 0, 0.3));
+
+  /* Compatibility bridge — existing semantic utilities remain supported. */
+  --c-canvas: var(--cp-bg-page);
+  --c-canvas-deep: var(--cp-bg-page-deep);
+  --c-surface: var(--cp-bg-elevated);
+  --c-surface-2: var(--cp-bg-subtle);
+  --c-surface-3: var(--cp-bg-strong);
+  --c-ink: var(--cp-text-primary);
+  --c-ink-soft: var(--cp-text-secondary);
+  --c-muted: var(--cp-text-muted);
+  --c-muted-soft: var(--cp-text-subtle);
+  --c-line: var(--cp-border-subtle);
+  --c-line-strong: var(--cp-border);
+  --c-accent: var(--cp-bg-accent);
+  --c-accent-hover: var(--cp-bg-accent-hover);
+  --c-accent-press: var(--cp-bg-accent-pressed);
+  --c-accent-deep: var(--cp-bg-accent-deep);
+  --c-accent-soft: var(--cp-bg-accent-soft);
+  --c-accent-tint: var(--cp-bg-accent-tint);
+  --c-accent-pale: var(--cp-accent-pale);
+  --c-accent-highlight: var(--cp-accent-highlight);
+  --c-accent-sky: var(--cp-accent-highlight);
+  --c-accent-cyan: var(--cp-accent-cyan);
+  --c-accent-glass: var(--cp-glass-tint);
+  --c-accent-ink: var(--cp-text-on-accent-soft);
+  --c-on-accent: var(--cp-text-on-accent);
+  --c-danger: var(--cp-danger-text);
+  --c-danger-soft: var(--cp-danger-bg);
+  --c-success: var(--cp-success-text);
+  --c-success-soft: var(--cp-success-bg);
+  --c-warning: var(--cp-warning-text);
+  --c-warning-soft: var(--cp-warning-bg);
+  --c-info: var(--cp-info-text);
+  --c-info-soft: var(--cp-info-bg);
+  --c-unread: var(--cp-bg-accent);
+  --c-highlight: var(--cp-highlight);
+  --c-highlight-soft: var(--cp-highlight-soft);
+  --c-shade: var(--cp-shade);
+  --c-ink-surface: var(--cp-bg-inverse);
+  --c-ink-surface-2: var(--cp-button-bg);
+  --c-glass-bg: var(--cp-bg-glass);
+  --c-glass-tint: var(--cp-glass-tint);
+  --c-glass-border: var(--cp-glass-border);
+  --c-scrim: var(--cp-scrim);
+
+  --shadow-card: 0 1px 1px var(--cp-shade), 0 12px 28px -24px var(--cp-scrim);
+  --shadow-raised: 0 2px 4px -2px var(--cp-shade), 0 18px 40px -28px var(--cp-scrim);
+  --shadow-float: 0 6px 16px -8px var(--cp-shade), 0 32px 64px -40px var(--cp-scrim);
+  --shadow-inset-top: inset 0 1px 0 var(--cp-highlight-soft);
 }
 
-/* "System" is resolved server-side into light/dark whenever possible; this
-   covers the first visit and any OS change while a tab stays open. */
+[data-theme='light'],
+[data-theme='system'] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
   [data-theme='system'] {
     color-scheme: dark;
-
-    --c-canvas: #121824;
-    --c-canvas-deep: #0d111b;
-    --c-surface: #1a2130;
-    --c-surface-2: #1f2737;
-    --c-surface-3: #273143;
-    --c-ink: #f0f1f4;
-    --c-ink-soft: #ccd2de;
-    --c-muted: #98a1b3;
-    --c-muted-soft: #79839a;
-    --c-line: #2b3446;
-    --c-line-strong: #3d4860;
-
-    --c-accent: #6f9bff;
-    --c-accent-hover: #8db1ff;
-    --c-accent-press: #5b89f5;
-    --c-accent-deep: #3f6ce0;
-    --c-accent-soft: rgba(111, 155, 255, 0.16);
-    --c-accent-tint: rgba(111, 155, 255, 0.09);
-    --c-accent-pale: rgba(111, 155, 255, 0.3);
-    --c-accent-highlight: #a9c4ff;
-    --c-accent-glass: rgba(111, 155, 255, 0.12);
-    --c-accent-ink: #c3d6ff;
-    --c-on-accent: #0d1730;
-
-    --c-success: #4fd39b;
-    --c-success-soft: rgba(79, 211, 155, 0.14);
-    --c-warning: #f0bd57;
-    --c-warning-soft: rgba(240, 189, 87, 0.14);
-    --c-danger: #ff8b86;
-    --c-danger-soft: rgba(255, 139, 134, 0.14);
-    --c-info: #6fc7e8;
-    --c-info-soft: rgba(111, 199, 232, 0.14);
-    --c-unread: #6f9bff;
-
-    --c-highlight: #ffffff;
-    --c-highlight-soft: rgba(255, 255, 255, 0.08);
-    --c-shade: rgba(0, 0, 0, 0.3);
-    --c-ink-surface: #0b0f18;
-    --c-ink-surface-2: #151b28;
-
-    --c-glass-bg: color-mix(in oklab, var(--c-surface) 70%, transparent);
-    --c-glass-tint: color-mix(in oklab, var(--c-accent) 8%, transparent);
-    --c-glass-border: color-mix(in oklab, var(--c-line) 70%, transparent);
-    --c-scrim: rgba(5, 8, 14, 0.62);
-
-    --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 16px 32px -26px rgba(0, 0, 0, 0.9);
-    --shadow-raised: 0 2px 6px -2px rgba(0, 0, 0, 0.5), 0 22px 48px -30px rgba(0, 0, 0, 0.95);
-    --shadow-float: 0 8px 20px -10px rgba(0, 0, 0, 0.6), 0 36px 68px -40px rgba(0, 0, 0, 0.95);
   }
 }
 
@@ -218,7 +248,7 @@
   --color-muted-soft: var(--c-muted-soft);
   --color-line: var(--c-line);
   --color-line-strong: var(--c-line-strong);
-  --color-accent: var(--c-accent);
+  --color-accent: var(--cp-text-accent);
   --color-accent-hover: var(--c-accent-hover);
   --color-accent-soft: var(--c-accent-soft);
   --color-accent-tint: var(--c-accent-tint);
@@ -240,6 +270,17 @@
   --color-unread: var(--c-unread);
   --color-ink-surface: var(--c-ink-surface);
 
+  --color-icon: var(--cp-icon);
+  --color-icon-muted: var(--cp-icon-muted);
+  --color-control-border: var(--cp-border-control);
+  --color-focus: var(--cp-focus);
+  --color-hover: var(--cp-hover-bg);
+  --color-selected: var(--cp-selected-bg);
+  --color-on-selected: var(--cp-selected-text);
+  --color-disabled: var(--cp-disabled-bg);
+  --color-on-disabled: var(--cp-disabled-text);
+  --color-glass-border: var(--cp-glass-border);
+  --color-accent-fill: var(--cp-bg-accent);
   --font-sans: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
 
@@ -275,7 +316,7 @@
   --color-ink: var(--c-ink);
   --color-muted: var(--c-muted);
   --color-line: var(--c-line);
-  --color-accent: var(--c-accent);
+  --color-accent: var(--cp-text-accent);
   --color-accent-soft: var(--c-accent-soft);
   --color-danger: var(--c-danger);
   --color-success: var(--c-success);
@@ -354,7 +395,7 @@
 
   /* Keyboard users always get a visible, high-contrast focus ring. */
   :focus-visible {
-    outline: 2px solid var(--c-accent);
+    outline: 2px solid var(--cp-focus);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -367,14 +408,9 @@
     color: inherit;
   }
 
-  input::placeholder,
-  textarea::placeholder {
-    color: color-mix(in oklab, var(--c-muted) 85%, transparent);
-  }
-
   ::selection {
-    background: var(--c-accent-soft);
-    color: var(--c-accent-ink);
+    background: var(--cp-selected-bg);
+    color: var(--cp-selected-text);
   }
 
   hr {

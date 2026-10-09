@@ -135,7 +135,7 @@ export function PostComposer({ communityId = null, defaultKind = 'post', compact
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
                 required={!isPoll}
-                className={cn(!needsTitle && !compact ? 'border-transparent bg-transparent shadow-none focus:border-line' : null)}
+                className={cn(!needsTitle && !compact ? 'cp-composer-input' : null)}
                 placeholder={
                   compact
                     ? 'Write a reply…'

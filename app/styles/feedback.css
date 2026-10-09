@@ -35,7 +35,6 @@
   /* ========================================================== word loader */
 
   .word-loader {
-    --word-loader-bg: var(--c-canvas);
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -52,19 +51,6 @@
     overflow: hidden;
   }
 
-  .word-loader__viewport::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      var(--word-loader-bg) 6%,
-      transparent 34%,
-      transparent 66%,
-      var(--word-loader-bg) 94%
-    );
-  }
-
   .word-loader__track {
     display: block;
     /* The source runs this on a 4s cycle with a 2% overshoot on every stop,
@@ -78,7 +64,7 @@
     padding-left: 0.3rem;
     font-weight: 650;
     letter-spacing: -0.01em;
-    color: var(--c-accent);
+    color: var(--cp-loader-active);
   }
 
   .word-loader-lg {
@@ -123,7 +109,7 @@
     height: 5rem;
     margin: -2.5rem 0 0 -0.25rem;
     border-radius: 999px;
-    background-color: var(--c-surface-3);
+    background-color: var(--cp-loader-track);
   }
 
   /* The two caps that make each bar read as a tube: one lit at the top, one
@@ -136,8 +122,8 @@
     width: 100%;
     height: 1.75rem;
     border-radius: 999px;
-    background-color: var(--c-surface-3);
-    border: 1px solid var(--c-line);
+    background-color: var(--cp-loader-track);
+    border: 1px solid var(--cp-border);
     box-shadow:
       inset 2px 2px 6px color-mix(in oklab, var(--c-ink) 12%, transparent),
       inset -2px -2px 6px color-mix(in oklab, var(--c-highlight) 40%, transparent);
@@ -166,7 +152,7 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background-color: var(--c-accent);
+    background-color: var(--cp-loader-active);
     animation: campus-cascade 3.63s ease-in-out infinite;
     box-shadow:
       inset 0 -3px 3px 0 rgba(0, 0, 0, 0.22),
@@ -267,8 +253,8 @@
     inset: 0;
     border-radius: 999px;
     border: 2px solid transparent;
-    border-top-color: var(--c-accent);
-    border-right-color: color-mix(in oklab, var(--c-accent) 45%, transparent);
+    border-top-color: var(--cp-loader-active);
+    border-right-color: var(--cp-loader-active);
     animation: campus-orb 0.9s linear infinite;
   }
 
@@ -320,7 +306,8 @@
     width: 100%;
     max-width: 30rem;
     border-radius: var(--radius-xl);
-    background-color: color-mix(in oklab, var(--c-surface) 94%, transparent);
+    background-color: var(--cp-bg-glass-strong);
+    color: var(--cp-text-primary);
     -webkit-backdrop-filter: blur(26px) saturate(160%);
     backdrop-filter: blur(26px) saturate(160%);
     border: 1px solid var(--c-glass-border);
@@ -385,6 +372,32 @@
     margin-top: 1.125rem;
   }
 
+  .cp-menu-item {
+    color: var(--cp-text-primary);
+    background-color: transparent;
+    transition: background-color 0.16s ease;
+  }
+
+  .cp-menu-item__icon {
+    color: var(--cp-icon-muted);
+  }
+
+  .cp-menu-item:hover:not(:disabled),
+  .cp-menu-item:focus-visible {
+    background-color: var(--cp-hover-bg);
+    color: var(--cp-hover-text);
+  }
+
+  .cp-menu-item:disabled {
+    color: var(--cp-disabled-text);
+    background-color: var(--cp-disabled-bg);
+    cursor: not-allowed;
+  }
+
+  .cp-menu-item:disabled .cp-menu-item__icon {
+    color: var(--cp-disabled-text);
+  }
+
   /* ================================================================ toast */
 
   .toast {
@@ -392,9 +405,9 @@
     align-items: center;
     gap: 0.625rem;
     border-radius: 999px;
-    border: 1px solid var(--c-glass-border);
-    background-color: color-mix(in oklab, var(--c-ink-surface) 94%, transparent);
-    color: #f2f4f8;
+    border: 1px solid var(--cp-toast-border);
+    background-color: var(--cp-toast-bg);
+    color: var(--cp-toast-text);
     padding: 0.5rem 0.9375rem;
     font-size: 0.8125rem;
     font-weight: 550;
@@ -422,7 +435,9 @@
     text-align: center;
     border-radius: var(--radius-lg);
     border: 1px dashed var(--c-line-strong);
-    background-image: linear-gradient(180deg, var(--c-surface-2), transparent 60%);
+    background-color: var(--cp-bg-elevated);
+    color: var(--cp-text-primary);
+    background-image: linear-gradient(180deg, var(--cp-bg-subtle), transparent 60%);
   }
 
   .state-icon {
@@ -434,7 +449,7 @@
     border-radius: var(--radius-md);
     border: 1px solid var(--c-line);
     background-color: var(--c-surface);
-    color: var(--c-accent);
+    color: var(--cp-loader-active);
     box-shadow: var(--shadow-inset-top);
   }
 
@@ -454,8 +469,8 @@
 
   .error-block {
     border-radius: var(--radius-md);
-    border: 1px solid color-mix(in oklab, var(--c-danger) 32%, transparent);
-    background-color: var(--c-danger-soft);
+    border: 1px solid var(--cp-danger-border);
+    background-color: var(--cp-danger-bg);
     padding: 0.8125rem 0.9375rem;
     color: var(--c-ink);
   }
@@ -596,13 +611,13 @@
 }
 
 .lf-choice__badge[data-kind='lost'] {
-  background-color: color-mix(in oklab, var(--c-warning) 18%, transparent);
-  color: var(--c-warning);
+  background-color: var(--cp-warning-bg);
+  color: var(--cp-warning-text);
 }
 
 .lf-choice__badge[data-kind='found'] {
-  background-color: color-mix(in oklab, var(--c-success) 18%, transparent);
-  color: var(--c-success);
+  background-color: var(--cp-success-bg);
+  color: var(--cp-success-text);
 }
 
 .lf-banner {
@@ -616,13 +631,13 @@
 }
 
 .lf-banner--lost {
-  color: var(--c-warning);
-  background-color: color-mix(in oklab, var(--c-warning) 10%, var(--c-surface));
+  color: var(--cp-warning-text);
+  background-color: var(--cp-warning-bg);
 }
 
 .lf-banner--found {
-  color: var(--c-success);
-  background-color: color-mix(in oklab, var(--c-success) 10%, var(--c-surface));
+  color: var(--cp-success-text);
+  background-color: var(--cp-success-bg);
 }
 
 .lf-banner__kicker {

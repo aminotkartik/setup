@@ -65,6 +65,7 @@
   .tilt__card {
     position: relative;
     z-index: 4;
+    isolation: isolate;
     width: 100%;
     border-radius: var(--radius-lg);
     transform-style: preserve-3d;
@@ -89,23 +90,21 @@
   .tilt-glass {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(
-      125deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.06) 42%,
-      rgba(255, 255, 255, 0.16) 50%,
-      rgba(255, 255, 255, 0.06) 58%,
-      rgba(255, 255, 255, 0) 100%
-    );
+    background: linear-gradient(125deg, transparent 0%, var(--cp-glass-reflection) 50%, transparent 100%);
     opacity: 0;
     transform: translate3d(-6%, -6%, 0);
     transition: opacity 0.3s ease, transform 0.5s var(--ease-out-soft);
   }
 
-  /* Pointer and keyboard get the same light. */
+  .tilt__content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Pointer and keyboard get the same light, behind the content. */
   .tilt:hover .tilt-glass,
   .tilt:focus-within .tilt-glass {
     opacity: 1;
@@ -184,15 +183,15 @@
   /* ======================================================== wheel selector */
 
   .wheel {
-    --wheel-accent: var(--c-accent);
-    /* The source's geometry: slots at -30/0/+30 degrees on an arc. The radius
-       and the panel are scaled to a settings card (the source's fixed 280px
-       would need a landing-page slab). Sizing, so the far slot — two steps
-       around, 60 degrees, once the arc has turned — still clears the rim with
-       its 44px tap target: 100px radius, 240px panel. The component reads the
-       step back out for its angles and spin, so the numbers live in one place. */
-    --wheel-r: 6.25rem;
-    --wheel-step: 30deg;
+    --wheel-accent: var(--cp-text-accent);
+    /* A readable three-slot dial: the chosen slot travels to the marker,
+       the other two stay above/below it on the arc. Upright copy and explicit
+       spacing replace the source's blurred, overlapping 30-degree labels. */
+    --wheel-r: 4.75rem;
+    --wheel-option-w: 6.5rem;
+    --wheel-left: 1rem;
+    --wheel-step: 120deg;
+    --wheel-current-spin: 0deg;
     position: relative;
     display: block;
     width: 100%;
@@ -209,7 +208,7 @@
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-muted-soft);
+    color: var(--cp-text-muted);
     /* Three nudges, then it rests: a hint that never stops moving is noise. */
     animation: campus-hint 2.6s ease-in-out 3;
     pointer-events: none;
@@ -218,7 +217,7 @@
   .wheel__panel {
     position: relative;
     width: 100%;
-    height: 15rem;
+    height: 17rem;
     overflow: hidden;
     border-radius: var(--radius-xl);
     border: 1px solid var(--c-line);
@@ -230,7 +229,7 @@
   .wheel__panel::before {
     content: '';
     position: absolute;
-    left: 0.9375rem;
+    left: 0.75rem;
     top: 50%;
     width: 0.375rem;
     height: 0.375rem;
@@ -245,18 +244,18 @@
     content: '';
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 0;
     pointer-events: none;
-    background: linear-gradient(
-      135deg,
-      color-mix(in oklab, var(--c-highlight) 42%, transparent) 0%,
-      transparent 46%,
-      color-mix(in oklab, #000 12%, transparent) 100%
-    );
+    background: linear-gradient(135deg, var(--cp-glass-reflection), transparent 46%);
   }
 
   .wheel__input {
     position: absolute;
+    /* Keep the hidden native focus target at the rotation centre. A target at
+       the arc's top-left rotates outside a narrow panel and makes the browser
+       scroll an overflow-hidden dial, silently clipping its visible labels. */
+    left: calc(var(--wheel-left) + var(--wheel-r) + var(--wheel-option-w) / 2);
+    top: 50%;
     width: 1px;
     height: 1px;
     margin: -1px;
@@ -270,31 +269,47 @@
   .wheel__option {
     position: absolute;
     top: 50%;
-    left: 2.25rem;
+    left: var(--wheel-left);
+    width: var(--wheel-option-w);
+    display: block;
+    min-height: 4.5rem;
+    transform-origin: calc(var(--wheel-r) + var(--wheel-option-w) / 2) center;
+    transform: translateY(-50%) rotate(var(--angle, 0deg));
+    /* Unselected options are still choices, not decorative ghosts. */
+    color: var(--cp-text-secondary);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.2s ease, border-color 0.2s ease;
+    z-index: 1;
+  }
+
+  /* The arc still travels to the marker. Counter-rotating the copy keeps
+     every choice upright, readable, and separated at both ends of the arc. */
+  .wheel__copy {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.125rem;
-    min-height: 2.75rem;
-    transform-origin: var(--wheel-r) center;
-    transform: translateY(-50%) rotate(var(--angle, 0deg));
-    filter: blur(2px);
-    opacity: 0.16;
-    cursor: pointer;
-    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease, filter 0.4s ease;
-    z-index: 1;
+    min-height: 4.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background-color: var(--cp-bg-subtle);
+    transform: rotate(calc(-1 * (var(--angle, 0deg) + var(--wheel-current-spin))));
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.2s ease;
   }
 
-  /* The chosen slot: sharp, lit, and nudged clear of the marker. */
   .wheel__input:checked + .wheel__option {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(-50%) translateX(0.5rem) rotate(var(--angle, 0deg));
     z-index: 4;
   }
 
-  .wheel__input:focus-visible + .wheel__option {
-    outline: 2px solid var(--c-accent);
+  .wheel__input:checked + .wheel__option .wheel__copy {
+    background-color: var(--cp-selected-bg);
+    border-color: var(--cp-selected-border);
+  }
+
+  .wheel__input:focus-visible + .wheel__option .wheel__copy {
+    outline: 2px solid var(--cp-focus);
     outline-offset: 4px;
     border-radius: var(--radius-xs);
   }
@@ -307,7 +322,7 @@
   }
 
   .wheel__label {
-    font-size: 1.75rem;
+    font-size: 1.0625rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 1;
@@ -317,33 +332,99 @@
   }
 
   .wheel__input:checked + .wheel__option .wheel__label {
-    text-shadow: 0 1px 14px color-mix(in oklab, var(--c-accent) 30%, transparent);
+    color: var(--cp-selected-text);
+    font-size: 1.5rem;
+  }
+
+  .wheel__option:hover .wheel__copy {
+    border-color: var(--cp-border-control);
+  }
+
+  .wheel__input:checked + .wheel__option .wheel__copy::after {
+    content: '✓';
+    position: absolute;
+    right: 0.5rem;
+    top: 0.375rem;
+    color: var(--cp-selected-text);
+    font-size: 0.75rem;
+  }
+
+  .wheel__input:disabled + .wheel__option {
+    cursor: not-allowed;
+  }
+
+  .wheel__input:disabled + .wheel__option .wheel__copy {
+    background-color: var(--cp-disabled-bg);
+    border-color: var(--cp-disabled-border);
+    border-style: dashed;
+  }
+
+  .wheel__input:disabled + .wheel__option :is(.wheel__label, .wheel__num, .wheel__note) {
+    color: var(--cp-disabled-text);
   }
 
   .wheel__note {
     font-size: 0.6875rem;
     color: var(--c-muted);
-    white-space: nowrap;
+    white-space: normal;
   }
 
   /* Rotation of the whole arc: the selected slot travels to the marker. One
      rule per slot, reading the real radio state, so any way of choosing —
      click, tap, arrow keys, a screen reader — animates the same way. */
-  .wheel:has(.wheel__input:nth-of-type(1):checked) .wheel__spin { transform: rotate(var(--wheel-spin-1, 0deg)); }
-  .wheel:has(.wheel__input:nth-of-type(2):checked) .wheel__spin { transform: rotate(var(--wheel-spin-2, 0deg)); }
-  .wheel:has(.wheel__input:nth-of-type(3):checked) .wheel__spin { transform: rotate(var(--wheel-spin-3, 0deg)); }
-  .wheel:has(.wheel__input:nth-of-type(4):checked) .wheel__spin { transform: rotate(var(--wheel-spin-4, 0deg)); }
-  .wheel:has(.wheel__input:nth-of-type(5):checked) .wheel__spin { transform: rotate(var(--wheel-spin-5, 0deg)); }
+  .wheel:has(.wheel__input:nth-of-type(1):checked) { --wheel-current-spin: var(--wheel-spin-1, 0deg); }
+  .wheel:has(.wheel__input:nth-of-type(2):checked) { --wheel-current-spin: var(--wheel-spin-2, 0deg); }
+  .wheel:has(.wheel__input:nth-of-type(3):checked) { --wheel-current-spin: var(--wheel-spin-3, 0deg); }
+  .wheel:has(.wheel__input:nth-of-type(4):checked) { --wheel-current-spin: var(--wheel-spin-4, 0deg); }
+  .wheel:has(.wheel__input:nth-of-type(5):checked) { --wheel-current-spin: var(--wheel-spin-5, 0deg); }
 
   .wheel__spin {
     position: absolute;
     inset: 0;
+    /* A transformed arc is its own stacking context. Give it an explicit
+       layer above the panel reflection so the shine cannot wash out its ink
+       or keyboard outline (especially the dark-blue outline in light mode). */
+    z-index: 1;
+    transform-origin: calc(var(--wheel-left) + var(--wheel-r) + var(--wheel-option-w) / 2) 50%;
+    transform: rotate(var(--wheel-current-spin));
     transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  /* The three-way dial keeps every slot on-screen on a 320px phone.
+     Other option counts use the same tactile labels without clipping choices. */
+  .wheel[data-layout='list'] .wheel__panel {
+    height: auto;
+    padding: 0.75rem;
+  }
+
+  .wheel[data-layout='list'] .wheel__panel::before {
+    display: none;
+  }
+
+  .wheel[data-layout='list'] .wheel__spin {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    transform: none;
+  }
+
+  .wheel[data-layout='list'] .wheel__option {
+    position: relative;
+    inset: auto;
+    width: auto;
+    flex: 1 1 8rem;
+    transform: none;
+  }
+
+  .wheel[data-layout='list'] .wheel__copy {
+    transform: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .wheel__spin,
-    .wheel__option {
+    .wheel__option,
+    .wheel__copy {
       transition: none;
     }
 
@@ -356,11 +437,9 @@
 @keyframes campus-hint {
   0%,
   100% {
-    opacity: 0.75;
     transform: translateY(0);
   }
   50% {
-    opacity: 1;
     transform: translateY(-0.125rem);
   }
 }

@@ -17,12 +17,12 @@
   .theme-switch {
     --ts-w: 4rem;
     --ts-h: 2rem;
-    --ts-dark-sky: #4353d8;
-    --ts-dark-sky-deep: #2c39ab;
-    --ts-light-sky: #35c8e6;
-    --ts-light-sky-soft: #7fe0f2;
-    --ts-moon: #ffd365;
-    --ts-sun: #ffed89;
+    --ts-dark-sky: var(--cp-theme-night);
+    --ts-dark-sky-deep: var(--cp-theme-night-deep);
+    --ts-light-sky: var(--cp-theme-day);
+    --ts-light-sky-soft: var(--cp-theme-day-deep);
+    --ts-moon: var(--cp-theme-moon);
+    --ts-sun: var(--cp-theme-sun);
     --ts-move: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 
     position: relative;
@@ -30,6 +30,7 @@
     width: var(--ts-w);
     height: var(--ts-h);
     border-radius: 5em;
+    border: 1px solid var(--cp-border-control);
     overflow: hidden;
     cursor: pointer;
     user-select: none;
@@ -69,9 +70,23 @@
     border: 0;
   }
 
-  .theme-switch__input:focus-visible ~ .theme-switch__back {
-    outline: 2px solid var(--c-accent-highlight);
-    outline-offset: 2px;
+  .theme-switch:has(.theme-switch__input:focus-visible) {
+    outline: 2px solid var(--cp-focus);
+    outline-offset: 3px;
+  }
+
+  .theme-switch:has(.theme-switch__input:disabled) {
+    cursor: not-allowed;
+    border-style: dashed;
+  }
+
+  .theme-switch__input:disabled ~ .theme-switch__back {
+    background: var(--cp-disabled-bg);
+  }
+
+  .theme-switch__input:disabled ~ .theme-switch__moon,
+  .theme-switch__input:disabled ~ .theme-switch__sun {
+    fill: var(--cp-disabled-text);
   }
 
   .theme-switch__back {
@@ -92,7 +107,7 @@
     content: '';
     position: absolute;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--cp-theme-star);
     transition: var(--ts-move);
   }
 

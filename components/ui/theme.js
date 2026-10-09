@@ -107,7 +107,7 @@ const SIZE = { sm: 'sm', md: 'md', lg: 'lg' };
  * The moon/sun pill switch. Checked = light mode, unchecked = dark mode.
  * Controlled by the shared store, so every instance in the app always agrees.
  */
-export function ThemeSwitch({ theme = 'dark', size = 'md', className = '', onChange = null, label = 'Light mode' }) {
+export function ThemeSwitch({ theme = 'dark', size = 'md', className = '', onChange = null, label = 'Light mode', disabled = false }) {
   const resolved = useSyncExternalStore(subscribeTheme, readThemeSnapshot, () =>
     theme === 'light' ? 'light' : 'dark',
   );
@@ -131,6 +131,7 @@ export function ThemeSwitch({ theme = 'dark', size = 'md', className = '', onCha
         className="theme-switch__input"
         aria-label={label}
         checked={checked}
+        disabled={disabled}
         onChange={toggle}
       />
       <span className="theme-switch__back" aria-hidden="true" />

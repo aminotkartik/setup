@@ -122,22 +122,13 @@ export function StaffDot({ tone = 'danger', label, className = '' }) {
 /* Notices                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const NOTICE_TONES = {
-  neutral: { border: 'var(--c-line)', background: 'var(--c-surface-2)', color: 'var(--c-ink)', icon: 'var(--c-muted)' },
-  accent: { border: 'color-mix(in oklab, var(--c-accent) 30%, transparent)', background: 'var(--c-accent-soft)', color: 'var(--c-ink)', icon: 'var(--c-accent-ink)' },
-  danger: { border: 'color-mix(in oklab, var(--c-danger) 32%, transparent)', background: 'var(--c-danger-soft)', color: 'var(--c-ink)', icon: 'var(--c-danger)' },
-  success: { border: 'color-mix(in oklab, var(--c-success) 32%, transparent)', background: 'var(--c-success-soft)', color: 'var(--c-ink)', icon: 'var(--c-success)' },
-  warning: { border: 'color-mix(in oklab, var(--c-warning) 32%, transparent)', background: 'var(--c-warning-soft)', color: 'var(--c-ink)', icon: 'var(--c-warning)' },
-};
+const NOTICE_TONES = new Set(['neutral', 'accent', 'danger', 'success', 'warning', 'info']);
 
 export function Notice({ tone = 'neutral', children, className = '', icon = null }) {
-  const palette = NOTICE_TONES[tone] || NOTICE_TONES.neutral;
+  const safeTone = NOTICE_TONES.has(tone) ? tone : 'neutral';
   return (
-    <div
-      className={cn('notice', className)}
-      style={{ borderColor: palette.border, backgroundColor: palette.background, color: palette.color }}
-    >
-      {icon ? <Icon name={icon} size={16} className="mt-0.5 shrink-0" style={{ color: palette.icon }} /> : null}
+    <div className={cn('notice', `notice-${safeTone}`, className)}>
+      {icon ? <Icon name={icon} size={16} className="notice__icon mt-0.5 shrink-0" /> : null}
       <div className="min-w-0">{children}</div>
     </div>
   );
