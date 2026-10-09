@@ -19,6 +19,7 @@ import { GlassSurface, ThemeSwitch } from '@/components/ui';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { ShellSearch } from '@/components/layout/ShellSearch';
+import { CommandPaletteTrigger } from '@/components/search/CommandPalette';
 
 function NotificationBell({ unreadNotifications = 0 }) {
   return (
@@ -64,6 +65,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
       {/* Desktop */}
       <div className="hidden h-16 items-center gap-4 px-6 lg:flex">
         <ShellSearch />
+        <CommandPaletteTrigger />
         <div className="ml-auto flex items-center gap-2">
           <NotificationBell unreadNotifications={unreadNotifications} />
           <span className="rule h-6 w-px" />

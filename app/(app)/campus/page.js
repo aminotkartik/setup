@@ -19,6 +19,8 @@ const SECTIONS = [
   { href: '/campus/housing', label: 'Housing', icon: 'building', description: 'Rooms, flats and PG posts.' },
   { href: '/campus/rides', label: 'Rides', icon: 'bus', description: 'Share a ride home or to the station.' },
   { href: '/campus/teams', label: 'Team finder', icon: 'users', description: 'Find teammates for a project or hackathon.' },
+  { href: '/campus/study', label: 'Study partner finder', icon: 'book', description: 'Find peers for a subject or exam.' },
+  { href: '/campus/study', label: 'Study partner finder', icon: 'book', description: 'Find peers for a subject or exam.' },
   { href: '/campus/utilities', label: 'Campus utilities', icon: 'book', description: 'Directory, services, cafeteria, transport, calendar, forms and help.' },
 ];
 
@@ -65,7 +67,8 @@ export default async function CampusPage() {
       <Card className="p-3">
         <p className="text-2xs text-muted">
           {summary.notices} published notices · {summary.events} upcoming events · {summary.clubs} clubs ·{' '}
-          {summary.resources} resources · {summary.opportunities} opportunities · {summary.projects} projects
+          {summary.resources} resources · {summary.opportunities} opportunities · {summary.projects} projects ·{' '}
+          {summary.study} open study requests
         </p>
       </Card>
 

@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/layout/Sidebar';
 import { ShellHeader } from '@/components/layout/ShellHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { CommandPaletteHost } from '@/components/search/CommandPalette';
 
 /**
  * The one application frame.
@@ -22,6 +23,7 @@ export function AppShell({
   canModerate = false,
   canAdmin = false,
   createItems = [],
+  paletteActions = [],
   theme = 'dark',
   children,
 }) {
@@ -59,6 +61,7 @@ export function AppShell({
       </div>
 
       <BottomNav unreadNotifications={unreadNotifications} />
+      <CommandPaletteHost actions={paletteActions} />
     </div>
   );
 }
