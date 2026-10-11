@@ -63,14 +63,16 @@
     );
 }
 
-/* The no-WebGL ghost: the reference's static fallback, floating in place. */
+/* The no-WebGL ghost: the reference's static fallback, floating in place. Its
+   opacity and eye glow are held to the same restrained luminance as the WebGL
+   scene (see createGhostScene), so the fallback never outshines the branding. */
 .login-ghost-fallback {
   position: absolute;
   top: 49%;
   left: 50%;
   width: clamp(235px, 33vw, 430px);
   height: clamp(235px, 33vw, 430px);
-  opacity: 0.78;
+  opacity: 0.58;
   transform: translate(-50%, -50%);
 }
 
@@ -99,7 +101,7 @@
 
 .login-ghost-eye {
   fill: #55dfff;
-  filter: drop-shadow(0 0 12px #168dff);
+  filter: drop-shadow(0 0 7px #168dff);
   transform-box: fill-box;
   transform-origin: center;
   animation: login-ghost-eye 2s ease-in-out infinite;
@@ -119,11 +121,11 @@
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.7;
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.32);
-    opacity: 1;
+    transform: scale(1.24);
+    opacity: 0.85;
   }
 }
 
