@@ -14,7 +14,18 @@ export function Card({ className = '', as: Tag = 'div', interactive = false, chi
   );
 }
 
-/** Glass is a material accent, in four deliberate levels (see surfaces.css). */
+/**
+ * Glass is a material accent, in deliberate levels (see surfaces.css):
+ *
+ *   default    quiet — navigation and secondary controls
+ *   soft       quieter — panels that should recede
+ *   strong     pronounced — sheets and popovers
+ *   floating   level 2 — headers, menus, dialogs
+ *   featured   level 3 — composer and featured controls
+ *   cinematic  the dark sky context
+ *   read       long-form text, messages and forms — the least decorated tier,
+ *              because immersion must stop where reading starts
+ */
 export function GlassSurface({ className = '', tone = 'default', as: Tag = 'div', rounded = true, children, ...props }) {
   const tones = {
     default: 'glass',
@@ -23,6 +34,7 @@ export function GlassSurface({ className = '', tone = 'default', as: Tag = 'div'
     floating: 'glass-floating',
     featured: 'glass-featured',
     cinematic: 'glass-cinematic',
+    read: 'glass-read',
   };
   return (
     <Tag className={cn(tones[tone] || tones.default, rounded ? 'rounded-[var(--radius-lg)]' : null, className)} {...props}>
@@ -31,9 +43,17 @@ export function GlassSurface({ className = '', tone = 'default', as: Tag = 'div'
   );
 }
 
+/**
+ * The page header. Every screen opens the same way: an optional technical
+ * eyebrow in the micro face, the title, the description, and a short luminous
+ * rule that separates the page from the environment. The rule is the one
+ * consistently emissive element on an ordinary page — it is what makes the
+ * whole application read as one art-directed place rather than forty similar
+ * ones.
+ */
 export function PageHeader({ title, eyebrow = null, description = null, action = null, back = null, className = '' }) {
   return (
-    <header className={cn('flex flex-col gap-3', className)}>
+    <header className={cn('page-head', className)}>
       {back ? (
         <Link
           href={back.href}
@@ -45,12 +65,13 @@ export function PageHeader({ title, eyebrow = null, description = null, action =
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
-          {eyebrow ? <p className="t-label mb-1.5">{eyebrow}</p> : null}
+          {eyebrow ? <p className="t-eyebrow mb-2">{eyebrow}</p> : null}
           <h1 className="t-page break-anywhere">{title}</h1>
           {description ? <p className="t-secondary mt-1.5 max-w-2xl">{description}</p> : null}
         </div>
         {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
       </div>
+      <span className="lit-rule mt-3.5" aria-hidden="true" />
     </header>
   );
 }

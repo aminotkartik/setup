@@ -9,13 +9,15 @@
 @layer components {
   /* ---------------------------------------------------------------- cards */
 
+  /* A card is a panel under a light source, not a flat rectangle: a hairline
+     of light catches its top edge and the fall-off shadow does the rest. */
   .card {
     position: relative;
     background-color: var(--cp-bg-elevated);
     color: var(--cp-text-primary);
     border: 1px solid var(--c-line);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
   }
 
   a.card,
@@ -58,6 +60,35 @@
     border-color: color-mix(in oklab, var(--c-accent) 22%, var(--c-line));
   }
 
+  /* Official campus content in the feed.
+     ------------------------------------------------------------
+     Announcements and notices get more presence than an ordinary post without
+     shouting: an accent-lit leading edge and a wash that falls away behind it.
+     The edge is a shape, not only a colour, so the distinction survives for
+     anyone who cannot separate the accent from the ordinary border. The
+     Official badge in the card header still carries the claim in words. */
+  .card-official {
+    border-color: color-mix(in oklab, var(--c-accent) 26%, var(--c-line));
+    background-image: linear-gradient(
+      90deg,
+      var(--cp-bg-accent-tint),
+      transparent 42%
+    );
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
+  }
+
+  .card-official::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0.875rem;
+    bottom: 0.875rem;
+    width: 0.1875rem;
+    border-radius: 0 999px 999px 0;
+    background-image: linear-gradient(180deg, var(--cp-accent-cyan), var(--c-accent));
+    box-shadow: 0 0 12px -2px var(--c-glow-soft);
+  }
+
   /* Elevated: for the one card in a column that should sit above the rest. */
   .card-elevated {
     background-color: var(--cp-bg-elevated);
@@ -79,58 +110,88 @@
 
   /* ---------------------------------------------------------- glass material */
 
+  /*
+     Glass is backed, not merely blurred.
+     ------------------------------------------------------------
+     The contrast suite composites every glass token over pure black AND pure
+     white and requires 4.5:1 for every text tier, which forces a high base
+     opacity. So depth here does not come from transparency — it comes from
+     light: a hairline that catches the top edge, a soft shade along the
+     bottom, a tinted cast that keeps the material from reading as grey, and a
+     localised glow only on the tiers that are meant to float.
+
+     Four material tiers plus two special contexts. They are ordered by how
+     much light they carry, not by how transparent they are:
+
+       .glass            quiet — navigation, secondary controls
+       .glass-soft       quieter — background panels that must recede
+       .glass-strong     pronounced — sheets, popovers
+       .glass-floating   level 2 — headers, menus, dialogs
+       .glass-featured   level 3 — the composer and featured controls
+       .glass-cinematic  the dark sky context
+       .glass-read       the reading material: long-form text, messages, forms
+
+     `@supports` gives browsers without backdrop-filter an opaque surface
+     instead of an unreadable one — the material degrades to a solid panel and
+     every contrast guarantee still holds.
+  */
+
+  .glass,
+  .glass-soft,
+  .glass-strong,
+  .glass-floating,
+  .glass-featured,
+  .glass-cinematic,
+  .glass-read {
+    color: var(--cp-text-primary);
+    border: 1px solid var(--c-glass-border);
+  }
+
   .glass {
     background-color: var(--cp-bg-glass);
-    color: var(--cp-text-primary);
-    /* The faint blue cast that keeps the material from reading as plain grey
-       transparency — the "liquid" in the liquid glass. */
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 62%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
-    border: 1px solid var(--c-glass-border);
     box-shadow: var(--shadow-raised), var(--shadow-inset-top);
   }
 
   .glass-soft {
     background-color: var(--cp-bg-glass-soft);
-    color: var(--cp-text-primary);
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 70%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
   }
 
   .glass-strong {
     background-color: var(--cp-bg-glass-strong);
-    color: var(--cp-text-primary);
     background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 58%);
     -webkit-backdrop-filter: blur(26px) saturate(160%);
     backdrop-filter: blur(26px) saturate(160%);
-    border: 1px solid var(--c-glass-border);
     box-shadow: var(--shadow-float), var(--shadow-inset-top);
   }
 
-  /* Level 2 — floating glass: headers, menus, sheets, dialogs. Crisper
-     edges and more lift than the everyday card material. */
+  /* Level 2 — floating glass: headers, menus, sheets, dialogs. Crisper edges,
+     more lift, and a thin band of light across the top so the panel reads as
+     a separate plane above the page rather than a tinted rectangle. */
   .glass-floating {
     background-color: var(--cp-bg-glass-strong);
-    color: var(--cp-text-primary);
-    background-image: linear-gradient(155deg, var(--c-glass-tint), transparent 60%);
+    background-image:
+      linear-gradient(180deg, var(--c-edge-light), transparent 0.75rem),
+      linear-gradient(155deg, var(--c-glass-tint), transparent 60%);
     -webkit-backdrop-filter: blur(22px) saturate(165%);
     backdrop-filter: blur(22px) saturate(165%);
-    border: 1px solid var(--c-glass-border);
     box-shadow: var(--shadow-float), var(--shadow-inset-top);
   }
 
   /* Level 3 — featured glass: the composer, featured cards, hero controls.
-     The tint turns blue-luminous; a slow specular drift keeps it alive at
+     The edge turns accent-lit and a slow specular drift keeps it alive at
      rest without shouting. */
   .glass-featured {
     position: relative;
     isolation: isolate;
     overflow: hidden;
     background-color: var(--cp-bg-glass-soft);
-    color: var(--cp-text-primary);
     background-image: linear-gradient(
       155deg,
       var(--cp-glass-tint),
@@ -138,8 +199,8 @@
     );
     -webkit-backdrop-filter: blur(20px) saturate(170%);
     backdrop-filter: blur(20px) saturate(170%);
-    border: 1px solid color-mix(in oklab, var(--c-accent) 18%, var(--c-glass-border));
-    box-shadow: var(--shadow-float), var(--shadow-inset-top);
+    border-color: color-mix(in oklab, var(--c-accent) 18%, var(--c-glass-border));
+    box-shadow: var(--shadow-glow-accent), var(--shadow-inset-top);
   }
 
   .glass-featured::after {
@@ -163,11 +224,36 @@
   .glass-cinematic {
     background-color: var(--cp-bg-cinematic-glass);
     background-image: linear-gradient(160deg, var(--cp-glass-reflection), var(--cp-glass-tint) 55%, transparent);
-    color: var(--cp-text-primary);
     -webkit-backdrop-filter: blur(22px) saturate(150%);
     backdrop-filter: blur(22px) saturate(150%);
-    border: 1px solid var(--cp-cinematic-border);
+    border-color: var(--cp-cinematic-border);
     box-shadow: var(--shadow-float), var(--shadow-inset-top);
+  }
+
+  /* The reading material. Long-form text, messages and forms get the least
+     decoration of any tier: no drifting specular, no accent edge, no glow.
+     Immersion stops where reading starts — a paragraph buried under a moving
+     highlight is a paragraph nobody finishes. */
+  .glass-read {
+    background-color: var(--cp-bg-glass-strong);
+    background-image: none;
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    backdrop-filter: blur(12px) saturate(120%);
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
+  }
+
+  /* No backdrop-filter → an opaque panel. The tokens are already near-opaque,
+     so this only removes the illusion; nothing becomes unreadable. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-soft,
+    .glass-strong,
+    .glass-floating,
+    .glass-featured,
+    .glass-cinematic,
+    .glass-read {
+      background-image: none;
+    }
   }
 
   /* Reflections live underneath real content, even while drifting. */
@@ -269,6 +355,17 @@
     height: 1px;
     background: var(--c-line);
     border: 0;
+  }
+
+  /* ---------------------------------------------------------- page header */
+
+  /* The opening of every screen. Kept deliberately short: the rule sits close
+     to the title so the header claims its space and then gets out of the way
+     of the content, which is the reason the student is here. */
+  .page-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   /* -------------------------------------------------------- section header */
@@ -476,15 +573,30 @@
     border-color: var(--cp-selected-border);
   }
 
+  /* ------------------------------------------------------------- messages */
+
+  /*
+     Messages are the one place where immersion steps back entirely.
+     ------------------------------------------------------------
+     Reading a conversation is the fastest, most repeated act in the product,
+     so a bubble is a solid, opaque panel with a hairline and a soft top edge —
+     never a translucent layer, never a moving highlight, never a backdrop
+     blur. Contrast is fixed and predictable at every scroll position, and the
+     two speakers stay distinguishable by material and alignment rather than by
+     colour alone.
+  */
+
   .cp-chat-bubble {
     background-color: var(--cp-bg-elevated);
     color: var(--cp-text-primary);
     border-color: var(--cp-border-subtle);
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
   }
 
   .cp-chat-bubble--mine {
     background-color: var(--cp-bg-accent-soft);
     border-color: var(--cp-selected-border);
+    box-shadow: var(--shadow-card), inset 0 1px 0 var(--cp-edge-light);
   }
 
   /* A closed/voted poll is still content: disabled options keep their text

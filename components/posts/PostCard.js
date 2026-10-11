@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
-import { relativeTime, truncate } from '@/lib/utils';
+import { cn, relativeTime, truncate } from '@/lib/utils';
 import { Badge, OfficialBadge } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { IdentityLine } from '@/components/identity/IdentityLine';
@@ -39,7 +39,10 @@ export function PostCard({
   const kindLabel = post.kind === 'discussion' ? 'Discussion' : post.kind === 'poll' ? 'Poll' : null;
 
   return (
-    <article className="card p-4" aria-label={kindLabel || 'Post'}>
+    <article
+      className={cn('card p-4', post.is_official ? 'card-official' : null)}
+      aria-label={kindLabel || 'Post'}
+    >
       <div className="flex items-start justify-between gap-3">
         <IdentityLine
           username={post.author_username}

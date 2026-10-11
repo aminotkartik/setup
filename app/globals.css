@@ -8,6 +8,7 @@
 @import './styles/calendar.css';
 @import './styles/command.css';
 @import './styles/atmosphere.css';
+@import './styles/night.css';
 @import './styles/login.css';
 @import './styles/intro.css';
 
@@ -32,12 +33,17 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Reading surfaces: warm daylight / deep navy, not an inverted theme. */
-  --cp-bg-page: light-dark(#f7f5f1, #121824);
-  --cp-bg-page-deep: light-dark(#efebe4, #0d111b);
-  --cp-bg-elevated: light-dark(#ffffff, #1a2130);
-  --cp-bg-subtle: light-dark(#fbf9f6, #1f2737);
-  --cp-bg-strong: light-dark(#ece8e1, #273143);
+  /* Reading surfaces.
+     Light  — warm daylight paper, unchanged.
+     Dark   — "the campus after dark": a deep midnight blue canvas, a darker
+              void beneath it for recesses, and a stepped ladder of navy
+              surfaces above. Each rung is deliberately close to its neighbour
+              so depth reads as lighting, not as a stack of boxes. */
+  --cp-bg-page: light-dark(#f7f5f1, #0b1120);
+  --cp-bg-page-deep: light-dark(#efebe4, #060b16);
+  --cp-bg-elevated: light-dark(#ffffff, #121824);
+  --cp-bg-subtle: light-dark(#fbf9f6, #171e2e);
+  --cp-bg-strong: light-dark(#ece8e1, #1e2637);
   --cp-text-primary: light-dark(#1c1b19, #f0f1f4);
   --cp-text-secondary: light-dark(#474440, #ccd2de);
   --cp-text-muted: light-dark(#625c53, #afb9cc);
@@ -64,7 +70,10 @@
   --cp-bg-accent-tint: light-dark(#f1f6ff, #23334e);
   --cp-accent-pale: light-dark(#cddcff, #365582);
   --cp-accent-highlight: light-dark(#7ea3ff, #a9c4ff);
-  --cp-accent-cyan: light-dark(#21b8e0, #4fd4f0);
+  /* The one cyan in the system: illumination, not a second brand colour. It
+     appears in focus rings, the active-navigation indicator and atmospheric
+     light fields — never as a large fill. */
+  --cp-accent-cyan: light-dark(#21b8e0, #5cd8f7);
 
   /* Status text/icons and opaque tinted fills: safe even over glass/images. */
   --cp-success-text: light-dark(#08613c, #75e4b4);
@@ -174,6 +183,33 @@
   --cp-highlight-soft: light-dark(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.08));
   --cp-shade: light-dark(rgba(28, 27, 25, 0.06), rgba(0, 0, 0, 0.3));
 
+  /* ------------------------------------------------------------------------
+     Lighting language — "the campus after dark"
+     ------------------------------------------------------------------------
+     Blue is used as light, never as a background wash. Three kinds of value
+     live here, all decorative (none of them is ever foreground ink):
+
+       illum-*  wide, low-alpha radial fields that suggest space behind the
+                shell. They are composited by app/styles/night.css.
+       glow-*   tight, localised emission for the few things that are allowed
+                to emit: the active nav indicator, focus rings, featured edges.
+       edge-*   hairline highlights that catch the "light from above" on the
+                top edge of a raised surface.
+
+     Light theme keeps the same roles at a fraction of the strength, so a
+     student who switches to daylight gets the same spatial model without the
+     night sky. */
+  --cp-illum-core: light-dark(rgba(39, 84, 207, 0.07), rgba(70, 130, 255, 0.16));
+  --cp-illum-cyan: light-dark(rgba(33, 184, 224, 0.05), rgba(60, 190, 235, 0.11));
+  --cp-illum-deep: light-dark(rgba(28, 27, 25, 0.035), rgba(2, 6, 16, 0.55));
+  --cp-glow-accent: light-dark(rgba(53, 102, 232, 0.3), rgba(111, 155, 255, 0.42));
+  --cp-glow-cyan: light-dark(rgba(33, 184, 224, 0.26), rgba(92, 216, 245, 0.34));
+  --cp-glow-soft: light-dark(rgba(53, 102, 232, 0.14), rgba(111, 155, 255, 0.2));
+  --cp-edge-light: light-dark(rgba(255, 255, 255, 0.75), rgba(168, 200, 255, 0.09));
+  --cp-edge-accent: light-dark(rgba(39, 84, 207, 0.22), rgba(126, 168, 255, 0.3));
+  --cp-grain: light-dark(rgba(28, 27, 25, 0.028), rgba(176, 214, 255, 0.022));
+  --cp-scanline: light-dark(rgba(28, 27, 25, 0.018), rgba(176, 222, 255, 0.02));
+
   /* Compatibility bridge — existing semantic utilities remain supported. */
   --c-canvas: var(--cp-bg-page);
   --c-canvas-deep: var(--cp-bg-page-deep);
@@ -218,10 +254,34 @@
   --c-glass-border: var(--cp-glass-border);
   --c-scrim: var(--cp-scrim);
 
+  /* Night/lighting bridge — short names for component CSS. */
+  --c-illum-core: var(--cp-illum-core);
+  --c-illum-cyan: var(--cp-illum-cyan);
+  --c-illum-deep: var(--cp-illum-deep);
+  --c-glow-accent: var(--cp-glow-accent);
+  --c-glow-cyan: var(--cp-glow-cyan);
+  --c-glow-soft: var(--cp-glow-soft);
+  --c-edge-light: var(--cp-edge-light);
+  --c-edge-accent: var(--cp-edge-accent);
+  --c-grain: var(--cp-grain);
+  --c-scanline: var(--cp-scanline);
+  --c-cyan: var(--cp-accent-cyan);
+
+  /* ------------------------------------------------------------------------
+     Elevation — five rungs, each with its own depth and light response
+     ------------------------------------------------------------------------
+     Depth comes from three things at once: a tight contact shadow, a long
+     soft fall-off, and a hairline of light on the top edge. The glow rungs
+     are the only ones allowed to emit, and they are reserved for the active
+     navigation indicator, featured edges and focus. */
   --shadow-card: 0 1px 1px var(--cp-shade), 0 12px 28px -24px var(--cp-scrim);
   --shadow-raised: 0 2px 4px -2px var(--cp-shade), 0 18px 40px -28px var(--cp-scrim);
   --shadow-float: 0 6px 16px -8px var(--cp-shade), 0 32px 64px -40px var(--cp-scrim);
-  --shadow-inset-top: inset 0 1px 0 var(--cp-highlight-soft);
+  --shadow-veil: 0 18px 50px -20px var(--cp-scrim), 0 2px 8px -2px var(--cp-shade);
+  --shadow-inset-top: inset 0 1px 0 var(--cp-edge-light);
+  --shadow-inset-glow: inset 0 1px 0 var(--cp-edge-light), inset 0 0 0 1px var(--cp-glow-soft);
+  --shadow-glow-accent: 0 0 0 1px var(--cp-edge-accent), 0 8px 28px -12px var(--cp-glow-accent);
+  --shadow-glow-cyan: 0 0 0 1px var(--cp-edge-accent), 0 6px 22px -10px var(--cp-glow-cyan);
 }
 
 [data-theme='light'],
@@ -306,8 +366,25 @@
   --shadow-raised: var(--shadow-raised);
   --shadow-float: var(--shadow-float);
 
+  /* ------------------------------------------------------------------------
+     Motion tokens — one choreography, not per-component improvisation
+     ------------------------------------------------------------------------
+     Durations are deliberately short: this is a tool students use all day, so
+     a transition must never be the reason a click feels slow. `--ease-glide`
+     is the reference's curve (aminotkartik/loginpage) and is the house curve
+     for anything that travels; `--ease-out-soft` stays for state changes that
+     only change colour. Ambient loops are the only long values, and every one
+     of them is disabled under prefers-reduced-motion. */
+  --dur-instant: 90ms;
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 380ms;
+  --dur-enter: 460ms;
+  --dur-ambient: 24s;
   --ease-out-soft: cubic-bezier(0.22, 0.68, 0, 1);
   --ease-spring: cubic-bezier(0.34, 1.32, 0.5, 1);
+  --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-settle: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 /* Direct CSS-variable consumers (inline styles, legacy component styles). */
@@ -454,11 +531,40 @@
    -------------------------------------------------------------------------- */
 
 @layer components {
+  /* ------------------------------------------------------------------------
+     Typography
+     ------------------------------------------------------------------------
+     One reading hierarchy, plus two rationed atmospheric faces. The display
+     face and the monospace micro face are for entry points and short
+     technical labels; neither is ever used at reading size, and neither is
+     ever applied to long user-authored text. */
+
   .t-display {
     font-size: clamp(1.625rem, 1.35rem + 1.1vw, 2.125rem);
     font-weight: 660;
     letter-spacing: -0.032em;
     line-height: 1.1;
+  }
+
+  /* Cinematic entry headings — the display face, used at most once per screen. */
+  .t-cinematic {
+    font-family: var(--font-display), Impact, sans-serif;
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.75rem);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.14;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  /* Technical micro-labels: the monospace face, short strings only. */
+  .t-eyebrow {
+    font-family: var(--font-micro), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cp-text-subtle);
   }
 
   .t-page {
@@ -497,10 +603,13 @@
     color: var(--c-muted);
   }
 
+  /* The workhorse micro-label. It takes the monospace face because it is
+     always a short uppercase tag — a section name, a field label, a status. */
   .t-label {
+    font-family: var(--font-micro), ui-monospace, monospace;
     font-size: 0.6875rem;
-    font-weight: 620;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--c-muted);
   }

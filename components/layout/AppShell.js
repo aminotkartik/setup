@@ -1,3 +1,4 @@
+import { NightSky } from '@/components/atmosphere/NightSky';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { ShellHeader } from '@/components/layout/ShellHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -31,6 +32,7 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh">
+      <NightSky />
       <a href="#content" className="skip-link">
         Skip to content
       </a>
@@ -44,7 +46,10 @@ export function AppShell({
         createItems={createItems}
       />
 
-      <div className="lg:pl-[17rem]">
+      {/* `.shell-root` lifts the chrome and the page above the fixed night
+          sky, which is a positioned layer and would otherwise paint over
+          static content. */}
+      <div className="shell-root lg:pl-[17rem]">
         <ShellHeader
           user={user}
           unreadNotifications={unreadNotifications}
@@ -55,7 +60,10 @@ export function AppShell({
           createItems={createItems}
         />
 
-        <main id="content" className="shell-content mx-auto w-full px-4 pb-28 pt-6 sm:px-6 lg:pb-16 lg:pt-8">
+        <main
+          id="content"
+          className="shell-content shell-main mx-auto w-full px-4 pb-28 pt-6 sm:px-6 lg:pb-16 lg:pt-8"
+        >
           {children}
         </main>
       </div>

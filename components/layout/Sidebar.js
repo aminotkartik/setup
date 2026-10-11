@@ -26,7 +26,7 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17rem] flex-col overflow-y-auto border-r border-line bg-canvas/80 px-3 pb-4 pt-5 backdrop-blur-xl lg:flex">
+    <aside className="glass-soft fixed inset-y-0 left-0 z-30 hidden w-[17rem] flex-col overflow-y-auto rounded-none border-y-0 border-l-0 px-3 pb-4 pt-5 lg:flex">
       <BrandLockup className="px-2" />
 
       <div className="mt-5">
@@ -34,6 +34,7 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
       </div>
 
       <nav aria-label="Primary" className="mt-4 flex flex-col gap-0.5">
+        <p className="nav-group-label mb-1.5">Campus</p>
         {PRIMARY_NAV.map((item) => (
           <Link key={item.href} href={item.href} aria-current={active(item.href) ? 'page' : undefined} className="nav-item">
             <Icon name={item.icon} size={18} className="nav-icon" />
@@ -45,6 +46,7 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
       <div className="rule my-4" />
 
       <nav aria-label="Secondary" className="flex flex-col gap-0.5">
+        <p className="nav-group-label mb-1.5">Direct</p>
         {secondary.map((item) => (
           <Link key={item.href} href={item.href} aria-current={active(item.href) ? 'page' : undefined} className="nav-item">
             <Icon name={item.icon} size={18} className="nav-icon" />
@@ -52,6 +54,8 @@ export function Sidebar({ user = null, unreadNotifications = 0, isStaff = false,
             {item.count > 0 ? <span className="nav-count">{item.count > 99 ? '99+' : item.count}</span> : null}
           </Link>
         ))}
+
+        {canModerate || canAdmin ? <p className="nav-group-label mb-1.5 mt-3">Staff</p> : null}
 
         {canModerate ? (
           <Link href={ROUTES.moderator} aria-current={active(ROUTES.moderator) ? 'page' : undefined} className="nav-item">

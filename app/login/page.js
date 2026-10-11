@@ -1,4 +1,3 @@
-import localFont from 'next/font/local';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
@@ -13,24 +12,6 @@ import { ParticleField } from '@/components/atmosphere/ParticleField';
 import { GhostScene } from '@/components/atmosphere/GhostScene';
 
 export const metadata = { title: 'Sign in' };
-
-/* The reference's typefaces, self-hosted from the reference repository's
-   assets. They are scoped to this screen through CSS variables, so the rest of
-   Campus+ keeps its own type. */
-const loginDisplay = localFont({
-  src: '../fonts/Boldonse-Regular.ttf',
-  variable: '--font-login-display',
-  display: 'swap',
-});
-
-const loginMono = localFont({
-  src: [
-    { path: '../fonts/DMMono-Regular.ttf', weight: '400', style: 'normal' },
-    { path: '../fonts/DMMono-Medium.ttf', weight: '500', style: 'normal' },
-  ],
-  variable: '--font-login-mono',
-  display: 'swap',
-});
 
 /**
  * Sign-in (spec §7). Google OAuth only: the student picks their institutional
@@ -62,7 +43,7 @@ export default async function LoginPage({ searchParams }) {
       : null;
 
   return (
-    <div className={`login-stage cinematic-stage min-h-dvh ${loginDisplay.variable} ${loginMono.variable}`}>
+    <div className={'login-stage cinematic-stage min-h-dvh'}>
       {/* The existing Campus+ particle sky, unchanged, is the base layer. */}
       <ParticleField density={1} interactive />
       {/* The reference's blue ghost, drawn over the sky and under the content. */}

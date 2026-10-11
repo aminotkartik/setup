@@ -425,6 +425,10 @@
 
   /* ================================================================= states */
 
+  /* An empty state is a designed surface, not a hole in the page. The old
+     dashed border read as "unfinished placeholder"; this is a solid panel with
+     a soft pool of light behind the icon, so an empty feed looks like a quiet
+     campus at 3am rather than a missing component. */
   .state-block {
     display: flex;
     flex-direction: column;
@@ -434,12 +438,17 @@
     padding: 2.75rem 1.5rem;
     text-align: center;
     border-radius: var(--radius-lg);
-    border: 1px dashed var(--c-line-strong);
+    border: 1px solid var(--c-line);
     background-color: var(--cp-bg-elevated);
     color: var(--cp-text-primary);
-    background-image: linear-gradient(180deg, var(--cp-bg-subtle), transparent 60%);
+    background-image:
+      radial-gradient(60% 55% at 50% 22%, var(--c-illum-core), transparent 72%),
+      linear-gradient(180deg, var(--cp-bg-subtle), transparent 60%);
+    box-shadow: var(--shadow-card), var(--shadow-inset-top);
   }
 
+  /* The icon sits in its own pool of light — the one emissive element in an
+     empty state, which is what gives the surface a centre of gravity. */
   .state-icon {
     display: grid;
     place-items: center;
@@ -447,10 +456,10 @@
     height: 2.75rem;
     margin-bottom: 0.25rem;
     border-radius: var(--radius-md);
-    border: 1px solid var(--c-line);
+    border: 1px solid var(--c-edge-accent);
     background-color: var(--c-surface);
-    color: var(--cp-loader-active);
-    box-shadow: var(--shadow-inset-top);
+    color: var(--cp-accent-cyan);
+    box-shadow: var(--shadow-inset-top), 0 0 22px -6px var(--c-glow-soft);
   }
 
   .state-title {
