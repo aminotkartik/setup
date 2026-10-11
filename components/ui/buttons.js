@@ -10,6 +10,8 @@
  *   - calm     → secondary / quiet / subtle (everything else)
  *   - tactile  → delete and keycap, used only for destructive or confirmatory
  *                actions
+ *   - glass    → the sign-in call to action only: translucent night-blue glass
+ *                with a cyan rim and a blue glow (see `.btn-glass`)
  *
  * Every one of them is a real `<button>` (or a real `<a>` when it navigates),
  * so keyboard, screen readers and disabled semantics behave normally.
@@ -40,6 +42,7 @@ const VARIANT = {
   quiet: 'btn-quiet',
   subtle: 'btn-subtle',
   danger: 'btn-danger',
+  glass: 'btn-glass',
 };
 
 function iconSize(size) {

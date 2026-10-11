@@ -17,8 +17,12 @@ import { Icon } from '@/components/ui/icons';
  * one-time-code action called `redirect()` inside its own `try/catch`, so the
  * `NEXT_REDIRECT` control-flow error was caught and reported as a failure. Now
  * no server action redirects at all — success is a plain return value.
+ *
+ * `children` are the page's notices (callback error, old-link notice). They sit
+ * after the button so the sign-in action stays directly beneath the
+ * introduction, and they are rendered exactly as before.
  */
-export function LoginForm({ next = null }) {
+export function LoginForm({ next = null, children = null }) {
   const { run, pending, error } = useFormAction(startGoogleSignIn, {
     onSuccess: ({ url }) => {
       // A full browser hop, exactly like clicking a link to Google.
@@ -37,15 +41,24 @@ export function LoginForm({ next = null }) {
         run(data);
       }}
     >
+      <Button
+        type="submit"
+        variant="glass"
+        size="lg"
+        loading={pending}
+        className="w-full"
+        icon="chevronRight"
+      >
+        {pending ? 'Taking you to Google…' : 'Continue with Google'}
+      </Button>
+
+      {children}
+
       {error ? (
         <Notice tone="danger" icon="flag">
           {error}
         </Notice>
       ) : null}
-
-      <Button type="submit" tone="accent" size="lg" disabled={pending} className="w-full" icon="chevronRight">
-        {pending ? 'Taking you to Google…' : 'Continue with Google'}
-      </Button>
 
       <p className="text-2xs text-muted">
         You will be sent to Google to choose your account. Campus+ never sees your Google password and
