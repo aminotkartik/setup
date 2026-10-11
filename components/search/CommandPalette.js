@@ -159,7 +159,7 @@ export function CommandPaletteHost({ actions = [] }) {
                 return (
                   <li key={`${action.section}-${action.href}-${action.label}`}>
                     {header ? (
-                      <p className="t-label px-3 pb-1 pt-2" aria-hidden="true">{header}</p>
+                      <p className="command-section" aria-hidden="true">{header}</p>
                     ) : null}
                     <button
                       type="button"
