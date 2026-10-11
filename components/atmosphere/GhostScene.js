@@ -30,8 +30,10 @@ function GhostFallback() {
             <stop className="login-ghost-stop-b" offset="42%" />
             <stop className="login-ghost-stop-c" offset="100%" />
           </radialGradient>
+          {/* A tighter blur than the reference's: the fallback must carry the
+              same restrained glow as the WebGL scene, not a screen-wide halo. */}
           <filter id="campus-ghost-fallback-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="9" result="a" />
+            <feGaussianBlur stdDeviation="6" result="a" />
             <feMerge>
               <feMergeNode in="a" />
               <feMergeNode in="SourceGraphic" />
