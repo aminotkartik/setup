@@ -1,0 +1,198 @@
+/* ==========================================================================
+   Login — the reference's cinematic identity (aminotkartik/loginpage),
+   ported to the Campus+ sign-in screen.
+   --------------------------------------------------------------------------
+   Everything here is scoped to `.login-stage` or to the classes the login
+   page renders, so no other screen changes. Two rules govern the whole file:
+   - Nothing here may put opacity, filter or a backdrop effect on an ancestor
+     of the sign-in button. A backdrop-filter can only sample what is inside
+     its nearest backdrop root, so the glass must sit directly over the sky
+     and the ghost. Reveal animations therefore act on the text blocks only.
+   - Motion respects prefers-reduced-motion: the reveal, the ghost float and
+     the fallback eye pulse are all removed.
+   ========================================================================== */
+
+/* The reference's deep navy, almost-black environment. */
+.login-stage {
+  background-color: #020713;
+}
+
+/* Decorative layers: the ghost canvas and the scanline/vignette overlay. */
+.login-ghost-layer {
+  /* The reference's ghost palette. The WebGL scene reads these tokens, so the
+     colours live here and nowhere in the component code. */
+  --ghost-body: #06284d;
+  --ghost-bright: #147dff;
+  --ghost-light: #5cdcff;
+  --ghost-eye: #4cdcff;
+  --ghost-socket: #00040a;
+  --ghost-ambient: #12355f;
+  --ghost-rim-a: #1788ff;
+  --ghost-rim-b: #69dfff;
+  --ghost-firefly: #6ce1ff;
+  --ghost-trail: #1688ff;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-ghost-layer .ghost-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.login-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 36%, rgba(0, 3, 11, 0.56) 100%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(176, 222, 255, 0.025) 0,
+      rgba(176, 222, 255, 0.025) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+
+/* The no-WebGL ghost: the reference's static fallback, floating in place. */
+.login-ghost-fallback {
+  position: absolute;
+  top: 49%;
+  left: 50%;
+  width: clamp(235px, 33vw, 430px);
+  height: clamp(235px, 33vw, 430px);
+  opacity: 0.78;
+  transform: translate(-50%, -50%);
+}
+
+.login-ghost-fallback svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: login-ghost-float 4.2s ease-in-out infinite;
+}
+
+.login-ghost-stop-a {
+  stop-color: #1688ff;
+}
+
+.login-ghost-stop-b {
+  stop-color: #0754aa;
+}
+
+.login-ghost-stop-c {
+  stop-color: #031629;
+}
+
+.login-ghost-socket {
+  fill: #010816;
+}
+
+.login-ghost-eye {
+  fill: #55dfff;
+  filter: drop-shadow(0 0 12px #168dff);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: login-ghost-eye 2s ease-in-out infinite;
+}
+
+@keyframes login-ghost-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-13px) rotate(1deg);
+  }
+}
+
+@keyframes login-ghost-eye {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.32);
+    opacity: 1;
+  }
+}
+
+/* Heading: the reference's display face and glowing emission. The copy is
+   unchanged; only its presentation is. */
+.login-title {
+  font-family: var(--font-login-display), Impact, sans-serif;
+  font-size: clamp(1.9rem, 6vw, 3rem);
+  font-weight: 400;
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: #effaff;
+  text-shadow:
+    0 0 4px rgba(70, 180, 255, 0.42),
+    0 0 19px rgba(20, 125, 255, 0.5),
+    0 0 42px rgba(8, 83, 193, 0.28);
+}
+
+/* The reference's gradient on the last phrase. */
+.login-title-accent {
+  background: linear-gradient(105deg, #d8f2ff 7%, #52bbff 47%, #0d67dd 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 14px rgba(20, 125, 255, 0.5));
+}
+
+/* The reference's title rule: a blue line that fades at both ends. */
+.login-rule {
+  display: block;
+  width: min(196px, 45vw);
+  height: 1px;
+  margin-top: 1.1rem;
+  background: linear-gradient(90deg, transparent, #2998ff 23%, #c1f0ff 50%, #2998ff 77%, transparent);
+  box-shadow: 0 0 20px rgba(19, 137, 255, 0.58);
+}
+
+/* Supporting labels take the reference's DM Mono. */
+.login-intro .t-label {
+  font-family: var(--font-login-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+/* The cinematic reveal: the text blocks rise into place once. The form is not
+   wrapped by any of these, so the glass button keeps its backdrop. */
+.login-intro {
+  animation: login-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+@keyframes login-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-intro,
+  .login-ghost-fallback svg,
+  .login-ghost-eye {
+    animation: none;
+  }
+}
