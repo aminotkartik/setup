@@ -273,6 +273,132 @@
     text-overflow: ellipsis;
   }
 
+  /* --- glass: the sign-in call to action -------------------------------
+     A floating piece of illuminated glass over the login scene. The face is
+     deliberately translucent, so the blue ghost and the particle sky show
+     through it; the backdrop blur and saturation make that visible. A cyan
+     rim, a bright top edge and a soft electric-blue glow give it an edge and
+     depth. Hover brightens the rim and lifts the glass; pressing settles it.
+     Every rule is scoped to .btn-glass, and the button is only used by the
+     sign-in action. Colours are fixed so it reads the same in both themes. */
+
+  .btn-glass {
+    --glass-rim: rgba(110, 226, 255, 0.6);
+    --glass-rim-hover: rgba(164, 240, 255, 0.92);
+    --glass-glow: rgba(12, 120, 255, 0.5);
+    --glass-glow-hover: rgba(12, 120, 255, 0.7);
+    position: relative;
+    min-height: 3.25rem;
+    color: #f4f9ff;
+    background-color: rgba(10, 36, 84, 0.16);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 46%, rgba(255, 255, 255, 0) 52%),
+      linear-gradient(118deg, rgba(12, 120, 255, 0.26), rgba(12, 120, 255, 0.04) 52%, rgba(87, 216, 255, 0.16));
+    -webkit-backdrop-filter: blur(22px) saturate(1.9) brightness(1.12);
+    backdrop-filter: blur(22px) saturate(1.9) brightness(1.12);
+    border: 1px solid var(--glass-rim);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -10px 18px -12px rgba(87, 216, 255, 0.35),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 12px 34px -10px var(--glass-glow),
+      0 0 22px -6px rgba(87, 216, 255, 0.25);
+    text-shadow: 0 1px 2px rgba(2, 7, 19, 0.55);
+    transition:
+      transform 0.28s var(--ease-out-soft),
+      box-shadow 0.35s ease,
+      border-color 0.35s ease,
+      background-color 0.35s ease;
+  }
+
+  /* Top reflection: a soft highlight across the upper edge of the glass. It
+     sits under the label (z-index 1) and never intercepts clicks. */
+  .btn-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 46%;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(220, 246, 255, 0.32), rgba(220, 246, 255, 0));
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .btn-glass:not(:disabled):not([aria-disabled='true']):hover {
+    transform: translateY(-2px);
+    border-color: var(--glass-rim-hover);
+    background-color: rgba(12, 44, 98, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -10px 18px -12px rgba(87, 216, 255, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 18px 42px -10px var(--glass-glow-hover),
+      0 0 30px -6px rgba(87, 216, 255, 0.4);
+  }
+
+  .btn-glass:not(:disabled):not([aria-disabled='true']):active {
+    transform: translateY(1px) scale(0.99);
+    box-shadow:
+      inset 0 2px 8px rgba(2, 7, 19, 0.36),
+      0 4px 12px -8px var(--glass-glow);
+  }
+
+  .btn-glass:focus-visible {
+    outline: 2px solid #8fe6ff;
+    outline-offset: 4px;
+  }
+
+  /* Pending keeps the glass material and full-strength text, so the control
+     stays legible while Google is loading. The rim breathes gently. This
+     selector is more specific than the shared disabled rule on purpose. */
+  .btn.btn-glass:disabled,
+  .btn.btn-glass[aria-disabled='true'] {
+    color: #e6f0ff;
+    background-color: rgba(10, 36, 84, 0.2);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 50%);
+    border: 1px solid rgba(110, 226, 255, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 10px 28px -12px var(--glass-glow);
+    text-shadow: 0 1px 2px rgba(2, 7, 19, 0.55);
+    cursor: progress;
+    transform: none;
+    animation: btn-glass-pending 1.8s ease-in-out infinite;
+  }
+
+  @keyframes btn-glass-pending {
+    0%,
+    100% {
+      border-color: rgba(110, 226, 255, 0.4);
+    }
+    50% {
+      border-color: rgba(164, 240, 255, 0.8);
+    }
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .btn-glass {
+      background-color: rgba(10, 34, 74, 0.92);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-glass,
+    .btn-glass::before {
+      transition: none;
+    }
+
+    .btn.btn-glass:disabled,
+    .btn.btn-glass[aria-disabled='true'] {
+      animation: none;
+    }
+
+    .btn-glass:not(:disabled):not([aria-disabled='true']):hover,
+    .btn-glass:not(:disabled):not([aria-disabled='true']):active {
+      transform: none;
+    }
+  }
+
   /* --- secondary: layered reflective light ------------------------------
      The supplied secondary button animates seven radial layers over a
      saturated, brightened wrapper, blended with difference and color-dodge,
