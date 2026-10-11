@@ -132,7 +132,7 @@
 /* Heading: the reference's display face and glowing emission. The copy is
    unchanged; only its presentation is. */
 .login-title {
-  font-family: var(--font-login-display), Impact, sans-serif;
+  font-family: var(--font-display), Impact, sans-serif;
   font-size: clamp(1.9rem, 6vw, 3rem);
   font-weight: 400;
   line-height: 1.14;
@@ -167,7 +167,7 @@
 
 /* Supporting labels take the reference's DM Mono. */
 .login-intro .t-label {
-  font-family: var(--font-login-mono), ui-monospace, monospace;
+  font-family: var(--font-micro), ui-monospace, monospace;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.17em;

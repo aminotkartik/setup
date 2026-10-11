@@ -3,6 +3,15 @@
    ========================================================================== */
 
 @layer components {
+  /* ------------------------------------------------------------------------
+     Navigation
+     ------------------------------------------------------------------------
+     A spatial interface, not a list of pills. The current section is marked
+     three ways at once — a thin blade of light at the leading edge, a
+     contextual wash that falls away to the right, and heavier type — so it is
+     recognisable without any one of them having to shout. Hover lifts the row
+     a hair and lights the icon; the row itself never glows. */
+
   .nav-item {
     position: relative;
     display: flex;
@@ -14,26 +23,35 @@
     font-weight: 550;
     color: var(--c-muted);
     transition:
-      background-color 0.16s ease,
-      color 0.16s ease,
-      transform 0.16s var(--ease-out-soft);
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      transform var(--dur-fast) var(--ease-glide);
   }
 
   .nav-item:hover {
     background-color: var(--cp-hover-bg);
     color: var(--cp-hover-text);
     text-decoration: none;
+    transform: translateX(1px);
   }
 
   .nav-item:active {
-    transform: scale(0.99);
+    transform: translateX(1px) scale(0.99);
   }
 
   .nav-item[aria-current='page'] {
-    background-color: var(--cp-selected-bg);
+    /* A wash anchored to the leading edge, falling away to the right: the row
+       reads as lit from the indicator, not as a filled chip. */
+    background-image: linear-gradient(
+      90deg,
+      var(--cp-bg-accent-soft),
+      color-mix(in oklab, var(--cp-bg-accent-soft) 22%, transparent) 68%,
+      transparent
+    );
     color: var(--cp-selected-text);
-    font-weight: 620;
-    box-shadow: var(--shadow-inset-top);
+    font-weight: 640;
+    box-shadow: inset 0 1px 0 var(--cp-edge-light);
+    transform: none;
   }
 
   .nav-item[aria-current='page']::before {
@@ -43,15 +61,17 @@
     top: 50%;
     translate: 0 -50%;
     width: 0.1875rem;
-    height: 1.125rem;
+    height: 1.25rem;
     border-radius: 999px;
-    background-color: var(--c-accent);
-    box-shadow: 0 0 10px color-mix(in oklab, var(--c-accent) 65%, transparent);
+    /* The one thing in the rail allowed to emit: a cyan core inside a blue
+       blade, tight enough to read as a light source rather than a smear. */
+    background-image: linear-gradient(180deg, var(--cp-accent-cyan), var(--c-accent));
+    box-shadow: 0 0 10px var(--c-glow-accent);
   }
 
   .nav-item .nav-icon {
     color: var(--cp-icon-muted);
-    transition: color 0.16s ease;
+    transition: color var(--dur-fast) ease;
   }
 
   .nav-item:hover .nav-icon {
@@ -59,7 +79,19 @@
   }
 
   .nav-item[aria-current='page'] .nav-icon {
-    color: var(--cp-text-accent);
+    color: var(--cp-accent-cyan);
+  }
+
+  /* Section labels inside the rail: the micro face, so the rail has a quiet
+     hierarchy of its own. Short labels only — never a sentence. */
+  .nav-group-label {
+    font-family: var(--font-micro), ui-monospace, monospace;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cp-text-subtle);
+    padding: 0 0.625rem;
   }
 
   .nav-count {
@@ -98,14 +130,29 @@
   }
 
   .tab-item[aria-current='page'] {
-    background-color: var(--cp-selected-bg);
+    background-image: linear-gradient(180deg, var(--cp-bg-accent-soft), transparent 85%);
     color: var(--cp-selected-text);
-    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--c-highlight) 22%, transparent);
+  }
+
+  /* The current tab gets a blade of light along its top edge — the same
+     signal the desktop rail uses at its leading edge, rotated for the bar. */
+  .tab-item[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    top: 0.125rem;
+    left: 50%;
+    translate: -50% 0;
+    width: 1.25rem;
+    height: 0.125rem;
+    border-radius: 999px;
+    background-image: linear-gradient(90deg, var(--cp-accent-cyan), var(--c-accent));
+    box-shadow: 0 0 8px var(--c-glow-accent);
   }
 
   .tab-item[aria-current='page'] .tab-icon {
+    color: var(--cp-accent-cyan);
     transform: translateY(-1px);
-    filter: drop-shadow(0 2px 6px color-mix(in oklab, var(--c-accent) 45%, transparent));
+    filter: drop-shadow(0 2px 6px var(--c-glow-accent));
   }
 
   .tab-icon {

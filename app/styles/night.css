@@ -1,0 +1,242 @@
+/* ==========================================================================
+   Night — the shared atmospheric environment
+   --------------------------------------------------------------------------
+   "The digital campus after dark": one art-directed environment behind the
+   whole application shell, so no page sits on a flat solid colour.
+
+   Four composited layers, all decorative, all `pointer-events: none`:
+
+     1. light fields  wide radial illumination that suggests space behind the
+                      shell (top-left core, a colder cyan pocket, a deep
+                      vignette that anchors the bottom)
+     2. drifting bloom  two very slow, very dim light blooms that move on
+                      `transform` only, so they never trigger layout or paint
+     3. texture       a fine grain plus the reference's scanline raster, at
+                      strengths low enough to read as atmosphere, not noise
+     4. vignette      the reference's edge falloff, which is what makes the
+                      centre of the screen feel lit rather than flat
+
+   Rules this file obeys:
+
+     * This layer performs no backdrop blurring at all. Blur budgets belong to
+       the glass primitives in surfaces.css; an environment layer must stay
+       cheap, and a full-screen blur is the most expensive thing on the page.
+     * Nothing here may cover an interactive region: the whole tree is
+       `pointer-events: none` and sits below the shell's stacking context.
+     * Motion is compositor-only (transform / opacity). Under
+       `prefers-reduced-motion` every loop stops and the environment becomes
+       a static, still treatment — the atmosphere survives, the movement does
+       not.
+     * Every colour is a token. This file contains no palette literals.
+
+   It is deliberately NOT a second particle field. The interactive canvas in
+   components/atmosphere/ParticleField.js stays where it already is (the sign-in
+   stage and the Home hero card); this layer is the calm, always-present sky
+   for the other fifty-odd screens, and it costs no animation frame at all.
+   ========================================================================== */
+
+/* The environment itself. Fixed so it never scrolls, and behind everything. */
+.night-sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  contain: strict;
+  background-color: var(--cp-bg-page);
+  /* Layer 1 — the light fields. Warm-cool asymmetry: the core light sits high
+     and to the left, the cyan pocket low and to the right, so the space reads
+     as a room with a light source rather than a symmetrical gradient. */
+  background-image:
+    radial-gradient(120% 78% at 12% -8%, var(--c-illum-core), transparent 62%),
+    radial-gradient(90% 62% at 88% 104%, var(--c-illum-cyan), transparent 68%),
+    linear-gradient(178deg, transparent 42%, var(--c-illum-deep) 100%);
+  background-repeat: no-repeat;
+}
+
+/* Layer 2 — the drifting blooms. Two elements, one long slow loop each, both
+   travelling on transform alone. They are dimmer than the static fields: their
+   job is to make the light feel like it is settling, not to be noticed. */
+.night-sky__bloom {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.night-sky__bloom--a {
+  top: -14rem;
+  left: -6rem;
+  width: 34rem;
+  height: 34rem;
+  background: radial-gradient(circle at 50% 50%, var(--c-glow-soft), transparent 70%);
+  animation: night-drift-a var(--dur-ambient) var(--ease-settle) infinite alternate;
+}
+
+.night-sky__bloom--b {
+  right: -10rem;
+  bottom: -12rem;
+  width: 30rem;
+  height: 30rem;
+  background: radial-gradient(circle at 50% 50%, var(--c-glow-cyan), transparent 72%);
+  opacity: 0.28;
+  animation: night-drift-b calc(var(--dur-ambient) * 1.4) var(--ease-settle) infinite alternate;
+}
+
+@keyframes night-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3rem, 2.5rem, 0) scale(1.08);
+  }
+}
+
+@keyframes night-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(-2.5rem, -2rem, 0) scale(1);
+  }
+}
+
+/* Layer 3 — texture. The grain is a fine dither that stops large dark fields
+   from banding; the scanline raster is the reference's, held to a whisper. */
+.night-sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--c-scanline) 0,
+    var(--c-scanline) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.55;
+}
+
+.night-sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Layer 4 — the vignette, plus the grain in the same paint. */
+  background-image:
+    radial-gradient(ellipse at 50% 46%, transparent 38%, var(--c-illum-deep) 100%);
+  box-shadow: inset 0 0 6rem var(--c-grain);
+}
+
+/* On small screens the blooms would sit mostly off-canvas and cost fill for
+   nothing, so the environment reduces to its static light fields. */
+@media (max-width: 767px) {
+  .night-sky__bloom {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion — the atmosphere stays, the movement goes
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .night-sky__bloom {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Content sits above the environment
+   -------------------------------------------------------------------------- */
+
+/* The shell wrapper owns the stacking context so the fixed sky cannot bleed
+   over menus, dialogs or the bottom navigation. */
+.shell-root {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+
+/* --------------------------------------------------------------------------
+   Route arrival
+   --------------------------------------------------------------------------
+   One transition language for every page: a short rise with a little depth,
+   applied once on mount. It is brief on purpose — at 460ms with the house
+   glide curve it reads as "the page settled", never as "the page animated".
+   Loading states use the same curve so a route never changes personality
+   between its skeleton and its content. */
+
+.route-enter {
+  animation: route-arrive var(--dur-enter) var(--ease-glide) both;
+}
+
+/* Applied at the shell rather than page by page: every route mounts a fresh
+   subtree inside <main>, so its direct children animate in exactly once and
+   no page has to remember to opt in. The fill mode ends on `transform: none`,
+   so the brief transform during arrival leaves no containing block behind for
+   sticky rails or fixed overlays. */
+.shell-main > * {
+  animation: route-arrive var(--dur-enter) var(--ease-glide) both;
+}
+
+@keyframes route-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.375rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Staggered arrival for list-like content. The offset is small enough that a
+   long list finishes arriving almost immediately. */
+.stagger > * {
+  animation: route-arrive var(--dur-enter) var(--ease-glide) both;
+  animation-delay: calc(var(--stagger-i, 0) * 45ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter,
+  .shell-main > *,
+  .stagger > * {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Luminous accents — the small, deliberate set of things allowed to emit
+   -------------------------------------------------------------------------- */
+
+/* A hairline of light along the top edge of a raised surface. This is what
+   makes a panel feel lit from above instead of merely lighter. */
+.lit-top {
+  box-shadow: var(--shadow-inset-top);
+}
+
+/* The active-region outline: a quiet cyan edge, used for the current section
+   and for focused panels. Never a full-surface glow. */
+.lit-edge {
+  box-shadow: var(--shadow-glow-cyan);
+}
+
+/* A short luminous rule, after the reference's title rule. Used at section
+   entry points, never under ordinary headings. */
+.lit-rule {
+  display: block;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-edge-accent) 22%,
+    var(--cp-accent-cyan) 50%,
+    var(--c-edge-accent) 78%,
+    transparent
+  );
+  box-shadow: 0 0 14px var(--c-glow-soft);
+}
