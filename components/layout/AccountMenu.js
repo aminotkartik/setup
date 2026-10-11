@@ -61,11 +61,14 @@ export function AccountMenu({ user = null, isStaff = false, theme = 'dark' }) {
         Notifications
       </MenuLink>
 
-      <div className="mt-1 flex items-center justify-between gap-3 border-t border-line px-3 py-2.5">
+      <div
+        className="mt-1 flex items-center justify-between gap-3 border-t border-line px-3 py-2.5"
+        onClick={(e) => e.stopPropagation()}
+      >
         <span className="text-2xs font-medium text-muted">Appearance</span>
         <ThemeSwitch theme={theme} />
       </div>
-      <div className="border-t border-line p-1.5">
+      <div className="border-t border-line p-1.5" onClick={(e) => e.stopPropagation()}>
         <SignOutButton variant="ghost" />
       </div>
     </Dropdown>

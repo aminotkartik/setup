@@ -8,7 +8,6 @@ import { Icon } from '@/components/ui/icons';
 import { Notice } from '@/components/ui';
 import { BrandLockup, CollegeCrest } from '@/components/brand/Brand';
 import { LoginForm } from '@/components/auth/LoginForm';
-import { ParticleField } from '@/components/atmosphere/ParticleField';
 import { GhostScene } from '@/components/atmosphere/GhostScene';
 
 export const metadata = { title: 'Sign in' };
@@ -44,9 +43,7 @@ export default async function LoginPage({ searchParams }) {
 
   return (
     <div className={'login-stage cinematic-stage min-h-dvh'}>
-      {/* The existing Campus+ particle sky, unchanged, is the base layer. */}
-      <ParticleField density={1} interactive />
-      {/* The reference's blue ghost, drawn over the sky and under the content. */}
+      {/* The reference's blue ghost, drawn over the static atmospheric background. */}
       <GhostScene />
       {/* The reference's scanlines and vignette, reproduced in CSS. */}
       <div className="login-vignette" aria-hidden="true" />

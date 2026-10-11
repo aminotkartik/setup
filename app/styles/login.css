@@ -12,9 +12,12 @@
      the fallback eye pulse are all removed.
    ========================================================================== */
 
-/* The reference's deep navy, almost-black environment. */
+/* The reference's deep navy atmospheric background: deep navy with subtle static radial blue illumination. */
 .login-stage {
   background-color: #020713;
+  background-image:
+    radial-gradient(circle at 50% 48%, rgba(20, 100, 220, 0.16) 0%, rgba(10, 45, 110, 0.08) 38%, transparent 70%),
+    radial-gradient(circle at 50% 12%, rgba(23, 136, 255, 0.07) 0%, transparent 45%);
 }
 
 /* Decorative layers: the ghost canvas and the scanline/vignette overlay. */
