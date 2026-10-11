@@ -133,7 +133,7 @@ function stub(rows, { error = null } = {}) {
 
 describe('study data contracts', () => {
   it('lists only active requests and reports unavailability instead of throwing', async () => {
-    const failing = stub([], { error: { message: 'boom' } });
+    const failing = stub([], { error: { message: 'boom', code: '42P01' } });
     const result = await listStudyPosts(failing);
     expect(result).toEqual({ items: [], unavailable: true });
 
