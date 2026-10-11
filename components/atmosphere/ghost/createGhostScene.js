@@ -20,6 +20,14 @@
  *     so the existing Campus+ particle sky stays visible behind the ghost;
  *   - the blocking preloader. The login form must never sit behind a loader.
  *
+ * Luminance: an animated ghost is a light source, and a screen-wide flare
+ * competes with the branding and the sign-in glass. The glow is therefore kept
+ * local — a lower tone-mapping exposure, a lower bloom strength and radius with
+ * a higher threshold (only the brightest cores bloom), a smaller, dimmer halo,
+ * and restrained emissive/light intensities. The eyes, rim and palette keep the
+ * ghost recognisable; the intent is a cinematic blue presence with dark
+ * negative space around it, not maximum output.
+ *
  * Reduced motion: one frame is rendered and no animation loop runs.
  * Lifecycle: `createGhostScene` returns a `dispose()` that stops the loop,
  * removes every listener and releases the WebGL context.
@@ -75,8 +83,8 @@ function haloTexture() {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  gradient.addColorStop(0, 'rgba(40, 150, 255, 0.55)');
-  gradient.addColorStop(0.35, 'rgba(12, 90, 210, 0.22)');
+  gradient.addColorStop(0, 'rgba(40, 150, 255, 0.34)');
+  gradient.addColorStop(0.35, 'rgba(12, 90, 210, 0.13)');
   gradient.addColorStop(1, 'rgba(2, 10, 30, 0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
@@ -119,7 +127,7 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
   renderer.setSize(width, height, false);
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 0.96;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
@@ -130,7 +138,10 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
   composer.setPixelRatio(pixelRatio());
   composer.setSize(width, height);
   composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.82, 0.8, 0.2);
+  /* strength, radius, threshold — a restrained bloom: only the eye cores and
+     the brightest body highlights pass the threshold, and the radius keeps the
+     spread tight so the glow stays around the ghost instead of washing the sky. */
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.52, 0.58, 0.34);
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
 
@@ -148,10 +159,10 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      opacity: 0.85,
+      opacity: 0.5,
     })),
   );
-  haloSprite.scale.set(15, 15, 1);
+  haloSprite.scale.set(11, 11, 1);
   haloSprite.position.z = -4;
   scene.add(haloSprite);
 
@@ -177,29 +188,29 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
   const ghostMaterial = track(new THREE.MeshPhysicalMaterial({
     color: palette.body,
     emissive: palette.bright,
-    emissiveIntensity: 2.25,
+    emissiveIntensity: 1.45,
     roughness: 0.2,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.93,
-    clearcoat: 0.75,
+    opacity: 0.9,
+    clearcoat: 0.55,
     clearcoatRoughness: 0.16,
     side: THREE.DoubleSide,
   }));
   const ghostBody = new THREE.Mesh(ghostGeometry, ghostMaterial);
   ghostGroup.add(ghostBody);
 
-  const innerLight = new THREE.PointLight(palette.light, 3.6, 11, 2);
+  const innerLight = new THREE.PointLight(palette.light, 2.4, 11, 2);
   innerLight.position.set(0, 0.2, 2.2);
   ghostGroup.add(innerLight);
 
-  scene.add(new THREE.AmbientLight(palette.ambient, 0.28));
+  scene.add(new THREE.AmbientLight(palette.ambient, 0.22));
 
-  const rimLeft = new THREE.DirectionalLight(palette.rimA, 1.25);
+  const rimLeft = new THREE.DirectionalLight(palette.rimA, 0.9);
   rimLeft.position.set(-8, 7, 6);
   scene.add(rimLeft);
 
-  const rimRight = new THREE.DirectionalLight(palette.rimB, 0.75);
+  const rimRight = new THREE.DirectionalLight(palette.rimB, 0.55);
   rimRight.position.set(7, -3, 4);
   scene.add(rimRight);
 
@@ -210,11 +221,11 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
   const socketMaterial = track(new THREE.MeshBasicMaterial({ color: palette.socket }));
   const eyeGeometry = track(new THREE.SphereGeometry(0.235, 16, 12));
   const auraGeometry = track(new THREE.SphereGeometry(0.48, 16, 12));
-  const eyeMaterial = track(new THREE.MeshBasicMaterial({ color: palette.eye, transparent: true, opacity: 0.14 }));
+  const eyeMaterial = track(new THREE.MeshBasicMaterial({ color: palette.eye, transparent: true, opacity: 0.1 }));
   const auraMaterial = track(new THREE.MeshBasicMaterial({
     color: palette.light,
     transparent: true,
-    opacity: 0.025,
+    opacity: 0.016,
     blending: THREE.AdditiveBlending,
     side: THREE.BackSide,
     depthWrite: false,
@@ -394,18 +405,18 @@ export function createGhostScene(container, { reducedMotion = false } = {}) {
 
     const breath = 1 + Math.sin(elapsed * 1.45) * 0.032 + Math.sin(elapsed * 0.47) * 0.018;
     ghostBody.scale.setScalar(breath);
-    ghostMaterial.emissiveIntensity = 2.08 + Math.sin(elapsed * 2.3) * 0.28 + eyeEnergy * 0.52;
-    innerLight.intensity = 3.0 + eyeEnergy * 1.25;
+    ghostMaterial.emissiveIntensity = 1.34 + Math.sin(elapsed * 2.3) * 0.17 + eyeEnergy * 0.3;
+    innerLight.intensity = 1.95 + eyeEnergy * 0.7;
 
-    eyeMaterial.opacity = 0.08 + eyeEnergy * 0.92;
-    auraMaterial.opacity = 0.035 + eyeEnergy * 0.2;
+    eyeMaterial.opacity = 0.05 + eyeEnergy * 0.5;
+    auraMaterial.opacity = 0.02 + eyeEnergy * 0.1;
     eyeMeshes.forEach((eye, index) => {
       eye.scale.setScalar(1 + Math.sin(elapsed * 6 + index * 0.85) * 0.08 * eyeEnergy);
     });
 
     haloSprite.position.x = ghostGroup.position.x;
     haloSprite.position.y = ghostGroup.position.y;
-    haloSprite.material.opacity = 0.7 + Math.sin(elapsed * 1.6) * 0.15;
+    haloSprite.material.opacity = 0.42 + Math.sin(elapsed * 1.6) * 0.08;
 
     for (let i = 0; i < FIREFLY_COUNT; i += 1) {
       const i3 = i * 3;
