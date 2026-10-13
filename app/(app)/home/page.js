@@ -4,19 +4,18 @@ import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { ROUTES } from '@/lib/constants';
 import { getCampusFeed, hydratePosts } from '@/lib/data/feed';
-import { ContentCard } from '@/components/content/ContentCard';
-import { Badge, EmptyState, LinkButton, Notice, Rail, RailCard, SectionHeader } from '@/components/ui';
-import { Icon } from '@/components/ui/icons';
+import { EmptyState, Notice } from '@/components/ui';
 import { PostComposer } from '@/components/posts/PostComposer';
-import { PostCard } from '@/components/posts/PostCard';
-import { SearchEntry } from '@/components/search/SearchEntry';
-import { ParticleField } from '@/components/atmosphere/ParticleField';
+import { DepthField } from '@/components/atmosphere/DepthField';
+import { IslandMotion } from '@/components/home/IslandMotion';
+import { HomePulse, HomeZone, HomeCoda } from '@/components/home/HomePulse';
+import { StreamItem, StreamSlot } from '@/components/home/StreamItem';
+import { HomeRail } from '@/components/home/HomeRail';
 import { HomeReadySignal } from '@/components/layout/HomeLaunchGate';
-import { formatDate, formatTime, formatCalendarBadge } from '@/lib/utils';
 
 export const metadata = { title: 'Home' };
 
-/** Modules worth one tap from the feed's contextual rail — real destinations. */
+/** Modules worth one tap from the contextual rail — real destinations. */
 const QUICK_LINKS = [
   { href: '/campus/noticeboard', label: 'Noticeboard', icon: 'megaphone' },
   { href: '/campus/events', label: 'Events', icon: 'calendar' },
@@ -27,16 +26,20 @@ const QUICK_LINKS = [
 ];
 
 /**
- * Home.
+ * Home — the living campus.
  *
- * Reads the unified campus feed plus the next few official events. Nothing is
- * invented: an empty database produces empty states, not placeholder content.
+ * Three movements, one page:
  *
- * Layout: a cinematic hero — the subtle blue particle sky behind the greeting,
- * search and the pearl-blue Explore button — then one readable feed column
- * and, on wide screens only, a contextual rail built entirely from data this
- * page already fetched. The atmosphere is exactly that: background, never in
- * the way of reading.
+ *   1. the threshold (HomePulse): who you are, the two ways in, and a column of
+ *      real counts, set over the depth field rather than inside a card;
+ *   2. the works: the composer and the stream on the left, the rail of small
+ *      destinations on the right — every entry an island of its own weight;
+ *   3. the exit: one rule and one line of plain speaking.
+ *
+ * All data is real and all reads keep their existing RLS/permission behaviour:
+ * the unified `campus_feed()`, the next few official events, the pinned
+ * notices, and the same hydrated posts as before. Nothing is mocked, and the
+ * absence of content renders as an empty state rather than as filler.
  */
 export default async function HomePage() {
   const user = await requireUser();
@@ -45,6 +48,7 @@ export default async function HomePage() {
   const me = user.profile.id;
 
   const canPost = can(actor, 'create_posts');
+  const canModerate = can(actor, 'remove_posts');
 
   const [{ items: feed, unavailable }, { data: events }, { data: pinnedNotices }] = await Promise.all([
     getCampusFeed(supabase, { limit: 20 }),
@@ -61,7 +65,7 @@ export default async function HomePage() {
       .eq('status', 'published')
       .order('pinned', { ascending: false })
       .order('published_at', { ascending: false })
-      .limit(2),
+      .limit(3),
   ]);
 
   const feedPosts = feed
@@ -78,265 +82,117 @@ export default async function HomePage() {
 
   const marketplace = feed.filter((item) => ['listing', 'deal'].includes(item.type)).slice(0, 3);
 
-  const header = (
-    <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-      <div className="min-w-0">
-        <p className="t-label mb-1.5">PCCOE · Campus feed</p>
-        <h1 className="t-page">
-          Good to see you, {(user.profile.display_name || user.profile.username).split(' ')[0]}
-        </h1>
-        <p className="t-secondary mt-1.5">
-          {user.profile.branch && user.profile.show_branch_year
-            ? `${user.profile.branch} · everything happening around campus right now`
-            : 'Everything happening around campus right now'}
-        </p>
-      </div>
-      {/* Theme-paired pearl-blue ink over the bounded liquid reflection. */}
-      <LinkButton href={ROUTES.explore} size="md" variant="sheen" icon="search">
-        Explore campus
-      </LinkButton>
-    </header>
-  );
+  /* The threshold's counts are lengths of what this page already loaded — a
+     module with nothing in it is left out rather than shown as a zero. */
+  const stats = [
+    { label: 'On the feed', value: feed.length },
+    { label: 'Events ahead', value: events?.length || 0 },
+    { label: 'Notices pinned', value: pinnedNotices?.length || 0 },
+    { label: 'Market listings', value: marketplace.length },
+  ].filter((stat) => stat.value > 0);
 
   return (
-    <div className="page-grid" data-rail={events?.length || pinnedNotices?.length ? 'true' : undefined}>
+    <div className="home-stage">
       {/* Loading-layer probe (renders nothing): tells the launch intro that
           Home content has committed so it can complete its reveal and fade. */}
       <HomeReadySignal />
-      <div className="flex min-w-0 flex-col gap-5">
-        {/* Cinematic hero: a subtle particle sky behind the greeting and
-            search. Atmospheric only — a canvas layer, no layout weight. */}
-        <div className="home-hero cinematic-stage rounded-[var(--radius-xl)]">
-          <ParticleField density={0.55} />
-          <div className="home-hero__inner login-sky">
-            {header}
-            <SearchEntry />
-          </div>
-        </div>
 
-        {canPost ? (
-          <PostComposer authorName={user.profile.display_name || user.profile.username} />
-        ) : (
-          <Notice tone="neutral" icon="lock">
-            Your account cannot publish posts right now.
-          </Notice>
-        )}
+      {/* The environment: one shared canvas behind the whole page, decorative
+          and non-interactive, with a CSS composition as its no-WebGL twin. */}
+      <DepthField />
 
-        {unavailable ? (
-          <Notice tone="warning" icon="flag">
-            The feed is temporarily unavailable. Refresh to try again.
-          </Notice>
-        ) : null}
+      <HomePulse user={user} stats={stats} />
 
-        <section aria-label="Campus feed" className="flex flex-col gap-3">
-          <SectionHeader
-            title="Campus feed"
-            description="Deterministic order, configured in the database — no ranking, no AI."
-          />
+      <IslandMotion>
+        <div className="home-body">
+          <div className="home-body__main">
+            <div className="home-composer">
+              <p className="home-composer__label">
+                New on campus
+                <span aria-hidden="true">·</span>
+                <span className="text-muted-soft">Posts, discussions and polls</span>
+              </p>
+              {canPost ? (
+                <PostComposer authorName={user.profile.display_name || user.profile.username} />
+              ) : (
+                <Notice tone="neutral" icon="lock">
+                  Your account cannot publish posts right now.
+                </Notice>
+              )}
+            </div>
 
-          {feed.length === 0 && !unavailable ? (
-            <EmptyState
-              icon="sparkle"
-              title="Nothing on the feed yet"
-              description="When students post, discuss or share official updates, they appear here. Be the first."
-              action={canPost ? null : undefined}
-            />
-          ) : null}
+            {unavailable ? (
+              <Notice tone="warning" icon="flag">
+                The feed is temporarily unavailable. Refresh to try again.
+              </Notice>
+            ) : null}
 
-          {feed.map((item) => {
-            if (item.type === 'listing') {
-              const price = item.meta?.is_free ? 'Free' : item.meta?.price != null ? `₹${item.meta.price}` : null;
-              return (
-                <ContentCard
-                  key={`listing-${item.id}`}
-                  href={ROUTES.listing(item.id)}
-                  icon="tag"
-                  title={item.title}
-                  badges={[
-                    { label: 'Marketplace' },
-                    ...(price ? [{ label: price, tone: 'accent' }] : []),
-                  ]}
-                  meta={[item.authorUsername ? `@${item.authorUsername}` : null]}
-                />
-              );
-            }
-
-            if (['notice', 'event', 'deal', 'opportunity', 'resource', 'project'].includes(item.type)) {
-              const href =
-                item.type === 'notice'
-                  ? ROUTES.notice(item.id)
-                  : item.type === 'event'
-                    ? ROUTES.event(item.id)
-                    : item.type === 'opportunity'
-                      ? ROUTES.opportunity(item.id)
-                      : item.type === 'resource'
-                        ? ROUTES.resource(item.id)
-                        : item.type === 'project'
-                          ? ROUTES.project(item.id)
-                          : ROUTES.campus;
-              return (
-                <ContentCard
-                  key={`${item.type}-${item.id}`}
-                  href={href}
-                  icon={item.type === 'event' ? 'calendar' : item.type === 'notice' ? 'megaphone' : 'briefcase'}
-                  title={item.title}
-                  description={item.body}
-                  official={item.isOfficial}
-                  badges={[{ label: item.type === 'deal' ? 'Campus deal' : item.type }]}
-                />
-              );
-            }
-
-            const post = postById.get(item.id) || item.post;
-            if (!post) return null;
-            return (
-              <PostCard
-                key={post.id}
-                post={post}
-                currentUserId={me}
-                canModerate={can(actor, 'remove_posts')}
-                reactions={{ count: post.reaction_count || 0, mine: Boolean(post.reacted_by_me) }}
-                poll={post.poll}
+            <section className="flex flex-col gap-4" aria-labelledby="home-stream-title">
+              <HomeZone
+                id="home-stream-title"
+                eyebrow="Campus feed"
+                title="What's moving right now"
+                note="Ordered by the database, newest first — no ranking, no AI, no engagement theatre."
+                aside={
+                  feed.length ? (
+                    <span className="home-zone__count text-2xs text-muted">
+                      {feed.length} {feed.length === 1 ? 'entry' : 'entries'}
+                    </span>
+                  ) : null
+                }
               />
-            );
-          })}
-        </section>
 
-        <p className="pb-2 text-center text-2xs text-muted-soft">
-          Campus+ has no algorithmic ranking and no AI. Feed order is deterministic and configured in the database.
-        </p>
-      </div>
+              {feed.length === 0 && !unavailable ? (
+                <EmptyState
+                  icon="sparkle"
+                  title="Nothing on the feed yet"
+                  description="When students post, discuss or share official updates, they appear here. Be the first."
+                  action={canPost ? null : undefined}
+                />
+              ) : null}
 
-      <Rail>
-        {events?.length ? (
-          <RailCard
-            title="Upcoming events"
-            icon="calendar"
-            action={
-              <Link href="/campus/events" className="text-2xs font-semibold text-muted hover:text-ink">
-                All
-              </Link>
-            }
-          >
-            <ul className="flex flex-col gap-2.5">
-              {events.map((event) => {
-                const calendar = formatCalendarBadge(event.starts_on);
-                return (
-                  <li key={event.id}>
-                    <Link href={ROUTES.event(event.id)} className="flex items-start gap-2.5 hover:no-underline">
-                      <span className="flex w-10 shrink-0 flex-col items-center rounded-[var(--radius-sm)] border border-line bg-surface-2 py-1">
-                        <span className="text-[0.5625rem] font-bold uppercase text-muted-soft">{calendar.month}</span>
-                        <span className="text-[0.8125rem] font-bold leading-none">{calendar.day}</span>
-                      </span>
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate text-[0.8125rem] font-semibold">{event.title}</span>
-                          {event.is_official ? <Badge tone="accent">Official</Badge> : null}
-                        </span>
-                        <span className="mt-0.5 block text-2xs text-muted-soft">
-                          {formatTime(event.start_time)}
-                          {event.location ? ` · ${event.location}` : ''}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </RailCard>
-        ) : null}
+              <div className="home-stream">
+                {feed.map((item) => {
+                  const post = postById.get(item.id) || item.post;
+                  return (
+                    <StreamSlot key={`${item.type}-${item.id}`} kind={item.type}>
+                      <StreamItem
+                        item={item}
+                        post={post}
+                        currentUserId={me}
+                        canModerate={canModerate}
+                        reactions={{
+                          count: post?.reaction_count || 0,
+                          mine: Boolean(post?.reacted_by_me),
+                        }}
+                      />
+                    </StreamSlot>
+                  );
+                })}
+              </div>
 
-        {pinnedNotices?.length ? (
-          <RailCard
-            title="Notices"
-            icon="megaphone"
-            action={
-              <Link href="/campus/noticeboard" className="text-2xs font-semibold text-muted hover:text-ink">
-                All
-              </Link>
-            }
-          >
-            <ul className="divide-y divide-line">
-              {pinnedNotices.map((notice) => (
-                <li key={notice.id}>
-                  <Link href={ROUTES.notice(notice.id)} className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 hover:no-underline">
-                    <span className="text-[0.8125rem] font-medium leading-snug">{notice.title}</span>
-                    <span className="flex items-center gap-1.5 text-2xs text-muted-soft">
-                      <Badge tone={notice.importance === 'critical' || notice.importance === 'high' ? 'danger' : 'neutral'}>
-                        {notice.importance === 'critical' ? 'Critical' : notice.importance === 'high' ? 'Important' : notice.category}
-                      </Badge>
-                      {formatDate(notice.published_at)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </RailCard>
-        ) : null}
-
-        {trending.length ? (
-          <RailCard title="Busiest right now" icon="trend">
-            <ol className="flex flex-col gap-2">
-              {trending.map((post) => (
-                <li key={post.id}>
-                  <Link href={ROUTES.post(post.id)} className="flex items-start gap-2 hover:no-underline">
-                    <span className="mt-0.5 text-2xs font-bold text-muted-soft">{String(trending.indexOf(post) + 1).padStart(2, '0')}</span>
-                    <span className="min-w-0">
-                      <span className="line-clamp-2 text-[0.8125rem] leading-snug">
-                        {post.title || post.body?.slice(0, 90) || 'Post'}
-                      </span>
-                      <span className="mt-0.5 block text-2xs text-muted-soft">
-                        {post.reaction_count || 0} reactions · {post.comment_count || 0} comments
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </RailCard>
-        ) : null}
-
-        {marketplace.length ? (
-          <RailCard
-            title="Marketplace"
-            icon="tag"
-            action={
-              <Link href={ROUTES.market} className="text-2xs font-semibold text-muted hover:text-ink">
-                Open
-              </Link>
-            }
-          >
-            <ul className="flex flex-col gap-2">
-              {marketplace.map((item) => (
-                <li key={`rail-listing-${item.id}`}>
-                  <Link href={ROUTES.listing(item.id)} className="flex items-center justify-between gap-2 hover:no-underline">
-                    <span className="min-w-0 truncate text-[0.8125rem]">{item.title}</span>
-                    <span className="shrink-0 text-2xs font-semibold text-accent-ink">
-                      {item.meta?.is_free ? 'Free' : item.meta?.price != null ? `₹${item.meta.price}` : ''}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </RailCard>
-        ) : null}
-
-        <RailCard title="Jump to" icon="grid">
-          <ul className="grid grid-cols-2 gap-1.5">
-            {QUICK_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-line bg-surface px-2.5 py-2 text-2xs font-semibold text-ink-soft transition-colors hover:border-line-strong hover:no-underline"
-                >
-                  <Icon name={link.icon} size={13} className="text-muted" />
-                  <span className="truncate">{link.label}</span>
+              {feed.length ? (
+                <Link href={ROUTES.explore} className="self-start text-xs font-semibold text-accent-ink hover:underline">
+                  More on Explore →
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </RailCard>
-      </Rail>
+              ) : null}
+            </section>
+          </div>
+
+          <HomeRail
+            events={events || []}
+            notices={pinnedNotices || []}
+            trending={trending}
+            marketplace={marketplace}
+            quickLinks={QUICK_LINKS}
+          />
+        </div>
+      </IslandMotion>
+
+      <HomeCoda>
+        Campus+ is an unofficial student project — no algorithmic ranking, no AI, no advertising. Feed order is
+        deterministic and configured in the database.
+      </HomeCoda>
     </div>
   );
 }

@@ -35,6 +35,7 @@
 
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { webglAvailable } from '@/components/atmosphere/webgl';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
@@ -65,15 +66,12 @@ const MAX_PIXEL_RATIO = 1.5;
 const FIREFLY_COUNT = 66;
 const TRAIL_COUNT = 180;
 
-/** Whether a WebGL context can be created at all. Never throws. */
-export function webglAvailable() {
-  try {
-    const probe = document.createElement('canvas');
-    return Boolean(probe.getContext('webgl2') || probe.getContext('webgl'));
-  } catch {
-    return false;
-  }
-}
+/**
+ * Whether a WebGL context can be created at all. The probe itself lives in
+ * `../webgl` so the Home depth field asks exactly the same question; it is
+ * re-exported here because that is where callers of this scene expect it.
+ */
+export { webglAvailable };
 
 /** A soft radial sprite texture for the reveal halo, drawn once. */
 function haloTexture() {

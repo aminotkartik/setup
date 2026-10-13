@@ -8,6 +8,8 @@
 @import './styles/calendar.css';
 @import './styles/command.css';
 @import './styles/atmosphere.css';
+@import './styles/islands.css';
+@import './styles/home.css';
 @import './styles/night.css';
 @import './styles/login.css';
 @import './styles/intro.css';
@@ -158,6 +160,14 @@
   --cp-sky-icon-bg: #21334d;
   --cp-sky-border: #7a90b2;
   --cp-sky-wash: rgba(8, 17, 33, 0.42);
+  /* The Home depth field: the environment the Campus Islands float over. It is
+     the same restraint in both themes — near-black navy at night, cool paper
+     mist in daylight — with the accent lines carrying the only light. The
+     canvas reads these, and the ridge/vignette fallbacks paint with them, so
+     the WebGL scene and the no-WebGL composition can never disagree. */
+  --cp-depth-base: light-dark(#e9eff8, #05070f);
+  --cp-depth-line-a: light-dark(#4a7cae, #5ad1e6);
+  --cp-depth-line-b: light-dark(#7f9bd6, #6f9bff);
   --cp-bg-cinematic-glass: light-dark(rgba(250, 248, 244, 0.97), rgba(23, 34, 56, 0.98));
   --cp-cinematic-border: light-dark(#abb9d0, #6d82a6);
   --cp-brand-plate: #fffdf9;

@@ -8,10 +8,10 @@
  * The compositor owns the motion, and the browser pauses it on a hidden tab
  * for free.
  *
- * It is deliberately not a particle field. The interactive canvas lives in
- * `./ParticleField` and stays on the two cinematic stages that already use it
- * (the sign-in screen and the Home hero); this layer is the environment for
- * every other screen, and stacking the two would double the cost for no gain.
+ * It is deliberately not one of the canvases. The sign-in stage keeps its
+ * ghost scene (`./GhostScene`) and Home mounts its own depth field
+ * (`./DepthField`); this layer is the environment underneath everything, and
+ * stacking the two would double the cost for no gain.
  *
  * The tree is `pointer-events: none` and sits below the shell's stacking
  * context, so it can never intercept a click, a text selection or a scroll.
