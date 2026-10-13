@@ -29,10 +29,11 @@
        not.
      * Every colour is a token. This file contains no palette literals.
 
-   It is deliberately NOT a second particle field. The interactive canvas in
-   components/atmosphere/ParticleField.js stays where it already is (the sign-in
-   stage and the Home hero card); this layer is the calm, always-present sky
-   for the other fifty-odd screens, and it costs no animation frame at all.
+   It is deliberately NOT a second atmosphere canvas. The sign-in stage keeps
+   its ghost scene and Home mounts its own depth field
+   (components/atmosphere/DepthField.js); this layer is the calm,
+   always-present sky underneath every screen, and it costs no animation frame
+   at all.
    ========================================================================== */
 
 /* The environment itself. Fixed so it never scrolls, and behind everything. */

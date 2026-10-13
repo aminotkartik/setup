@@ -307,3 +307,50 @@ describe('design system (spec §4)', () => {
     expect(blurry.length).toBeLessThanOrEqual(8);
   });
 });
+
+describe('public configuration reaches the browser bundle (spec §91, §92)', () => {
+  /*
+   * `NEXT_PUBLIC_*` values only reach the browser because the bundler replaces
+   * the exact expression `process.env.` + the variable name at build time. A
+   * computed key into `process.env` is invisible to that replacement, so the
+   * browser reads `undefined` while the server reads the real value.
+   *
+   * That is not hypothetical: `lib/config.js` used to read the Supabase URL and
+   * publishable key that way, which made `getBrowserClient()` return `null` in
+   * real browsers. Sign-out then silently did nothing — the session cookie
+   * survived and the proxy bounced `/login` straight back to `/home` — while
+   * every lint, test and build stayed green, because server-side code was
+   * unaffected. These guards fail if that pattern comes back.
+   */
+  const codeOnly = (file) =>
+    read(file)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n')
+      .filter((line) => !/^\s*\/\//.test(line))
+      .join('\n');
+
+  it('never reads a browser env var through a computed key', () => {
+    // `server-only` modules are never bundled for the browser: a computed key
+    // there is read from the real environment at request time and is fine.
+    const serverOnly = /import 'server-only'|from 'server-only'|require\('server-only'\)/;
+    const offenders = [...allSource, 'proxy.js'].filter(
+      (file) => /process\.env\s*\[/.test(codeOnly(file)) && !serverOnly.test(read(file)),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('reads its own public Supabase configuration as literal member expressions', () => {
+    const config = codeOnly(path.join('lib', 'config.js'));
+    expect(config).toContain('process.env.NEXT_PUBLIC_SUPABASE_URL');
+    expect(config).toContain('process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+    expect(config).not.toMatch(/process\.env\s*\[/);
+  });
+
+  it('keeps secrets out of anything a client component imports', () => {
+    const clientReachable = allSource.filter((file) => /^'use client'/.test(read(file)));
+    const leaked = clientReachable.filter((file) =>
+      /SUPABASE_SECRET_KEY|GIPHY_API_KEY|service_role/.test(codeOnly(file)),
+    );
+    expect(leaked).toEqual([]);
+  });
+});

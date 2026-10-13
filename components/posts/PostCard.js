@@ -30,7 +30,12 @@ export function PostCard({
   poll = null,
   showCommunity = true,
   detail = false,
+  variant = 'card',
 }) {
+  // `card` is the default everywhere; `stream` is the Home feed's entry
+  // presentation — the same content, the same actions, a surface and a type
+  // scale tuned for reading a column of posts (see app/styles/home.css).
+  const stream = variant === 'stream';
   const isOwner = currentUserId && post.author_id === currentUserId;
   const isDeleted = post.status === 'deleted';
   const isHidden = post.status === 'hidden' || post.status === 'removed';
@@ -40,7 +45,12 @@ export function PostCard({
 
   return (
     <article
-      className={cn('card p-4', post.is_official ? 'card-official' : null)}
+      className={cn(
+        stream ? 'stream-card stream-card--post' : 'card p-4',
+        post.is_official && !stream ? 'card-official' : null,
+        post.is_official && stream ? 'stream-card--official' : null,
+      )}
+      data-kind={post.kind}
       aria-label={kindLabel || 'Post'}
     >
       <div className="flex items-start justify-between gap-3">
@@ -70,7 +80,7 @@ export function PostCard({
 
       <div className="mt-3">
         {post.kind !== 'post' && post.title ? (
-          <h2 className="t-card leading-snug">
+          <h2 className={stream ? 'stream-card__title' : 't-card leading-snug'}>
             {detail ? post.title : <Link href={ROUTES.post(post.id)}>{post.title}</Link>}
           </h2>
         ) : null}
@@ -82,7 +92,7 @@ export function PostCard({
               : 'This post was deleted by its author.'}
           </p>
         ) : (
-          <p className="user-text t-body mt-1">
+          <p className={cn('user-text', stream ? 'stream-card__body' : 't-body mt-1')}>
             {detail ? renderTextWithMentions(post.body) : renderTextWithMentions(body)}
             {!detail && post.body?.length > 420 ? (
               <>
@@ -113,7 +123,12 @@ export function PostCard({
         ) : null}
       </div>
 
-      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+      <div
+        className={cn(
+          'mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3',
+          stream ? 'stream-card__footer' : null,
+        )}
+      >
         <div className="flex items-center gap-2">
           <ReactionBar
             targetType="post"

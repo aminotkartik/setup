@@ -194,7 +194,47 @@ export function Rail({ children, className = '', label = 'Campus information' })
   );
 }
 
-export function RailCard({ title, icon = null, action = null, children, className = '' }) {
+/**
+ * One titled section in a rail.
+ *
+ *   variant="card"    the design-system card (default) — hairline, radius, shadow.
+ *   variant="island"  the Home island surface: elevation and tone come from the
+ *                     island scale (see app/styles/islands.css), and `note`
+ *                     carries the one-line explanation under the title.
+ */
+export function RailCard({
+  title,
+  icon = null,
+  action = null,
+  children,
+  className = '',
+  variant = 'card',
+  elevation = 1,
+  tone = null,
+  note = null,
+}) {
+  if (variant === 'island') {
+    return (
+      <section
+        className={cn('island', className)}
+        data-elevation={String(elevation)}
+        data-tone={tone || undefined}
+      >
+        <header className="island__head">
+          <div className="min-w-0">
+            <h2 className="island__eyebrow flex items-center gap-1.5">
+              {icon ? <Icon name={icon} size={13} /> : null}
+              {title}
+            </h2>
+            {note ? <p className="island__note mt-1.5">{note}</p> : null}
+          </div>
+          {action}
+        </header>
+        <div>{children}</div>
+      </section>
+    );
+  }
+
   return (
     <section className={cn('card p-3.5', className)}>
       <header className="flex items-center justify-between gap-2">

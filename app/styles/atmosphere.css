@@ -1,20 +1,10 @@
-/* Campus+ particle sky: the animated canvas is decorative. A bounded navy
-   wash separates its brightest particles/glows from all foreground content. */
+/* The cinematic sky context: the login stage's deep navy, the wash that keeps
+   its brightest light away from foreground content, and the inverse typography
+   pair for copy that sits directly on it.
 
-.atmosphere {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  background-color: var(--cp-sky-bg);
-}
-
-.atmosphere__canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
+   Home no longer uses this layer — its environment is the depth field in
+   components/atmosphere/DepthField.js, with its own tokens and its own
+   app/styles/islands.css. */
 
 .cinematic-stage {
   position: relative;
@@ -56,27 +46,4 @@
 
 .login-sky .login-halo {
   filter: drop-shadow(0 10px 30px var(--cp-scrim));
-}
-
-.home-hero {
-  min-height: 15.5rem;
-  border: 1px solid var(--cp-cinematic-border);
-  box-shadow: var(--shadow-float);
-}
-
-.home-hero__inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 1.5rem;
-  min-height: inherit;
-  padding: 1.5rem;
-}
-
-@media (min-width: 640px) {
-  .home-hero__inner {
-    padding: 2rem;
-  }
 }

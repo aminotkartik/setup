@@ -1,0 +1,1040 @@
+/* ==========================================================================
+   Campus+ Home — "after dark"
+   --------------------------------------------------------------------------
+   The page is composed in three movements:
+
+     1. THE THRESHOLD (`.home-pulse`) — an open band of environment: a small
+        live marker, the greeting set as editorial display type, one primary
+        action, the search door, and a thin column of real campus counts. No
+        surface: this is the world, not a card.
+     2. THE WORKS (`.home-body`) — the composer and the stream on the left, the
+        rail of small destinations on the right. Every entry is an island with
+        its own proportion, elevation and surface treatment, connected by the
+        environment rather than by matching boxes.
+     3. THE EXIT (`.home-coda`) — a rule and one line of plain speaking, so the
+        page ends deliberately instead of trailing off.
+
+   Colour, elevation and materials all come from the design tokens; this file
+   adds composition, rhythm and a small number of deliberate movements. Type is
+   the primary instrument: sizes are fluid, measures are capped, and the only
+   ornament allowed is light.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. THRESHOLD
+   -------------------------------------------------------------------------- */
+
+.home-pulse {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: clamp(1.75rem, 4vh, 3rem);
+  min-height: clamp(17rem, 38vh, 25rem);
+  padding-block: clamp(2.25rem, 6vh, 4.5rem) clamp(1.5rem, 3vh, 2.25rem);
+}
+
+/* A single soft light behind the greeting — the only place on the page where
+   the accent colour is allowed to fill space. */
+.home-pulse__aurora {
+  position: absolute;
+  z-index: 0;
+  inset: -30% -20% auto -20%;
+  height: 120%;
+  pointer-events: none;
+  opacity: 0.85;
+  background-image:
+    radial-gradient(46% 62% at 18% 42%, color-mix(in oklab, var(--cp-accent-cyan) 13%, transparent) 0%, transparent 72%),
+    radial-gradient(38% 52% at 62% 22%, color-mix(in oklab, var(--cp-accent-highlight) 10%, transparent) 0%, transparent 76%);
+}
+
+.home-pulse__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: end;
+}
+
+@media (min-width: 1024px) {
+  .home-pulse__grid {
+    /* Asymmetric on purpose: the greeting takes the room, the data column is a
+       thin instrument at the right edge. */
+    grid-template-columns: minmax(0, 1.6fr) minmax(15rem, 20rem);
+  }
+}
+
+.home-pulse__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cp-text-secondary);
+}
+
+.home-pulse__dot {
+  position: relative;
+  display: block;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background-color: var(--cp-accent-cyan);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--cp-accent-cyan) 18%, transparent);
+}
+
+.home-pulse__title {
+  margin-top: clamp(0.75rem, 2vh, 1.25rem);
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--cp-text-muted);
+}
+
+.home-pulse__name {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: clamp(2.25rem, 1.35rem + 3.9vw, 4rem);
+  font-weight: 640;
+  line-height: 0.96;
+  letter-spacing: -0.038em;
+  color: var(--cp-text-primary);
+  text-wrap: balance;
+}
+
+/* One selective electric-blue highlight, on the largest type on the page: the
+   name is lit from the left edge and settles into the ink colour by the right.
+   `@supports` keeps the plain token colour for anything without text clipping,
+   so the headline can never disappear. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .home-pulse__name {
+    background-image: linear-gradient(
+      104deg,
+      color-mix(in oklab, var(--cp-accent-highlight) 82%, var(--cp-text-primary)) 0%,
+      color-mix(in oklab, var(--cp-accent-cyan) 46%, var(--cp-text-primary)) 38%,
+      var(--cp-text-primary) 82%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* A hairline of light under the name: the horizon of the typography. */
+.home-pulse__lead {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.9rem;
+  max-width: 46ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cp-text-secondary);
+}
+
+.home-pulse__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+
+.home-pulse__search {
+  flex: 1 1 19rem;
+  max-width: 27rem;
+}
+
+@media (min-width: 1024px) {
+  .home-pulse__search {
+    flex: 0 1 22rem;
+  }
+}
+
+/* The instrument column: real counts of what this page actually loaded. */
+.home-pulse__stats {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--cp-border-subtle);
+}
+
+.home-pulse__stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--cp-border-subtle);
+}
+
+.home-pulse__stat dt {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+.home-pulse__stat dd {
+  font-size: 1.0625rem;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--cp-text-primary);
+}
+
+.home-pulse__stat[data-empty='true'] dd {
+  color: var(--cp-text-subtle);
+}
+
+/* Below the desktop breakpoint the column of counts becomes a row of chips you
+   can swipe: the same information, still early in the page. */
+@media (max-width: 1023px) {
+  /* Wrapped chips rather than a horizontal scroller: a scroll container on a
+     phone is either a hidden control or a keyboard trap, and four counts fit
+     without one. */
+  .home-pulse__stats {
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0.5rem;
+    border-top: 0;
+  }
+
+  .home-pulse__stat {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--cp-border-subtle);
+    border-radius: var(--radius-md);
+    background-color: color-mix(in oklab, var(--cp-bg-subtle) 80%, transparent);
+  }
+
+  .home-pulse__stat dd {
+    order: -1;
+    font-size: 1.0625rem;
+  }
+}
+
+/* The horizon: a hairline at the foot of the threshold with one slow travelling
+   light. It is the page's only looping ornament, and it costs no layout. */
+.home-pulse__horizon {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  background-image: linear-gradient(90deg, transparent, var(--cp-border) 12%, var(--cp-border) 88%, transparent);
+}
+
+.home-pulse__horizon::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 22%;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--cp-accent-cyan) 55%, transparent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-pulse__horizon::after {
+    animation: horizon-travel 17s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .home-pulse__dot {
+    animation: pulse-breathe 5.5s ease-in-out infinite;
+  }
+}
+
+@keyframes horizon-travel {
+  0% {
+    transform: translateX(-110%);
+  }
+  55%,
+  100% {
+    transform: translateX(560%);
+  }
+}
+
+@keyframes pulse-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. THE WORKS
+   -------------------------------------------------------------------------- */
+
+.home-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  padding-bottom: 1rem;
+}
+
+@media (min-width: 1200px) {
+  .home-body {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    align-items: start;
+  }
+}
+
+.home-body__main {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  min-width: 0;
+}
+
+.home-body__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (min-width: 1200px) {
+  .home-body__rail {
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+    max-height: calc(100dvh - 6rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 1rem;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* A zone heading: mono eyebrow, editorial title, and the quiet explanation on
+   the right. Used once per movement so the page has a spine. */
+.home-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--cp-border-subtle);
+}
+
+.home-zone__eyebrow {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+.home-zone__title {
+  margin-top: 0.5rem;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  font-weight: 620;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--cp-text-primary);
+}
+
+.home-zone__note {
+  max-width: 34ch;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--cp-text-muted);
+}
+
+.home-zone__count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The composer sits on the stream like a command line for the campus. */
+.home-composer {
+  position: relative;
+}
+
+.home-composer__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   THE STREAM
+   --------------------------------------------------------------------------
+   One column of entries. Each entry is its own island, but they share a family:
+   a top-lit surface, a hairline edge, and a left marker that carries the kind
+   of content. Variation comes from the marker, the internal typography and the
+   right-hand stamp — never from a different box. */
+
+.home-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.home-stream__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--cp-border-subtle);
+}
+
+.stream-slot {
+  position: relative;
+}
+
+/* The entry surface: the design system's elevated token, one notch tighter and
+   lit from above, with a marker rail on the left. */
+.stream-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-elevated) 94%, transparent);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--cp-edge-light) 42%, transparent) 0%,
+    transparent 12%
+  );
+  color: var(--cp-text-primary);
+  box-shadow:
+    0 1px 1px var(--cp-shade),
+    0 20px 40px -38px var(--cp-scrim);
+}
+
+.stream-card--row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem 1rem 1.25rem;
+}
+
+/* The marker: a short lit bar at the left edge, coloured by content kind. */
+.stream-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--stream-marker, color-mix(in oklab, var(--cp-border) 90%, transparent));
+  opacity: var(--stream-marker-opacity, 0.85);
+}
+
+.stream-slot[data-kind='notice'] {
+  --stream-marker: color-mix(in oklab, var(--cp-accent-cyan) 78%, transparent);
+  --stream-marker-opacity: 1;
+}
+
+.stream-slot[data-kind='event'] {
+  --stream-marker: color-mix(in oklab, var(--cp-accent-highlight) 70%, transparent);
+}
+
+.stream-slot[data-kind='listing'] {
+  --stream-marker: color-mix(in oklab, var(--cp-success-text) 62%, transparent);
+}
+
+.stream-slot[data-kind='opportunity'],
+.stream-slot[data-kind='resource'],
+.stream-slot[data-kind='project'] {
+  --stream-marker: color-mix(in oklab, var(--cp-text-muted) 70%, transparent);
+}
+
+/* Post entries carry their marker from the design system's accent. */
+.stream-slot[data-kind='post'],
+.stream-slot[data-kind='discussion'],
+.stream-slot[data-kind='poll'] {
+  --stream-marker: color-mix(in oklab, var(--cp-bg-accent) 55%, transparent);
+}
+
+.stream-card__title {
+  display: block;
+  font-size: 0.9688rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  color: var(--cp-text-primary);
+}
+
+.stream-slot[data-kind='notice'] .stream-card__title {
+  font-size: 1.0625rem;
+  letter-spacing: -0.022em;
+}
+
+.stream-card__body {
+  display: block;
+  margin-top: 0.375rem;
+  max-width: 68ch;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--cp-text-secondary);
+}
+
+.stream-slot[data-kind='notice'] .stream-card__body {
+  color: var(--cp-text-primary);
+  font-size: 0.9063rem;
+}
+
+.stream-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.625rem;
+  margin-top: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--cp-text-muted);
+}
+
+.stream-card__glyph {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 86%, transparent);
+  color: var(--cp-text-muted);
+}
+
+/* The right-hand stamp: a date plate for events, a price plate for listings. */
+.stream-stamp {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  min-width: 3.25rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 90%, transparent);
+  text-align: center;
+}
+
+.stream-stamp__value {
+  font-size: 1.125rem;
+  font-weight: 680;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stream-stamp__label {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+.stream-stamp--price {
+  border-color: color-mix(in oklab, var(--cp-success-text) 28%, var(--cp-border-subtle));
+  background-color: color-mix(in oklab, var(--cp-success-bg) 60%, transparent);
+  color: var(--cp-success-text);
+}
+
+/* Post entries: the identity line leads, the body is the hero, the footer is a
+   quiet row of controls. */
+.stream-card--post {
+  padding: 1.125rem 1.25rem 0.875rem 1.375rem;
+}
+
+.stream-card--post .stream-card__title {
+  margin-top: 0.75rem;
+  font-size: 1.0625rem;
+}
+
+.stream-card--post .stream-card__body {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--cp-text-primary);
+}
+
+.stream-card--post footer,
+.stream-card--post .stream-card__footer {
+  border-top-color: color-mix(in oklab, var(--cp-border-subtle) 80%, transparent);
+}
+
+/* Hover: the surface acknowledges the pointer with light, not with movement of
+   the text. Only on a real pointer, and never for reduced motion. */
+@media (hover: hover) and (pointer: fine) {
+  .stream-card {
+    transition:
+      border-color 480ms var(--ease-out-soft),
+      box-shadow 480ms var(--ease-out-soft);
+  }
+
+  .stream-slot:hover .stream-card {
+    border-color: color-mix(in oklab, var(--cp-bg-accent) 20%, var(--cp-border));
+    box-shadow:
+      0 1px 1px var(--cp-shade),
+      0 24px 48px -38px var(--cp-scrim),
+      0 0 28px -22px var(--cp-glow-cyan);
+  }
+
+  /* The travelling light along the top edge of the hovered entry. */
+  .stream-slot:hover .stream-card::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--cp-accent-cyan) 70%, transparent) 45%,
+      transparent
+    );
+    animation: entry-sweep 1.1s var(--ease-glide) 1 both;
+  }
+}
+
+@keyframes entry-sweep {
+  from {
+    transform: translateX(-60%);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(60%);
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   THE RAIL — five small destinations, five different treatments
+   -------------------------------------------------------------------------- */
+
+.rail-island {
+  border-radius: var(--radius-lg);
+}
+
+/* Events — a timeline, with the next one lit. */
+.rail-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding-left: 1.125rem;
+}
+
+.rail-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.1875rem;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 1px;
+  background-image: linear-gradient(180deg, var(--cp-border), transparent);
+}
+
+.rail-event {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.rail-event::before {
+  content: '';
+  position: absolute;
+  left: -1.125rem;
+  top: 0.375rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background-color: var(--cp-bg-elevated);
+}
+
+.rail-event[data-next='true']::before {
+  border-color: color-mix(in oklab, var(--cp-accent-cyan) 70%, transparent);
+  background-color: var(--cp-accent-cyan);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--cp-accent-cyan) 16%, transparent);
+}
+
+.rail-event__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 2.25rem;
+  flex-shrink: 0;
+  padding: 0.25rem 0 0.3125rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 88%, transparent);
+}
+
+.rail-event__month {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+.rail-event__num {
+  font-size: 0.9375rem;
+  font-weight: 680;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-event__body {
+  min-width: 0;
+}
+
+.rail-event__title {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--cp-text-primary);
+}
+
+.rail-event__meta {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.6875rem;
+  color: var(--cp-text-muted);
+}
+
+/* Notices — editorial: the headline is the picture. */
+.rail-notice {
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-notice > * + * {
+  border-top: 1px solid var(--cp-border-subtle);
+}
+
+.rail-notice__item {
+  padding-block: 0.75rem;
+}
+
+.rail-notice__item:first-child {
+  padding-top: 0;
+}
+
+.rail-notice__item:last-child {
+  padding-bottom: 0;
+}
+
+.rail-notice__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cp-text-muted);
+}
+
+.rail-notice__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background-color: var(--cp-text-muted);
+}
+
+.rail-notice__item[data-importance='high'] .rail-notice__dot,
+.rail-notice__item[data-importance='critical'] .rail-notice__dot {
+  background-color: var(--cp-danger-text);
+}
+
+.rail-notice__headline {
+  display: block;
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.018em;
+  color: var(--cp-text-primary);
+}
+
+.rail-notice__date {
+  display: block;
+  margin-top: 0.3125rem;
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: var(--cp-text-muted);
+}
+
+/* Busiest — understated activity bars, drawn from real counters. */
+.rail-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rail-activity__row {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) 2.75rem;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.rail-activity__rank {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.625rem;
+  color: var(--cp-text-subtle);
+}
+
+.rail-activity__text {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cp-text-primary);
+}
+
+.rail-activity__meter {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-activity__count {
+  font-size: 0.6875rem;
+  color: var(--cp-text-muted);
+}
+
+.rail-activity__bar {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 0.3125rem;
+  margin-left: 1.75rem;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 90%, transparent);
+  overflow: hidden;
+}
+
+.rail-activity__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-image: linear-gradient(90deg, color-mix(in oklab, var(--cp-bg-accent) 55%, transparent), color-mix(in oklab, var(--cp-accent-cyan) 70%, transparent));
+}
+
+/* Marketplace — price first, the way a listing is actually read. */
+.rail-market {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.rail-market__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 55%, transparent);
+  transition: border-color 300ms var(--ease-out-soft), background-color 300ms var(--ease-out-soft);
+}
+
+.rail-market__item:hover {
+  border-color: color-mix(in oklab, var(--cp-success-text) 34%, var(--cp-border-subtle));
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 78%, transparent);
+}
+
+.rail-market__title {
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--cp-text-primary);
+}
+
+.rail-market__price {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 660;
+  font-variant-numeric: tabular-nums;
+  color: var(--cp-success-text);
+}
+
+.rail-market__price[data-free='true'] {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Jump to — a keypad, not a list. */
+.rail-keys {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+.rail-key {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cp-border-subtle);
+  background-color: color-mix(in oklab, var(--cp-bg-subtle) 60%, transparent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cp-text-secondary);
+  transition:
+    border-color 300ms var(--ease-out-soft),
+    color 300ms var(--ease-out-soft),
+    background-color 300ms var(--ease-out-soft);
+}
+
+.rail-key:hover {
+  border-color: color-mix(in oklab, var(--cp-bg-accent) 26%, var(--cp-border));
+  background-color: color-mix(in oklab, var(--cp-bg-accent-soft) 45%, transparent);
+  color: var(--cp-text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   3. EXIT
+   -------------------------------------------------------------------------- */
+
+.home-coda {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  color: var(--cp-text-subtle);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+}
+
+.home-coda::before,
+.home-coda::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(90deg, transparent, var(--cp-border-subtle));
+}
+
+.home-coda::after {
+  background-image: linear-gradient(270deg, transparent, var(--cp-border-subtle));
+}
+
+.home-coda span {
+  flex-shrink: 0;
+  max-width: 44ch;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Arrival
+   --------------------------------------------------------------------------
+   The threshold arrives as one movement; the works arrive after it. Both are
+   short, and both are cancelled for reduced motion (see islands.css). */
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-pulse__grid,
+  .home-pulse__stats,
+  .home-pulse__horizon {
+    animation: threshold-arrive 700ms var(--ease-glide) both;
+  }
+
+  .home-pulse__stats {
+    animation-delay: 120ms;
+  }
+
+  .home-pulse__horizon {
+    animation-delay: 200ms;
+  }
+}
+
+@keyframes threshold-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.75rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-pulse__dot,
+  .home-pulse__horizon::after {
+    animation: none;
+  }
+
+  .stream-slot:hover .stream-card::after {
+    content: none;
+  }
+}
+
+/* On a phone: tighter rhythm, no sticky rail, chunky touch targets, and the
+   band's type still set for reading rather than for effect. */
+@media (max-width: 767px) {
+  .home-pulse {
+    min-height: 0;
+    padding-block: 1.5rem 1.25rem;
+  }
+
+  .home-pulse__name {
+    font-size: clamp(2rem, 1.4rem + 6vw, 2.75rem);
+  }
+
+  .stream-card--row {
+    padding: 0.875rem 0.875rem 0.875rem 1rem;
+  }
+
+  .stream-card__glyph {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .home-zone {
+    align-items: flex-start;
+  }
+
+  .home-zone__note {
+    max-width: none;
+  }
+}
+
+/* Light theme: the same composition, but the surfaces lean on paper rather than
+   on glass, and the aurora drops to a whisper. */
+[data-theme='light'] .home-pulse__aurora {
+  opacity: 0.5;
+}
+
+[data-theme='light'] .stream-card {
+  background-image: none;
+  background-color: var(--cp-bg-elevated);
+}

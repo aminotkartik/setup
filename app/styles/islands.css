@@ -1,0 +1,449 @@
+/* ==========================================================================
+   Campus Islands — the environment and the island primitive
+   --------------------------------------------------------------------------
+   Two things live here, and neither of them is the Home page composition
+   (that is app/styles/home.css):
+
+     1. THE ENVIRONMENT — the shared depth field: one fixed canvas, its CSS
+        fallback, and the wash that separates it from the interface, plus the
+        page element that hosts them (`.home-stage`).
+     2. THE ISLAND — the surface primitive the Home rail's small destinations
+        and the feed's entries are built on: one ordered elevation scale that
+        drives surface mix, blur, shadow and pointer-depth together, so two
+        islands can never disagree about how far away they are.
+
+   Depth is lighting and material, not decoration: an island is the design
+   system's elevated surface with a little of the environment showing through
+   and a hairline of light on its top edge — the same language `.card` and
+   `.glass` already use, one step further out. Text contrast therefore stays
+   inside the audited token pairs in either theme.
+
+   Motion is small and slow: islands arrive once, drift a couple of pixels with
+   the pointer on a fine-pointer device, and otherwise hold still. Nothing
+   animates while you read, type, scroll or tab.
+   ========================================================================== */
+
+/* Registered so the arrival can travel through `--island-rise`: an unregistered
+   custom property cannot be interpolated. Browsers without @property simply
+   fade the island in and settle it — the same composition, one less nuance. */
+@property --island-rise {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* --------------------------------------------------------------------------
+   The stage: one shared canvas behind the whole page
+   -------------------------------------------------------------------------- */
+
+.home-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The page element itself does not animate.
+   `.shell-main > *` (night.css) animates every route wrapper with `both` fill,
+   and a filled transform animation makes that wrapper the containing block for
+   fixed-position descendants — which silently pinned the depth-field canvas to
+   the page box (1120 x 3681) instead of the viewport, so the camera framed
+   empty sky and the whole environment rendered black. Two classes beat one
+   class + universal selector, so this wins without `!important`. */
+.shell-main > .home-stage {
+  animation: none;
+}
+
+.depth-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--depth-base);
+}
+
+.depth-field__canvas,
+.depth-field__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.depth-field__canvas {
+  display: block;
+}
+
+/* The scene reads the theme's resolved colours through these: a custom property
+   echoes its own token stream, so the palette is read from painted properties
+   instead. They occupy no space and are never seen or announced. */
+.depth-field__probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The wash that separates the environment from the interface. It is the reason
+   the depth field never has to be dimmed by the content: it hands the very top
+   of the page back to the shell's own background so the sticky glass header
+   sits on a compatible surface, and it retires the field at the bottom so the
+   stream always has a calm ground. */
+.depth-field__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--cp-bg-page) 58%, transparent) 0%,
+      color-mix(in oklab, var(--cp-bg-page) 22%, transparent) 18%,
+      transparent 36%
+    ),
+    linear-gradient(
+      0deg,
+      color-mix(in oklab, var(--cp-bg-page) 58%, transparent) 0%,
+      transparent 24%
+    ),
+    radial-gradient(
+      130% 80% at 50% 118%,
+      color-mix(in oklab, var(--cp-bg-page-deep) 62%, transparent) 0%,
+      transparent 58%
+    );
+}
+
+/* The static atmosphere: three ridges at three distances plus a low horizon
+   glow. Deliberately the same picture as the WebGL scene, drawn with
+   gradients, so a browser without WebGL loses movement and nothing else. */
+.depth-field__fallback {
+  overflow: hidden;
+}
+
+.depth-field__ridge,
+.depth-field__horizon {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  display: block;
+}
+
+.depth-field__ridge {
+  border-radius: 50% 50% 0 0 / 12rem 12rem 0 0;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--depth-line-b) 12%, transparent) 0%,
+    transparent 55%
+  );
+}
+
+.depth-field__ridge--far {
+  bottom: 34%;
+  height: 22rem;
+  opacity: 0.55;
+}
+
+.depth-field__ridge--mid {
+  bottom: 20%;
+  height: 18rem;
+  opacity: 0.4;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--depth-line-a) 10%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+.depth-field__ridge--near {
+  bottom: 2%;
+  height: 14rem;
+  opacity: 0.3;
+}
+
+.depth-field__horizon {
+  bottom: 38%;
+  height: 1px;
+  border: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--depth-line-a) 42%, transparent) 30%,
+    color-mix(in oklab, var(--depth-line-a) 42%, transparent) 70%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Only the fallback breathes, and only barely: the WebGL field carries the
+     movement when it is available. */
+  .depth-field__fallback .depth-field__ridge {
+    animation: depth-drift 46s ease-in-out infinite alternate;
+  }
+
+  .depth-field__fallback .depth-field__ridge--mid {
+    animation-duration: 64s;
+    animation-direction: alternate-reverse;
+  }
+}
+
+@keyframes depth-drift {
+  from {
+    transform: translate3d(-1.5%, 0.75rem, 0);
+  }
+  to {
+    transform: translate3d(1.5%, -0.75rem, 0);
+  }
+}
+
+/* Field palette — the semantic tokens the shader reads (see
+   createDepthField.js). Declared here so the canvas inherits them exactly like
+   the CSS fallback beside it does; both come from the same --cp-depth-* pair. */
+.depth-field {
+  --depth-base: var(--cp-depth-base);
+  --depth-line-a: var(--cp-depth-line-a);
+  --depth-line-b: var(--cp-depth-line-b);
+}
+
+/* --------------------------------------------------------------------------
+   Layout hooks
+   -------------------------------------------------------------------------- */
+
+/* The pointer-depth host. `display: contents` keeps the grid and the reading
+   order untouched — the element exists only to carry --pointer-x/--pointer-y,
+   and custom properties inherit through it like any other element. */
+.island-motion {
+  display: contents;
+}
+
+/* Pages that compose islands widen the shell so the environment can breathe —
+   the same trick `.page-grid` uses, for the Home page's own composition. */
+.shell-content:has(.home-body),
+.shell-content:has(.home-pulse) {
+  max-width: 78rem;
+}
+
+/* --------------------------------------------------------------------------
+   The island
+   -------------------------------------------------------------------------- */
+
+.island {
+  --island-depth: 2px;
+  position: relative;
+  display: block;
+  padding: 1.125rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--island-edge);
+  background-color: var(--island-surface);
+  color: var(--cp-text-primary);
+  box-shadow: var(--island-shadow);
+  -webkit-backdrop-filter: blur(var(--island-blur)) saturate(120%);
+  backdrop-filter: blur(var(--island-blur)) saturate(120%);
+  transform: translate3d(
+    calc(var(--pointer-x, 0) * var(--island-depth)),
+    calc(var(--pointer-y, 0) * var(--island-depth) + var(--island-rise, 0px)),
+    0
+  );
+  animation: island-arrive var(--dur-enter, 460ms) var(--ease-glide) both;
+  animation-delay: calc(var(--island-order, 0) * 55ms);
+}
+
+@media (min-width: 640px) {
+  .island {
+    padding: 1.25rem;
+  }
+}
+
+/* A hairline of light on the top edge and a shade along the bottom: the same
+   "lit from above" cue the rest of the system uses, one step stronger because
+   these surfaces float over a field instead of sitting on a page. */
+.island::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--cp-edge-light) 70%, transparent) 0%,
+    transparent 14%,
+    transparent 86%,
+    color-mix(in oklab, var(--cp-scrim) 22%, transparent) 100%
+  );
+}
+
+/* Headers and bodies inside an island never touch its edge. */
+.island__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.island__eyebrow {
+  font-family: var(--font-micro), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--island-eyebrow, var(--cp-text-muted));
+}
+
+.island__title {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.island__note {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--cp-text-muted);
+  max-width: 42ch;
+}
+
+/* --------------------------------------------------------------------------
+   Elevation
+   --------------------------------------------------------------------------
+   Level 1 — the small rail islands: the quietest surface, the smallest blur.
+   Level 2 — a destination that matters (the next events): a little more
+             presence, without becoming a second primary. */
+
+.island[data-elevation='1'] {
+  --island-surface: color-mix(in oklab, var(--cp-bg-subtle) 92%, transparent);
+  --island-edge: color-mix(in oklab, var(--cp-border-subtle) 82%, transparent);
+  --island-blur: 8px;
+  --island-depth: 1.25px;
+  --island-shadow:
+    0 1px 1px var(--cp-shade),
+    0 18px 34px -30px var(--cp-scrim);
+}
+
+.island[data-elevation='2'] {
+  --island-surface: color-mix(in oklab, var(--cp-bg-elevated) 94%, transparent);
+  --island-edge: color-mix(in oklab, var(--cp-border-subtle) 88%, transparent);
+  --island-blur: 11px;
+  --island-depth: 2px;
+  --island-shadow:
+    0 1px 1px var(--cp-shade),
+    0 26px 46px -34px var(--cp-scrim);
+}
+
+/* Urgent islands carry the accent on the edge, not on the surface. */
+.island[data-tone='urgent'] {
+  border-color: color-mix(in oklab, var(--cp-bg-accent) 22%, var(--cp-border-subtle));
+}
+
+.island[data-tone='urgent'] .island__eyebrow {
+  --island-eyebrow: var(--cp-text-on-accent-soft);
+}
+
+/* Hover: a slow, small acknowledgment that this surface is a destination — no
+   lift big enough to move text under the reader's eye. */
+@media (hover: hover) and (pointer: fine) {
+  .island[data-interactive='true']:hover,
+  .rail-island:hover {
+    border-color: var(--cp-edge-accent);
+    box-shadow:
+      var(--island-shadow),
+      0 0 34px -26px var(--cp-glow-cyan);
+  }
+}
+
+.island {
+  transition:
+    border-color 520ms var(--ease-out-soft),
+    box-shadow 520ms var(--ease-out-soft);
+}
+
+/* Phones and other constrained devices: blurring a live WebGL canvas is the
+   most expensive thing this page could do, so the islands become more opaque
+   instead of more blurred. The depth reading survives; the cost does not. */
+@media (pointer: coarse), (max-width: 767px) {
+  .island {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .island[data-elevation='1'] {
+    --island-surface: color-mix(in oklab, var(--cp-bg-subtle) 97%, transparent);
+  }
+
+  .island[data-elevation='2'] {
+    --island-surface: color-mix(in oklab, var(--cp-bg-elevated) 97%, transparent);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Arrival and drift
+   -------------------------------------------------------------------------- */
+
+@keyframes island-arrive {
+  from {
+    opacity: 0;
+    --island-rise: 14px;
+  }
+
+  to {
+    opacity: 1;
+    --island-rise: 0px;
+  }
+}
+
+/* The rail arrives after the primary column, in reading order. */
+.home-body__rail > .island:nth-child(1) {
+  --island-order: 2;
+}
+
+.home-body__rail > .island:nth-child(2) {
+  --island-order: 3;
+}
+
+.home-body__rail > .island:nth-child(3) {
+  --island-order: 4;
+}
+
+.home-body__rail > .island:nth-child(4) {
+  --island-order: 5;
+}
+
+.home-body__rail > .island:nth-child(5) {
+  --island-order: 6;
+}
+
+/* The pointer response is switched off where it cannot be felt or would be
+   unwanted: touch devices, reduced motion, and narrow screens where the islands
+   are stacked and the pointer is a finger. */
+@media (hover: none), (pointer: coarse), (max-width: 1199px) {
+  .island {
+    --island-depth: 0px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island {
+    animation: none;
+    --island-depth: 0px;
+  }
+
+  .depth-field__fallback .depth-field__ridge {
+    animation: none;
+  }
+}
+
+/* Print: the environment is a screen effect; islands become plain panels. */
+@media print {
+  .depth-field {
+    display: none;
+  }
+
+  .island {
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: transparent;
+  }
+}

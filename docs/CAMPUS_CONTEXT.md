@@ -114,7 +114,7 @@ Status: ✅ present and statically consistent (no live database, so runtime is n
 | GIFs | `components/media/GifPicker.js` (also exports `GifAttachment`) | none | `lib/giphy/index.js`; `app/api/giphy/search/route.js` | 005, 007 (validated GIF references) | ❓ not exercised (no key) |
 | Achievements and reputation | none (no UI reads achievements) | none | `profiles.js` (reputation counters) | 008 (`ratings`), 009 (`achievements`), 012 (`evaluate_achievements`) | ❌ backend only; definitions in `lib/constants.js` |
 | Random Chat | none (no route, nav or components) | `lib/actions/random.js`, **no importers** | `lib/data/moderation.js` (`listRandomReports`) | 010, 022, 023 (kept for review) | ❌ retired |
-| Launch intro, theme, atmosphere | `app/(app)/home/layout.js`, `components/layout/HomeLaunchGate.js`, `components/ui/CampusIntroLoader.js`, `components/atmosphere/ParticleField.js` | none | `lib/intro.js`, `lib/theme.js` | none | ✅ honours `prefers-reduced-motion` 🔎 |
+| Launch intro, theme, atmosphere | `app/(app)/home/layout.js`, `components/layout/HomeLaunchGate.js`, `components/ui/CampusIntroLoader.js`, `components/atmosphere/DepthField.js` (Home environment), `components/atmosphere/NightSky.js` (shell sky) | none | `lib/intro.js`, `lib/theme.js` | none | ✅ honours `prefers-reduced-motion` 🔎 |
 
 ---
 
