@@ -427,10 +427,36 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /* Horizontal containment for decorative bleed.
+       Several ambient layers are designed to run past the column they belong
+       to — the Home aurora is `-20%` a side of its band, the bottom nav is
+       inset from a fixed box, the cinematic intro stages are full-bleed. Where
+       a bleed has nothing bounding it, the *document* grows instead: at 390px
+       the Home glow measured 501px and made every phone screen scrollable
+       sideways by 56px, and at 1440px the same glow made the desktop page
+       200px wider than the window. `clip` (not `hidden`) is the fix that keeps
+       the design: the layer is still painted right up to the edge of the
+       viewport, it simply stops contributing scrollable overflow — and because
+       `clip` does not create a scroll container, `position: sticky` still
+       sticks to the document and `position: fixed` layers still take the
+       viewport as their containing block.
+
+       It goes on `html` AND `body`, because neither alone is enough: with the
+       root's overflow left `visible`, a clipped body is propagated to the
+       viewport and its own box goes back to `visible` (measured: `scrollWidth`
+       stayed 1640/446), and with only the root clipped the body still measured
+       200px of scrollable overflow on a 1440px window. The pair clamps it
+       (1440/390, no horizontal scroll) while leaving the sticky header at the
+       top and the fixed depth field at the full viewport. `hidden` was measured
+       too and rejected: it does clamp, but it turns `body` into a scroll
+       container and the sticky header scrolled away with the page
+       (`top: -815`). `clip` creates no scroll container, so nothing moves. */
+    overflow-x: clip;
     background-color: var(--c-canvas);
   }
 
   body {
+    overflow-x: clip;
     background-color: var(--c-canvas);
     /* A single, whisper-soft warm wash at the top of the canvas: identity
        without a "gradient background". */

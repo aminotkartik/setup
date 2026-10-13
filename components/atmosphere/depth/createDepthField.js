@@ -25,14 +25,35 @@
  * Colour comes from the design tokens on the container element (`.depth-field`
  * in app/styles/islands.css), so light and dark themes are the same scene with
  * the tokens' own values — no second palette is invented in JavaScript. The
- * renderer writes colour through unchanged (`LinearSRGBColorSpace` output) so a
- * token's value lands on screen exactly as the CSS beside it does.
+ * renderer writes colour through unchanged (`LinearSRGBColorSpace` output), so
+ * the palette is fed to the shader in display values (`paintedColor` undoes
+ * three's sRGB→linear conversion) and a token lands on screen exactly as the CSS
+ * beside it does.
  */
 
 import * as THREE from 'three';
 
-/** Keeps the field well below the islands' contrast budget. */
+/**
+ * Keeps the field well below the islands' contrast budget.
+ *
+ * The daylight treatment is deliberately weaker than the night one: on paper the
+ * contours are *darker* than the ground, so a line passing behind dark text eats
+ * its contrast, where at night a cyan line behind light text adds some.
+ *
+ * These stay at the light theme's original values. A contrast audit of the Home
+ * composer label — muted text sitting directly on the field — read 4.56:1, and
+ * lowering the strength did not help it (4.43 at 0.17, 4.34 at 0.11), because
+ * the lines were not the cause: the field was painting its whole palette ~15%
+ * too dark (see `paintedColor` below). With that conversion fixed the original
+ * 0.26 measures 5.72:1, so the cartographic reading is kept as designed.
+ */
 const LINE_STRENGTH = { dark: 0.62, light: 0.26 };
+
+/** How fast the field dissolves into the page background, per treatment. */
+const FOG_DENSITY = { dark: 0.0086, light: 0.0105 };
+
+/** The two treatment constants, keyed by the palette the probes resolved. */
+const treatment = (palette) => (palette.dark ? 'dark' : 'light');
 
 /**
  * Device budget. A phone is not asked to shade a desktop's worth of geometry.
@@ -76,6 +97,18 @@ function paintedColor(element, property) {
   } catch {
     return null;
   }
+  /* Undo the sRGB→linear conversion `setStyle` just did.
+     Three's colour management converts a CSS colour into the linear working
+     space, and nothing downstream converts it back — this renderer outputs
+     `LinearSRGBColorSpace`, so the shader's numbers reach the framebuffer
+     unchanged and the browser shows them as sRGB. A token that had been
+     converted therefore paints *darker* than it declares, and the daylight
+     `--cp-depth-base` did: measured on the real page it came out around 15% down
+     (a pale paper blue arriving as a distinctly heavier blue-grey), which is
+     what pushed the Home composer label to 4.34:1 — below AA. Converting back
+     makes the uniform carry exactly the value the token names, so the canvas
+     paints the colour the CSS beside it paints. */
+  if (THREE.ColorManagement?.enabled) color.convertLinearToSRGB();
   return color;
 }
 
@@ -278,8 +311,8 @@ export function createDepthField(container, { reducedMotion = false, onContextLo
       uBase: { value: palette.base },
       uLineA: { value: palette.lineA },
       uLineB: { value: palette.lineB },
-      uLineStrength: { value: palette.dark ? LINE_STRENGTH.dark : LINE_STRENGTH.light },
-      uFogDensity: { value: palette.dark ? 0.0086 : 0.0105 },
+      uLineStrength: { value: LINE_STRENGTH[treatment(palette)] },
+      uFogDensity: { value: FOG_DENSITY[treatment(palette)] },
       uHorizon: { value: 128 },
       uHorizonWidth: { value: 62 },
     },
@@ -399,8 +432,8 @@ export function createDepthField(container, { reducedMotion = false, onContextLo
     material.uniforms.uBase.value.copy(next.base);
     material.uniforms.uLineA.value.copy(next.lineA);
     material.uniforms.uLineB.value.copy(next.lineB);
-    material.uniforms.uLineStrength.value = palette.dark ? LINE_STRENGTH.dark : LINE_STRENGTH.light;
-    material.uniforms.uFogDensity.value = palette.dark ? 0.0086 : 0.0105;
+    material.uniforms.uLineStrength.value = LINE_STRENGTH[treatment(palette)];
+    material.uniforms.uFogDensity.value = FOG_DENSITY[treatment(palette)];
     if (reducedMotion) render();
   }
 

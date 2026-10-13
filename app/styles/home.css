@@ -35,7 +35,17 @@
 }
 
 /* A single soft light behind the greeting — the only place on the page where
-   the accent colour is allowed to fill space. */
+   the accent colour is allowed to fill space.
+
+   It bleeds well past the greeting band on purpose (`-20%` a side, `-30%` above
+   it), which is what makes it read as light in the room rather than as a panel.
+   That bleed used to be *scrollable*: at 390px the pulse is 358px wide, so the
+   glow measured 501px and pushed the document 56px wider than the phone; at
+   1440px it pushed it 200px wider. The `overflow-x: clip` pair on `html`/`body`
+   in globals.css keeps every decorative layer inside the document's scrollable
+   overflow, so the glow still reaches the screen edge and the page still cannot
+   be dragged sideways. Nothing about the composition changed — only what the
+   browser is allowed to scroll. */
 .home-pulse__aurora {
   position: absolute;
   z-index: 0;
