@@ -416,15 +416,25 @@
 
 /* The pointer response is switched off where it cannot be felt or would be
    unwanted: touch devices, reduced motion, and narrow screens where the islands
-   are stacked and the pointer is a finger. */
+   are stacked and the pointer is a finger.
+
+   The elevation rules above are `.island[data-elevation='1'|'2']`, i.e. two
+   classes' worth of specificity, so a bare `.island` here would lose to them
+   and leave the depth switched *on* — which is exactly what a mobile audit
+   caught (a 390px phone reporting `--island-depth: 2px`). The zeroing rules
+   therefore repeat the elevation selectors. */
 @media (hover: none), (pointer: coarse), (max-width: 1199px) {
-  .island {
+  .island,
+  .island[data-elevation='1'],
+  .island[data-elevation='2'] {
     --island-depth: 0px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .island {
+  .island,
+  .island[data-elevation='1'],
+  .island[data-elevation='2'] {
     animation: none;
     --island-depth: 0px;
   }
