@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import campusLogo from '@/logo.jpeg';
 import pccoeCrest from '@/public/brand/pccoe-crest.webp';
 import { Icon } from '@/components/ui/icons';
 import { ROUTES } from '@/lib/constants';
@@ -12,17 +13,18 @@ import { cn } from '@/lib/utils';
  * mark never drifts between screens.
  *
  * ── Identity vs context ───────────────────────────────────────────────────
- * The product mark is Campus+ (the plus tile below) — it is the app identity
- * and the app icon. The college crest is a separate slot with its own rules
- * (see `CollegeCrest`): it says who the product is *for*, never what it is.
+ * The product mark is the supplied Campus+ artwork in `logo.jpeg`. The college
+ * crest is a separate slot with its own rules (see `CollegeCrest`): it says
+ * who the product is *for*, never what it is.
  *
- * Swapping the mark: put the asset in `public/brand/`, point `LOGO_SRC` at it
- * and every placement follows, at three responsive sizes, with the original
- * proportions preserved (`object-fit: contain`). `LOGO_PLATE` renders a raster
- * mark on a soft white plate when the artwork ships on its own background.
+ * Swapping the mark: statically import the asset and point `LOGO_SRC` at its
+ * `src`. Every placement follows, at three responsive sizes, with the original
+ * proportions preserved (`object-fit: contain`). Static imports are served
+ * from /_next/static/media so the logo also works before sign-in.
+ * `LOGO_PLATE` optionally renders the artwork on a soft white plate.
  */
 
-export const LOGO_SRC = null;
+export const LOGO_SRC = campusLogo.src;
 export const LOGO_PLATE = false;
 
 /**
