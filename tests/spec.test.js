@@ -149,6 +149,7 @@ describe('secrets never reach the browser bundle (spec §74, §93)', () => {
     // NEXT_PUBLIC_ variable would be shipped to the browser.
     expect([...publicVars].sort()).toEqual([
       'NEXT_PUBLIC_COLLEGE_NAME',
+      'NEXT_PUBLIC_LOCAL_PREVIEW',
       'NEXT_PUBLIC_PLATFORM_NAME',
       'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
       'NEXT_PUBLIC_SUPABASE_URL',
