@@ -7,6 +7,7 @@ import { getNotice } from '@/lib/data/campus';
 import { UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Badge, Notice, Card } from '@/components/ui';
 import { ReportDialog } from '@/components/social/ReportDialog';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -51,7 +52,7 @@ export default async function NoticePage({ params }) {
       ) : null}
 
       <Card className="flex flex-col gap-3 p-4">
-        <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{notice.body}</p>
+        <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={notice.body} /></p>
         <p className="text-2xs text-muted">
           Published {formatDateTime(notice.published_at || notice.created_at)}
           {notice.updated_by ? ' · edited by staff' : ''}

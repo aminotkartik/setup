@@ -7,6 +7,7 @@ import { UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Badge, Notice, Card, StaffDot, LinkButton } from '@/components/ui';
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { formatDate } from '@/lib/utils';
 
@@ -51,7 +52,7 @@ export default async function ResourcePage({ params }) {
 
       <Card className="flex flex-col gap-3 p-4">
         {resource.description ? (
-          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{resource.description}</p>
+          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={resource.description} /></p>
         ) : null}
         <p className="text-[0.8125rem]">
           <ExternalLink url={resource.url} className="underline">

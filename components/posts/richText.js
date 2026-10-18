@@ -1,40 +1,20 @@
-import Link from 'next/link';
-import { ROUTES } from '@/lib/constants';
+import { renderLinkifiedText } from '@/components/content/LinkifiedText';
 
 /**
- * Render stored text as plain text with linked @mentions.
+ * Render stored post/comment text with linked @mentions and URLs.
  *
- * User text is never interpreted as HTML (spec §65): it is split into strings
- * and React elements, so a post containing markup renders that markup
- * literally. Only @username tokens that match the platform's username shape
- * become links.
+ * User text is never interpreted as HTML (spec §65): lib/linkify.js splits it
+ * into segments that become strings and React elements, so markup renders
+ * literally. @username tokens that match the platform's username shape link
+ * to profiles; http(s)/www. URLs link out safely (see LinkifiedText). URLs
+ * win over mentions, so an @ inside a URL path is not turned into a profile.
  */
-const MENTION = /(^|[^\w@])@([a-z0-9_]{3,24})\b/g;
-
 export function renderTextWithMentions(text) {
-  const source = String(text ?? '');
-  if (!source) return null;
-
-  const nodes = [];
-  let lastIndex = 0;
-  MENTION.lastIndex = 0;
-  let match;
-
-  while ((match = MENTION.exec(source)) !== null) {
-    const [full, prefix, username] = match;
-    const start = match.index + prefix.length;
-    if (start > lastIndex) nodes.push(source.slice(lastIndex, start));
-    nodes.push(
-      <Link key={`${username}-${start}`} href={ROUTES.user(username)} className="mention">
-        @{username}
-      </Link>,
-    );
-    lastIndex = start + full.length - prefix.length;
-  }
-
-  if (lastIndex < source.length) nodes.push(source.slice(lastIndex));
-  return nodes;
+  return renderLinkifiedText(text, { mentions: true });
 }
+
+/** Same renderer under its general name, for non-post surfaces. */
+export const renderRichText = renderTextWithMentions;
 
 /** Plain-text list item rendering (technologies, skills) without HTML. */
 export function TextList({ items, className = '' }) {

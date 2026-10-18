@@ -10,6 +10,22 @@ import { PostActions } from '@/components/posts/PostActions';
 import { PollBlock } from '@/components/posts/PollBlock';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { renderTextWithMentions } from '@/components/posts/richText';
+import { segmentTextLinks } from '@/lib/linkify';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
+
+/** Feed truncation that never cuts through a URL. */
+function truncateFeedBody(text) {
+  const source = String(text ?? '');
+  if (source.length <= 420) return source;
+  let offset = 0;
+  for (const segment of segmentTextLinks(source)) {
+    if (segment.type === 'link' && offset < 420 && offset + segment.value.length > 420) {
+      return `${source.slice(0, offset).trimEnd()}…`;
+    }
+    offset += segment.value.length;
+  }
+  return truncate(source, 420);
+}
 
 /**
  * The one post card — posts, discussions and polls.
@@ -39,7 +55,10 @@ export function PostCard({
   const isOwner = currentUserId && post.author_id === currentUserId;
   const isDeleted = post.status === 'deleted';
   const isHidden = post.status === 'hidden' || post.status === 'removed';
-  const body = detail ? post.body : truncate(post.body, 420);
+  // Truncate for the feed without slicing a URL in half (see ContentCard):
+  // if the cut lands inside a link, end the preview just before it.
+  const body = detail ? post.body : truncateFeedBody(post.body);
+
   const commentCount = post.comment_count ?? 0;
   const kindLabel = post.kind === 'discussion' ? 'Discussion' : post.kind === 'poll' ? 'Poll' : null;
 
@@ -81,7 +100,7 @@ export function PostCard({
       <div className="mt-3">
         {post.kind !== 'post' && post.title ? (
           <h2 className={stream ? 'stream-card__title' : 't-card leading-snug'}>
-            {detail ? post.title : <Link href={ROUTES.post(post.id)}>{post.title}</Link>}
+            {detail ? <LinkifiedText text={post.title} /> : <Link href={ROUTES.post(post.id)}>{post.title}</Link>}
           </h2>
         ) : null}
 

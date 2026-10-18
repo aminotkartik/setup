@@ -4,6 +4,7 @@ import { listUtility, UTILITY_KEYS } from '@/lib/data/campus';
 import { ROUTES } from '@/lib/constants';
 import { PageHeader, EmptyState, Notice, Card, Badge } from '@/components/ui';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export const metadata = { title: 'Campus utilities' };
@@ -103,16 +104,16 @@ export default async function UtilitiesPage({ searchParams }) {
               {item.audience ? <Badge>{item.audience}</Badge> : null}
               {item.service_status ? <Badge>{item.service_status}</Badge> : null}
             </div>
-            {item.description ? <p className="text-[0.8125rem] leading-relaxed text-muted">{item.description}</p> : null}
-            {item.menu_text ? <p className="whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-muted">{item.menu_text}</p> : null}
-            {item.offers ? <p className="text-[0.8125rem] text-muted">Offers: {item.offers}</p> : null}
+            {item.description ? <p className="user-text text-[0.8125rem] leading-relaxed text-muted"><LinkifiedText text={item.description} /></p> : null}
+            {item.menu_text ? <p className="user-text whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-muted"><LinkifiedText text={item.menu_text} /></p> : null}
+            {item.offers ? <p className="user-text text-[0.8125rem] text-muted">Offers: <LinkifiedText text={item.offers} /></p> : null}
             <dl className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
               {item.block ? <dd>{item.block}</dd> : null}
               {item.location ? <dd>{item.location}</dd> : null}
               {item.hours ? <dd>{item.hours}</dd> : null}
               {item.timings ? <dd>{item.timings}</dd> : null}
               {item.pickup_locations ? <dd>Pickup: {item.pickup_locations}</dd> : null}
-              {item.contact_info ? <dd>{item.contact_info}</dd> : null}
+              {item.contact_info ? <dd><LinkifiedText text={item.contact_info} /></dd> : null}
               {item.availability ? <dd>{item.availability}</dd> : null}
               {item.purpose ? <dd>{item.purpose}</dd> : null}
               {item.starts_on ? <dd>{formatDate(item.starts_on)}{item.ends_on ? ` – ${formatDate(item.ends_on)}` : ''}</dd> : null}

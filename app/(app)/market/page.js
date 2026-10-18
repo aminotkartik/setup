@@ -6,6 +6,7 @@ import { listListings, listGigs, listDeals, listCategories, getMarketSummary } f
 import { ROUTES } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader, SectionHeader, TiltCard } from '@/components/ui';
 import { ContentCard } from '@/components/content/ContentCard';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate, formatPrice } from '@/lib/utils';
 
 export const metadata = { title: 'Market' };
@@ -141,7 +142,7 @@ export default async function MarketPage({ searchParams }) {
                 </div>
                 <h3 className="t-section mt-2">{featuredListing.title}</h3>
                 {featuredListing.description ? (
-                  <p className="t-secondary mt-1.5 max-w-xl">{featuredListing.description}</p>
+                  <p className="user-text t-secondary mt-1.5 max-w-xl"><LinkifiedText text={featuredListing.description} /></p>
                 ) : null}
                 {featuredSeller ? <p className="t-caption mt-2">Listed by @{featuredSeller.username}</p> : null}
               </div>

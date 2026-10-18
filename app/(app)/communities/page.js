@@ -6,6 +6,7 @@ import { listCommunities } from '@/lib/data/campus';
 import { ROUTES } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader, SectionHeader, TiltCard } from '@/components/ui';
 import { ContentCard } from '@/components/content/ContentCard';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 export const metadata = { title: 'Communities' };
 
@@ -125,7 +126,7 @@ export default async function CommunitiesPage({ searchParams }) {
                 <p className="t-label">{featured.kind === 'club' ? 'Club' : featured.kind === 'study_group' ? 'Study group' : 'Community'}</p>
                 <h3 className="t-section mt-1">{featured.name}</h3>
                 {featured.description ? (
-                  <p className="t-secondary mt-1.5 max-w-xl">{featured.description}</p>
+                  <p className="user-text t-secondary mt-1.5 max-w-xl"><LinkifiedText text={featured.description} /></p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge tone="accent">{featured.member_count} members</Badge>

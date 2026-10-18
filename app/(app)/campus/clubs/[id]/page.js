@@ -17,6 +17,7 @@ import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { ExternalLink } from '@/components/content/ExternalLink';
 import { ContentCard } from '@/components/content/ContentCard';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -66,9 +67,9 @@ export default async function ClubPage({ params }) {
           {club.subject ? <Badge>{club.subject}</Badge> : null}
           {club.join_policy !== 'open' ? <Badge tone="warning">Approval needed</Badge> : null}
         </div>
-        <p className="user-text text-[0.9375rem] leading-relaxed">{club.description}</p>
-        {club.recruitment_info ? <p className="text-[0.8125rem] text-muted">{club.recruitment_info}</p> : null}
-        {club.contact_info ? <p className="text-[0.8125rem] text-muted">Contact: {club.contact_info}</p> : null}
+        <p className="user-text text-[0.9375rem] leading-relaxed"><LinkifiedText text={club.description} /></p>
+        {club.recruitment_info ? <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={club.recruitment_info} /></p> : null}
+        {club.contact_info ? <p className="user-text text-[0.8125rem] text-muted">Contact: <LinkifiedText text={club.contact_info} /></p> : null}
         {club.external_url ? (
           <p className="text-[0.8125rem]">
             <ExternalLink url={club.external_url} className="underline">

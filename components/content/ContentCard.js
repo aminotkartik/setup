@@ -2,6 +2,27 @@ import Link from 'next/link';
 import { Badge, OfficialBadge } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { cn, relativeTime, truncate } from '@/lib/utils';
+import { containsLinkableUrl, segmentTextLinks } from '@/lib/linkify';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
+
+/**
+ * Truncate for a card without slicing a URL in half: if the cut would land
+ * inside a link, end the preview just before that link instead of showing a
+ * partial address that links somewhere the author never wrote.
+ */
+function truncateForCard(text, limit) {
+  const source = String(text ?? '');
+  const truncated = truncate(source, limit);
+  if (source.length <= limit) return truncated;
+  let offset = 0;
+  for (const segment of segmentTextLinks(source)) {
+    if (segment.type === 'link' && offset < limit && offset + segment.value.length > limit) {
+      return `${source.slice(0, offset).trimEnd()}…`;
+    }
+    offset += segment.value.length;
+  }
+  return truncated;
+}
 
 /**
  * One card for every non-post piece of campus content: notices, events, clubs,
@@ -50,6 +71,14 @@ export function ContentCard({
         stamp: 'shrink-0 self-center text-right',
       };
 
+  const displayDescription = description ? truncateForCard(description, stream ? 260 : 220) : null;
+  // A clickable card is one big <Link>; a URL inside its text can therefore
+  // never be a nested <a>. When the text carries a link, the card renders as
+  // an article and only the title navigates to the detail page, leaving the
+  // inline link free to open externally (RichTextLink also stops bubbling).
+  const textHasLink =
+    containsLinkableUrl(displayDescription) || (typeof title === 'string' && containsLinkableUrl(title));
+
   const inner = (
     <>
       {icon ? (
@@ -59,7 +88,17 @@ export function ContentCard({
       ) : null}
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <span className={skin.title}>{title}</span>
+          <span className={skin.title}>
+            {href && textHasLink && !(typeof title === 'string' && containsLinkableUrl(title)) ? (
+              <Link href={href} className="hover:underline">
+                {title}
+              </Link>
+            ) : typeof title === 'string' ? (
+              <LinkifiedText text={title} />
+            ) : (
+              title
+            )}
+          </span>
           {official ? <OfficialBadge /> : null}
           {!official && community ? <Badge>Community submitted</Badge> : null}
           {badges.map((badge) => (
@@ -68,7 +107,11 @@ export function ContentCard({
             </Badge>
           ))}
         </span>
-        {description ? <span className={skin.body}>{truncate(description, stream ? 260 : 220)}</span> : null}
+        {displayDescription ? (
+          <span className={skin.body}>
+            <LinkifiedText text={displayDescription} />
+          </span>
+        ) : null}
         {meta.filter(Boolean).length ? (
           <span className={stream ? skin.meta : `${skin.meta} block`}>{meta.filter(Boolean).join(' · ')}</span>
         ) : null}
@@ -83,7 +126,7 @@ export function ContentCard({
     </>
   );
 
-  if (!href) {
+  if (!href || textHasLink) {
     return <article className={skin.root}>{inner}</article>;
   }
 

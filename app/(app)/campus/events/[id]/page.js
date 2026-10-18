@@ -13,6 +13,7 @@ import { categoryLabel } from '@/components/campus/eventMeta';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate, formatDateTime, formatTime } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -100,7 +101,7 @@ export default async function EventPage({ params }) {
 
       <Card className="flex flex-col gap-3 p-4">
         {event.description ? (
-          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{event.description}</p>
+          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={event.description} /></p>
         ) : null}
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
           <div className="flex gap-1">
@@ -126,7 +127,7 @@ export default async function EventPage({ params }) {
             </div>
           ) : null}
         </dl>
-        {event.registration_info ? <p className="text-[0.8125rem] text-muted">{event.registration_info}</p> : null}
+        {event.registration_info ? <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={event.registration_info} /></p> : null}
         {event.registration_url ? (
           <p className="text-[0.8125rem]">
             Registration:{' '}

@@ -2,6 +2,16 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 export default defineConfig({
+  // The app writes JSX in .js files (the Next.js convention used throughout
+  // app/ and components/). Teach the test transform the same thing, scoped to
+  // components so component-rendering tests can import them; pure lib modules
+  // keep the plain JS loader.
+  oxc: {
+    lang: 'jsx',
+    jsx: { runtime: 'automatic' },
+    include: /components\/.*\.js$/,
+    exclude: [],
+  },
   test: {
     environment: 'node',
     include: ['tests/**/*.test.{js,mjs}'],

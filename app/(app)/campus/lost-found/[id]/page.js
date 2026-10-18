@@ -5,6 +5,7 @@ import { can, toActor } from '@/lib/permissions/authorization';
 import { getLostFound } from '@/lib/data/campus';
 import { PageHeader, Notice, Badge, Card } from '@/components/ui';
 import { PostActionsRow } from '@/components/campus/PostActionsRow';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate, formatTime } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 
@@ -56,7 +57,7 @@ export default async function LostFoundDetailPage({ params }) {
       </div>
 
       <Card className="flex flex-col gap-3 p-5">
-        <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-ink">{item.description}</p>
+        <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-ink"><LinkifiedText text={item.description} /></p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[0.8125rem]">
           <dt className="text-muted">Where</dt>
           <dd className="text-ink">{item.location || 'Not given'}</dd>
