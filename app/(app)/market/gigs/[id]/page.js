@@ -9,6 +9,7 @@ import { PageHeader, Badge, Notice, Card, StaffDot } from '@/components/ui';
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -54,7 +55,7 @@ export default async function GigPage({ params }) {
           {gig.category ? <Badge>{gig.category}</Badge> : null}
           {gig.status !== 'published' ? <Badge tone="danger">{gig.status}</Badge> : null}
         </div>
-        <p className="user-text text-[0.9375rem] leading-relaxed">{gig.description}</p>
+        <p className="user-text text-[0.9375rem] leading-relaxed"><LinkifiedText text={gig.description} mentions /></p>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
           <div className="flex gap-1">
             <dt>Posted</dt>

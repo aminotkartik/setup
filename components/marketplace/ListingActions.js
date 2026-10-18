@@ -22,6 +22,7 @@ import {
 } from '@/lib/actions/marketplace';
 import { startConversation } from '@/lib/actions/messaging';
 import { ROUTES } from '@/lib/constants';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 export function ListingActions({
   listingId,
@@ -139,7 +140,7 @@ export function ListingActions({
 
       {note ? (
         <Notice tone="success" icon="check">
-          Seller&apos;s note: {note}
+          Seller&apos;s note: <LinkifiedText text={note} />
           {sellerUsername ? (
             <>
               {' '}

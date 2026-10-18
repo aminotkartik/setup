@@ -9,6 +9,7 @@ import { IdentityLine } from '@/components/identity/IdentityLine';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { StudyPostManage } from '@/components/study/StudyPostManage';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { availabilityLabel, modeLabel, purposeLabel } from '@/components/study/studyMeta';
 import { formatDate } from '@/lib/utils';
 
@@ -70,7 +71,7 @@ export default async function StudyPostPage({ params }) {
           isStaff={creator?.is_staff === true}
           timestamp={post.created_at}
         />
-        <p className="user-text mt-3 whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{post.description}</p>
+        <p className="user-text mt-3 whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={post.description} mentions /></p>
         <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
           <div className="flex gap-1"><dt>Subject</dt><dd className="text-ink">{post.subject}</dd></div>
           {post.branch ? <div className="flex gap-1"><dt>Branch</dt><dd>{post.branch}</dd></div> : null}

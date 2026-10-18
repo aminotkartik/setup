@@ -7,6 +7,7 @@ import { getPostsByAuthor } from '@/lib/data/feed';
 import { ROUTES } from '@/lib/constants';
 import { PageHeader, LinkButton, EmptyState, Badge, Card, IdentityMark, StaffDot, Notice, TiltCard } from '@/components/ui';
 import { PostCard } from '@/components/posts/PostCard';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export const metadata = { title: 'Your profile' };
@@ -55,7 +56,7 @@ export default async function ProfilePage() {
               <span className="truncate">{name}</span>
               {showsRoleBadge(actor) ? <StaffDot label="Campus+ staff" /> : null}
             </h2>
-            {profile.bio ? <p className="user-text mt-2 text-[0.9375rem] leading-relaxed">{profile.bio}</p> : (
+            {profile.bio ? <p className="user-text mt-2 text-[0.9375rem] leading-relaxed"><LinkifiedText text={profile.bio} mentions /></p> : (
               <p className="mt-2 text-[0.8125rem] text-muted">No bio yet. Add one in settings.</p>
             )}
             <dl className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-muted">

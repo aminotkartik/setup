@@ -21,6 +21,7 @@ import { getBrowserClient, isBrowserConfigured } from '@/lib/supabase/client';
 import { sendMessage, editMessage, deleteMessage, markConversationRead } from '@/lib/actions/messaging';
 import { cn, relativeTime } from '@/lib/utils';
 import { LIMITS } from '@/lib/constants';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 function mergeMessages(current, incoming) {
   const byId = new Map(current.map((message) => [message.id, message]));
@@ -210,7 +211,7 @@ export function ChatThread({
                     <p className="text-[0.8125rem] italic text-muted">This message was deleted.</p>
                   ) : (
                     <>
-                      {message.body ? <p className="user-text text-[0.9375rem] leading-relaxed">{message.body}</p> : null}
+                      {message.body ? <p className="user-text text-[0.9375rem] leading-relaxed"><LinkifiedText text={message.body} mentions /></p> : null}
                       {message.gif?.url ? <GifAttachment gif={message.gif} className="mt-2 max-w-[14rem]" /> : null}
                     </>
                   )}
