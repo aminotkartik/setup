@@ -15,6 +15,7 @@ import { ROUTES, UUID_REGEX, PAGE_SIZE } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
 import { ModerationActions, ResolveReportForm, MarketplaceReviewActions, RandomReportActions } from '@/components/moderation/ModerationPanels';
 import { formatDateTime, relativeTime } from '@/lib/utils';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 export const metadata = { title: 'Moderation' };
 
@@ -114,7 +115,7 @@ export default async function ModeratorPage({ searchParams }) {
                 <p className="text-[0.875rem] font-medium">
                   {report.summary || (report.random_session_id ? 'Random session' : `Target ${report.target_id}`)}
                 </p>
-                {report.details ? <p className="mt-1 text-[0.8125rem] text-muted">{report.details}</p> : null}
+                {report.details ? <p className="user-text mt-1 text-[0.8125rem] text-muted"><LinkifiedText text={report.details} /></p> : null}
                 <p className="mt-1 text-2xs text-muted">
                   Reporter @{report.reporter_username || 'unknown'}
                   {report.moderator_url ? (
@@ -162,7 +163,7 @@ export default async function ModeratorPage({ searchParams }) {
                   @{listing.seller_username || 'unknown'} · {listing.is_free ? 'Free' : `₹${listing.price ?? '—'}`}
                 </span>
               </div>
-              <p className="text-[0.8125rem] text-muted">{listing.description}</p>
+              <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={listing.description} /></p>
               <div className="flex flex-wrap items-center gap-3">
                 <MarketplaceReviewActions listingId={listing.id} currentStatus={listing.status} />
                 <Link href={ROUTES.listing(listing.id)} className="text-2xs underline hover:text-ink">
@@ -180,7 +181,7 @@ export default async function ModeratorPage({ searchParams }) {
                 <span className="text-[0.875rem] font-medium">{listing.title}</span>
                 <span className="text-2xs text-muted">@{listing.seller_username || 'unknown'}</span>
               </div>
-              {listing.moderation_reason ? <p className="text-2xs text-muted">Reason: {listing.moderation_reason}</p> : null}
+              {listing.moderation_reason ? <p className="user-text text-2xs text-muted">Reason: <LinkifiedText text={listing.moderation_reason} /></p> : null}
               <MarketplaceReviewActions listingId={listing.id} currentStatus={listing.status} />
             </Card>
           ))}
@@ -203,7 +204,7 @@ export default async function ModeratorPage({ searchParams }) {
                 <Badge>{report.reason}</Badge>
                 <span className="text-2xs text-muted">Reported {relativeTime(report.created_at)}</span>
               </div>
-              {report.details ? <p className="text-[0.8125rem] text-muted">{report.details}</p> : null}
+              {report.details ? <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={report.details} /></p> : null}
               <p className="text-2xs text-muted">Session {report.session_id}</p>
               <RandomReportActions reportId={report.id} />
             </Card>
@@ -219,7 +220,7 @@ export default async function ModeratorPage({ searchParams }) {
               <p className="text-[0.8125rem]">
                 {focused.summary || focused.target_id} · {focused.reason} · {focused.status}
               </p>
-              {focused.details ? <p className="text-2xs text-muted">{focused.details}</p> : null}
+              {focused.details ? <p className="user-text text-2xs text-muted"><LinkifiedText text={focused.details} /></p> : null}
               <ModerationActions
                 targetType={focused.target_type}
                 targetRef={focused.target_id}

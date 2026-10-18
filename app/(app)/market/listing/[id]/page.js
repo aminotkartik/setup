@@ -15,6 +15,7 @@ import { PageHeader, Badge, Notice, LinkButton, StaffDot, Card } from '@/compone
 import { IdentityLine } from '@/components/identity/IdentityLine';
 import { ListingActions } from '@/components/marketplace/ListingActions';
 import { ReportDialog } from '@/components/social/ReportDialog';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 /**
@@ -80,7 +81,7 @@ export default async function ListingPage({ params }) {
           {listing.is_official ? <Badge tone="accent">Official</Badge> : null}
         </div>
 
-        <p className="user-text text-[0.9375rem] leading-relaxed">{listing.description}</p>
+        <p className="user-text text-[0.9375rem] leading-relaxed"><LinkifiedText text={listing.description} mentions /></p>
 
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
           <div className="flex gap-1">
@@ -107,7 +108,7 @@ export default async function ListingPage({ params }) {
       ) : null}
       {listing.status === 'hidden' || listing.status === 'removed' || listing.status === 'rejected' ? (
         <Notice tone="warning" icon="flag">
-          This listing was {listing.status} by a moderator{listing.moderation_reason ? `: ${listing.moderation_reason}` : '.'}
+          This listing was {listing.status} by a moderator{listing.moderation_reason ? <>{': '}<LinkifiedText text={listing.moderation_reason} /></> : '.'}
         </Notice>
       ) : null}
 
@@ -154,7 +155,7 @@ export default async function ListingPage({ params }) {
 
         {rating ? (
           <Notice tone="success">
-            You rated this exchange {rating.score}/5{rating.comment ? ` — “${rating.comment}”` : ''}.
+            You rated this exchange {rating.score}/5{rating.comment ? <> — “<LinkifiedText text={rating.comment} />”</> : ''}.
           </Notice>
         ) : null}
       </Card>

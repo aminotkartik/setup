@@ -9,6 +9,7 @@ import { IdentityLine } from '@/components/identity/IdentityLine';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -51,7 +52,7 @@ export default async function ProjectPage({ params }) {
       </div>
 
       <Card className="flex flex-col gap-3 p-4">
-        <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{project.description}</p>
+        <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={project.description} mentions /></p>
         <div className="flex flex-wrap gap-4 text-[0.8125rem]">
           {project.repo_url ? (
             <ExternalLink url={project.repo_url} className="underline">

@@ -737,6 +737,34 @@
   text-underline-offset: 2px;
 }
 
+/* URLs linkified inside user text (lib/linkify.js). Unlike a mention, a URL
+   must be recognisable before hover — especially on touch, where there is no
+   hover — so it is underlined at rest. --c-accent-ink / --cp-text-accent are
+   light-dark() pairs, so the link keeps readable contrast in both themes. */
+.rich-link {
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  border-radius: var(--radius-xs);
+  overflow-wrap: anywhere;
+}
+
+.rich-link:hover {
+  color: var(--cp-text-accent);
+  text-decoration-thickness: 2px;
+}
+
+.rich-link:visited {
+  color: var(--cp-text-accent);
+}
+
+.mention:focus-visible,
+.rich-link:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
 /* --------------------------------------------------------------------------
    User-authored text
    --------------------------------------------------------------------------

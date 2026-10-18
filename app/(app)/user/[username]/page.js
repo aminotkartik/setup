@@ -9,6 +9,7 @@ import { ROUTES, USERNAME_REGEX } from '@/lib/constants';
 import { Badge, Card, EmptyState, IdentityMark, PageHeader, StaffDot } from '@/components/ui';
 import { ShareButton } from '@/components/social/ShareButton';
 import { PostCard } from '@/components/posts/PostCard';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { ProfileActions } from '@/components/profile/ProfileActions';
 import { formatDate } from '@/lib/utils';
 
@@ -83,7 +84,7 @@ export default async function UserProfilePage({ params }) {
               {profile.is_staff ? <StaffDot label="Campus+ staff" /> : null}
             </h2>
             <p className="mt-0.5 text-[0.8125rem] text-muted">@{profile.username}</p>
-            {profile.bio ? <p className="user-text mt-2 text-[0.9375rem] leading-relaxed">{profile.bio}</p> : null}
+            {profile.bio ? <p className="user-text mt-2 text-[0.9375rem] leading-relaxed"><LinkifiedText text={profile.bio} mentions /></p> : null}
             <dl className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-muted">
               {profile.branch || profile.year ? (
                 <div className="flex items-center gap-1">

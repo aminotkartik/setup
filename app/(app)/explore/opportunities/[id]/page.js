@@ -6,6 +6,7 @@ import { getOpportunity } from '@/lib/data/campus';
 import { OPPORTUNITY_CATEGORIES, UUID_REGEX } from '@/lib/constants';
 import { PageHeader, Badge, Card, Notice } from '@/components/ui';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { formatDate } from '@/lib/utils';
 
@@ -47,7 +48,7 @@ export default async function OpportunityPage({ params }) {
 
       <Card className="flex flex-col gap-3 p-4">
         {opportunity.description ? (
-          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{opportunity.description}</p>
+          <p className="user-text whitespace-pre-wrap text-[0.9375rem] leading-relaxed"><LinkifiedText text={opportunity.description} /></p>
         ) : null}
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted">
           {opportunity.organization ? <dd>{opportunity.organization}</dd> : null}

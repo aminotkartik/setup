@@ -28,6 +28,7 @@ import {
 } from '@/components/admin/AdminPanels';
 import { ModerationActions, ResolveReportForm } from '@/components/moderation/ModerationPanels';
 import { formatDateTime, relativeTime } from '@/lib/utils';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 export const metadata = { title: 'Administration' };
 
@@ -321,7 +322,7 @@ export default async function AdminPage({ searchParams }) {
               <p className="text-[0.875rem] font-medium">
                 {report.summary || (report.random_session_id ? 'Random session' : `Target ${report.target_id}`)}
               </p>
-              {report.details ? <p className="text-[0.8125rem] text-muted">{report.details}</p> : null}
+              {report.details ? <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={report.details} /></p> : null}
               <p className="text-2xs text-muted">
                 Reporter @{report.reporter_username || 'unknown'}
                 {report.moderator_url ? (

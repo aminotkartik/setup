@@ -21,6 +21,7 @@ import { CommunityActions } from '@/components/communities/CommunityActions';
 import { MessageButton } from '@/components/social/MessageButton';
 import { ReportDialog } from '@/components/social/ReportDialog';
 import { ExternalLink } from '@/components/content/ExternalLink';
+import { LinkifiedText } from '@/components/content/LinkifiedText';
 import { formatDate } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
@@ -99,16 +100,16 @@ export default async function CommunityPage({ params }) {
           {community.join_policy !== 'open' ? <Badge tone="warning">Approval needed</Badge> : null}
         </div>
 
-        <p className="user-text text-[0.9375rem] leading-relaxed">{community.description}</p>
+        <p className="user-text text-[0.9375rem] leading-relaxed"><LinkifiedText text={community.description} mentions /></p>
 
         {community.meeting_info ? (
           <p className="flex items-center gap-2 text-[0.8125rem] text-muted">
-            <Icon name="calendar" size={14} /> {community.meeting_info}
+            <Icon name="calendar" size={14} /> <span className="user-text"><LinkifiedText text={community.meeting_info} /></span>
           </p>
         ) : null}
         {community.contact_info ? (
           <p className="flex items-center gap-2 text-[0.8125rem] text-muted">
-            <Icon name="mail" size={14} /> {community.contact_info}
+            <Icon name="mail" size={14} /> <span className="user-text"><LinkifiedText text={community.contact_info} /></span>
           </p>
         ) : null}
         {community.external_url ? (
@@ -119,7 +120,7 @@ export default async function CommunityPage({ params }) {
           </p>
         ) : null}
         {community.recruitment_info ? (
-          <p className="text-[0.8125rem] text-muted">{community.recruitment_info}</p>
+          <p className="user-text text-[0.8125rem] text-muted"><LinkifiedText text={community.recruitment_info} /></p>
         ) : null}
 
         <p className="text-2xs text-muted">Created {formatDate(community.created_at)}</p>
