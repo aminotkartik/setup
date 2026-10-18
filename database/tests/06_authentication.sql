@@ -157,6 +157,21 @@ begin
     (select count(*) from public.username_history where user_id = public.current_profile_id()) = 1,
     'the first claimed username must be recorded in history'
   );
+  perform public.test_assert(
+    (select division from public.profiles where id = public.current_profile_id()) = 'A',
+    'the onboarding division must be stored and retrievable'
+  );
+
+  -- Divisions run A through R: the newest division saves exactly like A did
+  -- (the column is plain text, so this is a storage round-trip, not a schema
+  -- change). This is the same direct profile update Settings performs.
+  update public.profiles
+     set division = 'R'
+   where id = public.current_profile_id();
+  perform public.test_assert(
+    (select division from public.profiles where id = public.current_profile_id()) = 'R',
+    'division R must be stored and retrievable'
+  );
 end;
 $$;
 
