@@ -9,7 +9,7 @@ tracks the cockpit being replaced.
 | Area | State |
 | --- | --- |
 | Cinematic launch intro | ✅ PR #6 — black → emblem → wordmark → tagline → blinds open onto Home; one intro per browser (`campus_intro` cookie); skippable; reduced-motion still frame |
-| Theme system | ✅ Dark default (`lib/theme.js`), one shared store (`components/ui/theme.js`), supplied moon/sun pill toggle everywhere, `'system'` passes through the cookie, no flash |
+| Theme system | ✅ Permanently dark: the one night palette is hard-coded (`data-theme="dark"` in `app/layout.js`, `color-scheme: dark` in `app/globals.css`); no toggle, no cookie, no system following, no flash |
 | Primary button | ✅ Supplied gradient-frame button adapted to warm vibrant blue (`cp-btn-face`), animated frame, hover reveal, active scale `.9`, idle drift |
 | Explore / Delete buttons | ✅ Explore = bright sheen, **hard black label**; Delete stays dedicated destructive |
 | Search | ✅ Supplied pill as scoped `SearchField` (Explore results, feed entry, shell header); search backend untouched |

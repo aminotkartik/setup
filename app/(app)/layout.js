@@ -2,7 +2,6 @@ import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { AppShell } from '@/components/layout/AppShell';
-import { readTheme } from '@/lib/theme';
 
 // Every page in this group depends on the signed-in student, so nothing here is
 // cached: a page rendered for one student must never be served to another.
@@ -22,7 +21,6 @@ export const dynamic = 'force-dynamic';
 export default async function AppLayout({ children }) {
   const user = await requireUser();
   const actor = toActor(user);
-  const theme = await readTheme();
 
   // Unread badge: the count is the recipient's own rows, so RLS does the
   // filtering for us.
@@ -107,7 +105,6 @@ export default async function AppLayout({ children }) {
       canAdmin={canAdmin}
       createItems={createItems}
       paletteActions={paletteActions}
-      theme={theme}
     >
       {children}
     </AppShell>

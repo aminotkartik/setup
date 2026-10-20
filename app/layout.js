@@ -3,7 +3,6 @@ import GalacticIntro from '@/components/layout/GalacticIntro';
 
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
-import { readTheme } from '@/lib/theme';
 
 /* The Campus+ After Dark typefaces, self-hosted from the reference
    repository's assets (aminotkartik/loginpage). They are loaded once, here,
@@ -40,9 +39,10 @@ const microFont = localFont({
  * bottom navigation) is applied per-route group so the sign-in and setup
  * screens can stay deliberately plain.
  *
- * The appearance (light/dark) is stored in a cookie and read here, so the very
- * first paint already has the right palette: no flash of the wrong theme, and
- * no inline bootstrap script. `applyTheme()` keeps the cookie in step.
+ * Campus+ is permanently dark: the root always renders `data-theme="dark"`
+ * with a dark `color-scheme`, so the very first paint is the night palette —
+ * no cookie, saved preference or operating-system setting can select anything
+ * else, and there is never a flash of light.
  *
  * The reading stack prefers Inter (then Geist) and falls back to the platform
  * UI font. Inter is not fetched at build time on purpose: a build that depends
@@ -67,17 +67,13 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f5f1' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1120' },
-  ],
+  // The one Campus+ theme color (--cp-bg-page); it never follows the device.
+  themeColor: '#0b1120',
 };
 
-export default async function RootLayout({ children }) {
-  const theme = await readTheme();
-
+export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme={theme} suppressHydrationWarning>
+    <html lang="en" data-theme="dark">
       <body className={`${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
         <GalacticIntro>{children}</GalacticIntro>
       </body>

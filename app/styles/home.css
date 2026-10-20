@@ -1038,13 +1038,3 @@
   }
 }
 
-/* Light theme: the same composition, but the surfaces lean on paper rather than
-   on glass, and the aurora drops to a whisper. */
-[data-theme='light'] .home-pulse__aurora {
-  opacity: 0.5;
-}
-
-[data-theme='light'] .stream-card {
-  background-image: none;
-  background-color: var(--cp-bg-elevated);
-}

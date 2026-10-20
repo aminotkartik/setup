@@ -7,11 +7,11 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
-import { Dropdown, IdentityMark, MenuLink, StaffDot, ThemeSwitch } from '@/components/ui';
+import { Dropdown, IdentityMark, MenuLink, StaffDot } from '@/components/ui';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { Icon } from '@/components/ui/icons';
 
-export function AccountMenu({ user = null, isStaff = false, theme = 'dark' }) {
+export function AccountMenu({ user = null, isStaff = false }) {
   if (!user) {
     return (
       <Link href="/login" className="btn btn-secondary btn-sm hover:no-underline">
@@ -60,14 +60,6 @@ export function AccountMenu({ user = null, isStaff = false, theme = 'dark' }) {
       <MenuLink href={ROUTES.notifications} icon="bell">
         Notifications
       </MenuLink>
-
-      <div
-        className="mt-1 flex items-center justify-between gap-3 border-t border-line px-3 py-2.5"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span className="text-2xs font-medium text-muted">Appearance</span>
-        <ThemeSwitch theme={theme} />
-      </div>
       <div className="border-t border-line p-1.5" onClick={(e) => e.stopPropagation()}>
         <SignOutButton variant="ghost" />
       </div>

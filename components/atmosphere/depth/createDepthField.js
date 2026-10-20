@@ -426,7 +426,7 @@ export function createDepthField(container, { reducedMotion = false, onContextLo
   if (resizeObserver) resizeObserver.observe(container);
   else window.addEventListener('resize', resize);
 
-  /** Theme changes move `data-theme` on <html>: re-read the resolved tokens. */
+  /** Re-read the resolved palette tokens into the shader (kept for the wrapper's disposal handle). */
   function refreshPalette() {
     palette = readPalette(probes);
     material.uniforms.uBase.value.copy(next.base);
@@ -470,8 +470,8 @@ export function createDepthField(container, { reducedMotion = false, onContextLo
     canvas.remove();
   }
 
-  // `refreshPalette` rides along on `dispose` so the wrapper can follow a theme
-  // change without tearing the scene down and building it again.
+  // `refreshPalette` rides along on `dispose` so the wrapper can re-read the
+  // (permanent dark) palette without tearing the scene down and rebuilding it.
   dispose.refreshPalette = refreshPalette;
   return dispose;
 }

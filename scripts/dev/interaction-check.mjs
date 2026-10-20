@@ -527,14 +527,14 @@ async function main() {
     await context.close();
   }
 
-  /* ── 7. Light theme, via the real application preference ────────────── */
+  /* ── 7. A legacy light-preference cookie is ignored (dark-only app) ─── */
   if (want('theme')) {
     const context = await newContext(browser, 'desktop');
     await context.addCookies([{ name: 'campus_theme', value: 'light', url: BASE }]);
     const page = await context.newPage();
     await page.goto(`${BASE}/home`, { waitUntil: 'networkidle', timeout: 60_000 });
     await page.waitForTimeout(1200);
-    await check('light-theme-preference', async () => {
+    await check('legacy-light-cookie-ignored', async () => {
       const out = await page.evaluate(() => {
         const field = document.querySelector('.depth-field');
         const canvas = field?.querySelector('canvas');
@@ -551,10 +551,10 @@ async function main() {
           fieldState: field?.dataset.state || null,
         };
       });
-      const ok = out.datasetTheme === 'light' && out.canvas;
+      const ok = out.datasetTheme === 'dark' && out.colorScheme === 'dark' && out.canvas;
       return {
         status: ok ? 'ok' : 'warn',
-        detail: `cookie-driven light theme: data-theme=${out.datasetTheme}, color-scheme=${out.colorScheme}, depth-field=${out.fieldState}, --cp-depth-base=${out.depthBase}`,
+        detail: `legacy light cookie present, app still dark: data-theme=${out.datasetTheme}, color-scheme=${out.colorScheme}, depth-field=${out.fieldState}, --cp-depth-base=${out.depthBase}`,
         evidence: out,
       };
     });

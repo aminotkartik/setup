@@ -383,7 +383,7 @@
     inset: 0;
     /* A transformed arc is its own stacking context. Give it an explicit
        layer above the panel reflection so the shine cannot wash out its ink
-       or keyboard outline (especially the dark-blue outline in light mode). */
+       or keyboard outline. */
     z-index: 1;
     transform-origin: calc(var(--wheel-left) + var(--wheel-r) + var(--wheel-option-w) / 2) 50%;
     transform: rotate(var(--wheel-current-spin));

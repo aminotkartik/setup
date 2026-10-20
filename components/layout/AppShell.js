@@ -8,7 +8,7 @@ import { CommandPaletteHost } from '@/components/search/CommandPalette';
  * The one application frame.
  *
  * Desktop: a light rail with the brand, the Create action and navigation, plus
- * a glass header carrying search, notifications, appearance and the account.
+ * a glass header carrying search, notifications and the account.
  * Mobile: a compact glass header and the bottom tab bar, with everything else
  * behind the menu sheet.
  *
@@ -25,7 +25,6 @@ export function AppShell({
   canAdmin = false,
   createItems = [],
   paletteActions = [],
-  theme = 'dark',
   children,
 }) {
   const isStaff = Boolean(user?.roles?.some((role) => ['moderator', 'admin', 'super_admin'].includes(role)));
@@ -56,7 +55,6 @@ export function AppShell({
           isStaff={isStaff}
           canModerate={canModerate}
           canAdmin={canAdmin}
-          theme={theme}
           createItems={createItems}
         />
 
