@@ -24,7 +24,7 @@ const { supabaseAuthCookieNames, isSupabaseAuthCookie } = await import('@/lib/au
 
 const CUSTOMER_COOKIE = 'sb-abcdefghijklmnop-auth-token';
 const CHUNKED = `${CUSTOMER_COOKIE}.0; ${CUSTOMER_COOKIE}.1`;
-const OTHER_COOKIES = 'campus_theme=dark; campus_intro=1';
+const OTHER_COOKIES = 'campus_recent_searches=1; campus_intro=1';
 
 /** A stand-in for the browser client, with the two methods sign-out touches. */
 function fakeClient({ signOutResult = { error: null }, session = null, throws = null, cookiesAfter = null } = {}) {
@@ -61,7 +61,7 @@ describe('public Supabase configuration must reach the browser bundle', () => {
     expect(isSupabaseAuthCookie('sb-abcdefghijklmnop-auth-token.3')).toBe(true);
     expect(isSupabaseAuthCookie('sb-abcdefghijklmnop-auth-token-code-verifier')).toBe(true);
     // Campus+ owns no other `sb-` cookie, and must not delete anything else.
-    expect(isSupabaseAuthCookie('campus_theme')).toBe(false);
+    expect(isSupabaseAuthCookie('campus_recent_searches')).toBe(false);
     expect(isSupabaseAuthCookie('campus_intro')).toBe(false);
     expect(supabaseAuthCookieNames(`${CUSTOMER_COOKIE}=x; ${OTHER_COOKIES}`)).toEqual([CUSTOMER_COOKIE]);
     expect(supabaseAuthCookieNames(`${CHUNKED}; ${OTHER_COOKIES}`)).toEqual([

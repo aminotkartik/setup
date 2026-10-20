@@ -227,11 +227,11 @@ describe('route surface (spec §5, §6)', () => {
 
 describe('design system (spec §4)', () => {
   const globals = read('app/globals.css');
-  const partials = ['surfaces', 'controls', 'feedback', 'theme-switch', 'interactive', 'navigation']
+  const partials = ['surfaces', 'controls', 'feedback', 'interactive', 'navigation']
     .map((name) => read(`app/styles/${name}.css`))
     .join('\n');
 
-  it('defines the semantic token set for light, dark and system', () => {
+  it('defines the semantic token set for the one permanent dark theme', () => {
     for (const token of [
       '--c-canvas',
       '--c-surface',
@@ -263,21 +263,22 @@ describe('design system (spec §4)', () => {
     ]) {
       expect(globals).toContain(token);
     }
-    // Two intentional themes plus "follow the device".
+    // One mandatory dark theme — no light variant and no "follow the device".
     expect(globals).toContain("[data-theme='dark']");
-    expect(globals).toContain("[data-theme='system']");
-    expect(globals).toContain('@media (prefers-color-scheme: dark)');
+    expect(globals).not.toContain("[data-theme='light']");
+    expect(globals).not.toContain("[data-theme='system']");
+    expect(globals).not.toContain('@media (prefers-color-scheme: dark)');
     // The tokens are exposed to Tailwind as utilities.
     expect(globals).toContain('@theme inline');
   });
 
-  it('keeps the warm neutrals, the blue identity and a designed dark theme', () => {
-    expect(globals).toContain('#f7f5f1'); // warm off-white canvas
-    expect(globals).toContain('#1c1b19'); // warm charcoal ink
-    expect(globals).toContain('#3566e8'); // Campus+ primary blue
-    expect(globals).toContain('#1d42a6'); // pressed blue
-    expect(globals).toContain('#121824'); // dark theme: deep blue-tinted ink, not black
-    expect(globals).toContain('#6f9bff'); // dark theme accent stays blue and luminous
+  it('keeps the blue identity and the designed night palette', () => {
+    expect(globals).toContain('#0b1120'); // midnight-blue canvas
+    expect(globals).toContain('#121824'); // elevated navy surface, not black
+    expect(globals).toContain('#f0f1f4'); // primary ink on the night canvas
+    expect(globals).toContain('#6f9bff'); // accent stays blue and luminous
+    expect(globals).toContain('#5b89f5'); // pressed blue
+    expect(globals).not.toContain('#f7f5f1'); // the retired light canvas is gone
 
     // The old orange identity is gone for good.
     expect(globals).not.toContain('#ef6a1c');
@@ -285,8 +286,8 @@ describe('design system (spec §4)', () => {
   });
 
   it('never hardcodes a colour in a page or component', () => {
-    // The only allowed literals are the two theme-color meta entries, which have
-    // to mirror the tokens for the browser chrome.
+    // The only allowed literal is the one theme-color meta entry, which has
+    // to mirror the canvas token for the browser chrome.
     const offenders = allSource.filter((file) => {
       if (file === path.join('app', 'layout.js')) return false;
       return /#[0-9a-fA-F]{3,8}\b/.test(read(file));

@@ -24,7 +24,6 @@ const browser = await launchBrowser();
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
 await context.addCookies([
   { name: 'campus_intro', value: '1', url: ORIGIN },
-  { name: 'campus_theme', value: 'dark', url: ORIGIN },
 ]);
 const page = await context.newPage();
 await page.goto(TARGET, { waitUntil: 'networkidle', timeout: 90_000 });

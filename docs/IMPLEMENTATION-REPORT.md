@@ -203,7 +203,7 @@ removed.
 and `ƒ Proxy (Middleware)`; last measured at 736 ms on Next.js 16.3.8.
 
 * static: `/icon.svg` only — every other route is dynamic (`ƒ`), because the
-  shell reads the session and the theme cookie;
+  shell reads the session;
 * dynamic (58): every authenticated surface and deep link — home, explore (3
   families + new + detail), market (list, new, listing detail, edit, gig detail),
   communities (list, new, detail + the `/community/[slug]` alias), campus (hub,
@@ -320,7 +320,7 @@ state afterwards: **18 passed, 0 warnings, 0 failures** (105 s).
 | Search | Type in the shell field, submit | Lands on `/explore?q=campus` with results |
 | Navigation / history | `/home` → `/explore` → Back → Forward | Returns to the same routes, `scrollY` preserved |
 | Keyboard | <kbd>Tab</kbd> through the shell | Focus lands on real controls with a visible `2px solid` outline |
-| Light theme | **Real theme cookie**, not a DOM override | `data-theme=light`, `color-scheme: light`, depth field still WebGL |
+| Dark-only enforcement | Legacy light-preference cookie present | Still `data-theme=dark`, `color-scheme: dark`, depth field still WebGL |
 | Reduced motion | Media emulation | Island animation `none`, depth `0px`, field still composed |
 | Non-WebGL | `webglcontextcreationerror` path | `state=fallback`, 0 canvases, 3 CSS ridges + horizon, islands still composed |
 | Touch | CDP `Input.dispatchTouchEvent` tap and 320 px drag | Tap navigated and Back returned; drag scrolled 0 → 305 px without navigating; tap focused the textarea and typed 18 chars |

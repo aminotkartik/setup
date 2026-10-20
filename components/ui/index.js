@@ -6,8 +6,8 @@
  * language: `Button` is the same button in the composer, the marketplace, the
  * moderator queue and the admin tables.
  *
- * Modules without client hooks stay server-renderable; only the overlay and
- * theme surfaces are client modules.
+ * Modules without client hooks stay server-renderable; only the overlay
+ * surfaces are client modules.
  */
 
 export { Button, LinkButton, IconButton, SheenButton, DeleteButton, KeycapButton } from '@/components/ui/buttons';
@@ -38,12 +38,4 @@ export {
   BackHomeLink,
 } from '@/components/ui/states';
 export { Modal, Sheet, Dropdown, MenuItem, MenuLink, Toast } from '@/components/ui/overlays';
-export {
-  ThemeSwitch,
-  applyTheme,
-  THEME_COOKIE,
-  subscribeTheme,
-  readThemeSnapshot,
-  readThemePreference,
-} from '@/components/ui/theme';
 export { TiltCard, WheelSelector } from '@/components/ui/interactive';

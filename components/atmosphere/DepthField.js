@@ -18,13 +18,10 @@
  *   - `prefers-reduced-motion` builds the scene but renders a single still
  *     frame, and the loop is never started.
  *
- * The theme is followed live: switching appearance re-reads the tokens and
- * updates the shader's colours without rebuilding the scene.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { subscribeTheme } from '@/components/ui/theme';
 import { webglAvailable } from '@/components/atmosphere/webgl';
 
 /**
@@ -53,7 +50,6 @@ export function DepthField({ className = '' }) {
 
     let cancelled = false;
     let dispose = null;
-    let unsubscribe = null;
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     import('./depth/createDepthField')
@@ -76,7 +72,6 @@ export function DepthField({ className = '' }) {
             },
           });
           setMode('webgl');
-          unsubscribe = subscribeTheme(() => dispose?.refreshPalette?.());
         } catch (error) {
           container.querySelectorAll('canvas').forEach((canvas) => canvas.remove());
           console.warn('[Campus+] Depth field unavailable; showing the static atmosphere.', error);
@@ -90,7 +85,6 @@ export function DepthField({ className = '' }) {
 
     return () => {
       cancelled = true;
-      unsubscribe?.();
       dispose?.();
     };
   }, []);

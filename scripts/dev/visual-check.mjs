@@ -5,7 +5,7 @@
  *
  * Lint and a green build cannot tell you whether a page looks right. This runs
  * the authenticated application at the usual breakpoints and in the states that
- * matter — dark, light, reduced motion, no WebGL, mobile — captures full-page
+ * matter — dark (the one Campus+ theme), reduced motion, no WebGL, mobile — captures full-page
  * screenshots, and records console errors, failed requests and a few measured
  * facts (renderer size, island count, contrast-bearing text nodes).
  *
@@ -46,14 +46,12 @@ const SHOTS = [
   { name: 'home-desktop-dark', url: '/home', view: 'desktop', scheme: 'dark' },
   { name: 'home-desktop-dark-full', url: '/home', view: 'desktop', scheme: 'dark', fullPage: true },
   { name: 'home-wide-dark', url: '/home', view: 'wide', scheme: 'dark' },
-  { name: 'home-desktop-light', url: '/home', view: 'desktop', scheme: 'light' },
   { name: 'home-mobile-dark', url: '/home', view: 'mobile', scheme: 'dark' },
   { name: 'home-mobile-dark-full', url: '/home', view: 'mobile', scheme: 'dark', fullPage: true },
   { name: 'home-desktop-reduced-motion', url: '/home', view: 'desktop', scheme: 'dark', reducedMotion: true },
   { name: 'home-desktop-no-webgl', url: '/home', view: 'desktop', scheme: 'dark', noWebgl: true },
   { name: 'home-tablet-dark', url: '/home', view: 'tablet', scheme: 'dark' },
   { name: 'feed-scroll-mid', url: '/home', view: 'desktop', scheme: 'dark', scrollTo: 0.55 },
-  { name: 'home-mobile-light', url: '/home', view: 'mobile', scheme: 'light' },
 ];
 
 async function collect(page) {
@@ -135,7 +133,7 @@ async function main() {
   for (const shot of shots) {
     const context = await browser.newContext({
       viewport: VIEWPORTS[shot.view],
-      colorScheme: shot.scheme === 'light' ? 'light' : 'dark',
+      colorScheme: 'dark',
       deviceScaleFactor: 1,
       reducedMotion: shot.reducedMotion ? 'reduce' : 'no-preference',
       isMobile: shot.view === 'mobile',
@@ -143,12 +141,7 @@ async function main() {
     });
     // The cinematic launch intro is a once-per-browser-session experience; a
     // screenshot run wants the page behind it, not the splash.
-    await context.addCookies([
-      { name: 'campus_intro', value: '1', url: BASE },
-      // The theme is a cookie the server reads (`lib/theme.js`), so the light
-      // shots set it the way a student would instead of poking the DOM.
-      { name: 'campus_theme', value: shot.scheme === 'light' ? 'light' : 'dark', url: BASE },
-    ]);
+    await context.addCookies([{ name: 'campus_intro', value: '1', url: BASE }]);
 
     const page = await context.newPage();
     // Every page: WebGL contexts in a software rasteriser are slow to die, so

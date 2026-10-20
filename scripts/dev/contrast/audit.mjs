@@ -28,12 +28,12 @@ import { measureViewport, verifyFocusPaint } from './rendered.mjs';
 const { values } = parseArgs({ options: {
   quick: { type: 'boolean', default: false },
   suite: { type: 'string', default: 'all' },
-  theme: { type: 'string', default: 'both' },
+  theme: { type: 'string', default: 'dark' },
   route: { type: 'string', multiple: true },
   role: { type: 'string', default: 'student' },
 } });
 if (!['all', 'routes', 'components', 'mobile', 'motion', 'intro'].includes(values.suite)) throw new Error('Invalid --suite');
-if (!['both', 'dark', 'light'].includes(values.theme)) throw new Error('Invalid --theme');
+if (values.theme !== 'dark') throw new Error('Invalid --theme: Campus+ is permanently dark');
 if (!['student', 'moderator', 'admin', 'anonymous', 'onboarding', 'suspended'].includes(values.role)) throw new Error('Invalid --role');
 if (values.route?.some((route) => !route.startsWith('/') || route.startsWith('//'))) throw new Error('--route must be an application-relative path');
 const root = process.cwd();
@@ -85,7 +85,7 @@ ids.listingOwned = (await db.query('select id from public.marketplace_listings w
 const lostFound = (await db.query('select distinct on (kind) id, kind from public.lost_found order by kind, created_at desc')).rows;
 await db.end();
 
-const required = ['/home', '/explore', '/communities', '/chat', '/market', '/notifications', '/settings?tab=appearance', '/profile'];
+const required = ['/home', '/explore', '/communities', '/chat', '/market', '/notifications', '/settings', '/profile'];
 const extra = [
   '/campus', '/campus/noticeboard', '/campus/events', '/campus/clubs', '/campus/utilities',
   '/campus/lost-found', '/campus/lost-found?kind=lost', '/campus/lost-found?kind=found',
@@ -131,7 +131,6 @@ async function contextFor(theme, role, mobile = false, motion = 'reduce') {
   context.setDefaultTimeout(20000);
   context.setDefaultNavigationTimeout(120000);
   await context.addCookies([
-    { name: 'campus_theme', value: theme, url: base },
     { name: 'campus_intro', value: '1', url: base },
     ...(role === 'anonymous' ? [] : sessions[role].cookies.map((cookie) => ({ ...cookie, url: base }))),
   ]);
@@ -226,31 +225,6 @@ async function runPage(page, { theme, role, route, mobile = false }) {
       await page.mouse.move(0, 0); await page.mouse.up();
     }
   }
-  if (route === '/settings?tab=appearance') {
-    for (const choice of ['light', 'dark', 'system']) {
-      const labelElement = page.locator(`label[for="appearance-${choice}"]`);
-      await labelElement.click();
-      await paint(page, `${label}-wheel-${choice}`);
-      await screenshot(page, `${label}-wheel-${choice}`);
-      // Snapshot the panel and slots atomically: changing the appearance copy
-      // can reflow a narrow page between two separate browser RPCs.
-      const { panel, copy } = await page.locator('.wheel__panel').evaluate((element) => {
-        const p = element.getBoundingClientRect();
-        return {
-          panel: { x: p.x, y: p.y, width: p.width, height: p.height },
-          copy: [...element.querySelectorAll('.wheel__copy')].map((slot) => {
-            const r = slot.getBoundingClientRect();
-            return { x: r.x, y: r.y, right: r.right, bottom: r.bottom };
-          }),
-        };
-      });
-      for (const r of copy) if (r.x < panel.x - 1 || r.right > panel.x + panel.width + 1 || r.y < panel.y - 1 || r.bottom > panel.y + panel.height + 1) throw new Error(`Wheel label is clipped by its panel: ${JSON.stringify({ panel, copy: r })}`);
-      for (let i = 0; i < copy.length; i += 1) for (let j = i + 1; j < copy.length; j += 1) {
-        if (Math.min(copy[i].right, copy[j].right) > Math.max(copy[i].x, copy[j].x) && Math.min(copy[i].bottom, copy[j].bottom) > Math.max(copy[i].y, copy[j].y)) throw new Error('Wheel labels overlap');
-      }
-      report.layouts.push({ label: `${label}-wheel-${choice}`, noOverlap: true, noClipping: true, panelWidth: panel.width });
-    }
-  }
 }
 
 async function gallery(page, theme) {
@@ -258,7 +232,6 @@ async function gallery(page, theme) {
   await page.evaluate(() => { document.body.replaceChildren(); const root = document.createElement('div'); root.id = 'cp-contrast-root'; document.body.append(root); });
   await page.addScriptTag({ content: galleryScript });
   await page.locator('#cp-contrast-fixture').waitFor();
-  await page.evaluate((value) => window.__campusContrastSetTheme(value), theme);
   await axe(page, `${theme}-gallery`);
   for (const section of await page.locator('[data-audit-section]').all()) {
     await section.scrollIntoViewIfNeeded();
@@ -300,11 +273,6 @@ async function gallery(page, theme) {
     if (await control.isChecked()) throw new Error(`${name} keyboard toggle did not uncheck the native input`);
     await paint(page, `${theme}-${name}-unchecked`);
   }
-  const toggle = page.locator('#checks .theme-switch:not(:has(input:disabled)) input');
-  await toggle.scrollIntoViewIfNeeded();
-  report.states.push({ label: `${theme}-celestial-focus`, ...await verifyFocusPaint(page, toggle, toggle.locator('..')) });
-  await toggle.locator('..').click(); await paint(page, `${theme}-celestial-other-theme`);
-  await page.evaluate((value) => window.__campusContrastSetTheme(value), theme);
   await page.locator('#overlays button[aria-haspopup="menu"]').click();
   await axe(page, `${theme}-dropdown`, '[role="menu"]');
   await paint(page, `${theme}-dropdown`, '[role="menu"]');
@@ -321,7 +289,7 @@ async function gallery(page, theme) {
   }
   await page.locator('[data-audit="clear-toast"]').click();
   await page.locator('#wheel').scrollIntoViewIfNeeded();
-  for (const value of ['light', 'dark', 'system']) {
+  for (const value of ['feed', 'discussions', 'polls']) {
     await page.locator(`label[for="audit-wheel-${value}"]`).click();
     const radio = page.locator(`#audit-wheel-${value}`);
     report.states.push({ label: `${theme}-wheel-${value}-focus`, ...await verifyFocusPaint(page, radio, page.locator(`label[for="audit-wheel-${value}"] .wheel__copy`)) });
@@ -335,7 +303,7 @@ async function gallery(page, theme) {
 }
 
 try {
-  const themes = values.theme === 'both' ? ['dark', 'light'] : [values.theme];
+  const themes = [values.theme];
   for (const theme of themes) {
     if (['all', 'routes'].includes(values.suite)) {
       for (const role of ['student', 'moderator', 'admin', 'anonymous', 'onboarding', 'suspended']) {
@@ -353,9 +321,9 @@ try {
     if (['all', 'mobile'].includes(values.suite)) {
       const context = await contextFor(theme, 'student', true);
       const mobile = await context.newPage();
-      for (const route of ['/home', '/explore', '/chat', '/market', '/notifications', '/settings?tab=appearance', '/profile']) await runPage(mobile, { theme, role: 'student', route, mobile: true });
+      for (const route of ['/home', '/explore', '/chat', '/market', '/notifications', '/settings', '/profile']) await runPage(mobile, { theme, role: 'student', route, mobile: true });
       await mobile.setViewportSize({ width: 320, height: 844 });
-      await runPage(mobile, { theme, role: 'student-320px', route: '/settings?tab=appearance', mobile: true });
+      await runPage(mobile, { theme, role: 'student-320px', route: '/settings', mobile: true });
       await context.close();
       const loginContext = await contextFor(theme, 'anonymous', true);
       await runPage(await loginContext.newPage(), { theme, role: 'anonymous', route: '/login?error=domain', mobile: true });

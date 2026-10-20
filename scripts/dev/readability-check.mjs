@@ -7,10 +7,9 @@
  * contrast (which `tests/contrast.test.js` and the rendered audit already
  * cover) is not the whole story: what a student reads is the composite — the
  * canvas' contours, the CSS ridge fallback, the aurora, the wash — with glyphs
- * on top of it. The light theme is the one that has to be watched, because its
- * direction is "cartographic lines on paper": the field draws *darker* lines on
- * a light ground, which is exactly the direction that eats the contrast of dark
- * text.
+ * on top of it. What has to be watched is the field itself: it draws luminous
+ * contour lines on a near-black ground, which is exactly the direction that
+ * eats the contrast of light text when a ridge brightens behind a glyph.
  *
  * How it measures, and why this way:
  *   - the ink is the element's **declared** colour (`getComputedStyle().color`).
@@ -25,7 +24,7 @@
  *   - the reported ratio is the WORST of those samples, i.e. the moment and
  *     place where the environment competes most with the words.
  *
- *   node scripts/dev/readability-check.mjs [--url http://127.0.0.1:3300] [--only light]
+ *   node scripts/dev/readability-check.mjs [--url http://127.0.0.1:3300] [--only dark]
  *
  * Exit code is non-zero when any measured pair falls below its target.
  */
@@ -161,7 +160,6 @@ async function measure(browser, scheme) {
   });
   await context.addCookies([
     { name: 'campus_intro', value: '1', url: BASE },
-    { name: 'campus_theme', value: scheme, url: BASE },
   ]);
   const page = await context.newPage();
   if (values['no-webgl']) {
@@ -272,7 +270,7 @@ async function measure(browser, scheme) {
 }
 
 const browser = await launchBrowser();
-const schemes = values.only ? [values.only] : ['dark', 'light'];
+const schemes = values.only ? [values.only] : ['dark'];
 const report = { base: BASE, at: new Date().toISOString(), rows: [] };
 
 console.log('\nMeasured composite contrast on /home — declared ink vs the real pixels behind it\n');
