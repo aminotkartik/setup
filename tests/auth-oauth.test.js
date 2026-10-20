@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -12,7 +13,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  *   - the Google-verified address is re-checked against the institutional
  *     allow-list, and a disallowed session is signed out again,
  *   - `next` can only be a path on this site (no open redirect),
- *   - every failure lands on /login with a reason the screen can explain.
+ *   - every failure lands on /login with a reason the screen can explain,
+ *   - the login form starts that round trip exactly once per submission and
+ *     leaves for Google with a plain external navigation — no Next.js router
+ *     push/refresh after it (the iPhone Safari reload/loop regression).
  */
 
 const state = vi.hoisted(() => ({
@@ -53,6 +57,7 @@ import {
   originFromHost,
   safeNextPath,
 } from '@/lib/auth/oauth';
+import { createGoogleSignInHandler, SIGN_IN_FAILED } from '@/lib/auth/sign-in';
 
 const ALLOWED_EMAIL = 'aditi@pccoepune.org';
 
@@ -278,5 +283,152 @@ describe('GET /auth/callback', () => {
     await GET(callback(`?code=good&email=attacker@evil.example`));
 
     expect(seen).toEqual([ALLOWED_EMAIL]);
+  });
+});
+
+/**
+ * The browser half of starting sign-in (`lib/auth/sign-in.js`, wired up by
+ * `LoginForm`). These pin the loop/reload fix: the generic form helper
+ * refreshed `/login` through the Next.js router right after starting the
+ * external navigation to Google, racing it.
+ */
+describe('createGoogleSignInHandler()', () => {
+  const GOOGLE_URL = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=x';
+
+  // No form element in Node: `currentTarget` is undefined, which builds an
+  // empty FormData — exactly the real form's content (`next` is the only field).
+  const submitEvent = () => ({ preventDefault: vi.fn(), currentTarget: undefined });
+
+  function makeHandler({ next = null, respond = null } = {}) {
+    const calls = { starts: [], navigations: [], pending: false, error: null };
+    const handler = createGoogleSignInHandler({
+      next,
+      startSignIn: async (data) => {
+        calls.starts.push(data);
+        return respond ? respond(calls.starts.length) : { ok: true, url: GOOGLE_URL };
+      },
+      navigate: (url) => calls.navigations.push(url),
+      setPending: (value) => {
+        calls.pending = value;
+      },
+      setError: (value) => {
+        calls.error = value;
+      },
+    });
+    return { handler, calls };
+  }
+
+  it('prevents the native submission, starts sign-in once, and navigates externally', async () => {
+    const { handler, calls } = makeHandler({ next: '/market?tab=gigs' });
+    const event = submitEvent();
+
+    await handler(event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(calls.starts).toHaveLength(1);
+    // The validated destination is preserved for the server action…
+    expect(calls.starts[0].get('next')).toBe('/market?tab=gigs');
+    // …success is exactly one external navigation…
+    expect(calls.navigations).toEqual([GOOGLE_URL]);
+    // …and pending stays on: the browser is leaving, so the submit button
+    // must remain disabled until it actually does.
+    expect(calls.pending).toBe(true);
+    expect(calls.error).toBeNull();
+  });
+
+  it('omits `next` entirely when there is no destination', async () => {
+    const { handler, calls } = makeHandler();
+
+    await handler(submitEvent());
+
+    expect(calls.starts).toHaveLength(1);
+    expect(calls.starts[0].get('next')).toBeNull();
+    expect(calls.navigations).toEqual([GOOGLE_URL]);
+  });
+
+  it('ignores repeat submissions while one is in flight (and after it succeeds)', async () => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    const { handler, calls } = makeHandler({ respond: () => gate });
+
+    // A double-tap in the same tick: both calls see the same React state, so
+    // only the handler's own guard can keep this to one server action call —
+    // a second would overwrite the PKCE verifier cookie for the first.
+    const first = handler(submitEvent());
+    const second = handler(submitEvent());
+    release({ ok: true, url: GOOGLE_URL });
+    await Promise.all([first, second]);
+
+    expect(calls.starts).toHaveLength(1);
+    expect(calls.navigations).toEqual([GOOGLE_URL]);
+
+    // Still navigating away: further taps remain no-ops.
+    await handler(submitEvent());
+    expect(calls.starts).toHaveLength(1);
+    expect(calls.navigations).toEqual([GOOGLE_URL]);
+  });
+
+  it('shows the server action error, re-enables the button, and allows a retry', async () => {
+    const message = 'We could not reach Google. Please try again in a moment.';
+    const { handler, calls } = makeHandler({
+      respond: (attempt) => (attempt === 1 ? { ok: false, error: message } : { ok: true, url: GOOGLE_URL }),
+    });
+
+    await handler(submitEvent());
+
+    expect(calls.error).toBe(message);
+    expect(calls.pending).toBe(false);
+    expect(calls.navigations).toEqual([]);
+
+    await handler(submitEvent());
+
+    expect(calls.starts).toHaveLength(2);
+    expect(calls.error).toBeNull();
+    expect(calls.pending).toBe(true);
+    expect(calls.navigations).toEqual([GOOGLE_URL]);
+  });
+
+  it('treats a thrown call and a missing URL as retryable failures, never navigating', async () => {
+    const thrown = makeHandler({
+      respond: () => {
+        throw new Error('network down');
+      },
+    });
+    await thrown.handler(submitEvent());
+    expect(thrown.calls.error).toBe(SIGN_IN_FAILED);
+    expect(thrown.calls.pending).toBe(false);
+    expect(thrown.calls.navigations).toEqual([]);
+
+    const noUrl = makeHandler({ respond: () => ({ ok: true }) });
+    await noUrl.handler(submitEvent());
+    expect(noUrl.calls.error).toBe(SIGN_IN_FAILED);
+    expect(noUrl.calls.pending).toBe(false);
+    expect(noUrl.calls.navigations).toEqual([]);
+  });
+});
+
+describe('LoginForm wiring', () => {
+  const loginForm = fs.readFileSync('components/auth/LoginForm.js', 'utf8');
+  const signIn = fs.readFileSync('lib/auth/sign-in.js', 'utf8');
+
+  it('submits through the dedicated handler, not the generic in-app form helper', () => {
+    expect(loginForm).not.toContain("from '@/lib/forms'");
+    expect(loginForm).toContain('createGoogleSignInHandler');
+    expect(loginForm).toContain('startSignIn: startGoogleSignIn');
+  });
+
+  it('has `onSubmit` as the single submission path (no form `action`)', () => {
+    expect(loginForm).toContain('onSubmit={handleSubmit}');
+    expect(loginForm).not.toMatch(/<form[^>]*\saction=/);
+  });
+
+  it('navigates externally and never touches the Next.js router', () => {
+    expect(loginForm).toContain('window.location.assign(url)');
+    expect(loginForm).not.toContain('next/navigation');
+    expect(loginForm).not.toMatch(/router\.(push|refresh|replace)/);
+    expect(signIn).not.toContain('next/navigation');
+    expect(signIn).not.toMatch(/router\.(push|refresh|replace)/);
   });
 });
