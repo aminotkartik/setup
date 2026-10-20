@@ -7,11 +7,122 @@ import styles from './GalacticIntro.module.css';
 // A completed intro cannot replay even if the boundary is later remounted.
 let completed = false;
 
+/* The intro is the only consumer of these two self-hosted variable faces.
+   These names must stay in sync with GalacticIntro.module.css: the Font
+   Loading API resolves @font-face family descriptors, not the names inside
+   the font files (SpaceGrotesk.ttf actually calls itself "Space Grotesk
+   Light", while its CSS family here is "Campus Galactic Space"). */
+const SYNE_FAMILY = 'Campus Galactic Syne';
+const SPACE_FAMILY = 'Campus Galactic Space';
+
+const CAMPUS_TEXT = 'CAMPUS';
+const PLUS_TEXT = '+';
+const TAGLINE_TEXT = 'THE PCCOE FORUM';
+const SKIP_LABEL = 'Skip intro';
+
+/* Font shorthand used to select the @font-face. Its size only participates in
+   face matching; 800/400 are the weights the intro actually renders. The
+   glyph strings contain every character the intro paints in that family. */
+const SYNE_FONT = `800 84px "${SYNE_FAMILY}"`;
+const SPACE_FONT = `400 13px "${SPACE_FAMILY}"`;
+const SYNE_GLYPHS = `${CAMPUS_TEXT}${PLUS_TEXT}`;
+const SPACE_GLYPHS = `${TAGLINE_TEXT}${SKIP_LABEL}`;
+
+/* Playback timing, all measured from the single transition to `playing`.
+   The CSS keyframe delays in GalacticIntro.module.css mirror these values. */
+const FADE_AT_MS = 5250;
+const FINISH_AT_MS = 5650;
+
+/* Bounded font wait. The old fixed 400 ms timer started the animation while a
+   slow font request was still in flight, so a late load could swap the
+   wordmark after it had already been measured. Three seconds gives cold
+   deployments and Edge's first-request font handling room to finish, while
+   still guaranteeing the overlay never waits forever. */
+const FONT_WAIT_MS = 3000;
+/* Independent deadline, measured from effect mount. It covers the longest
+   possible startup (the full font budget) plus the normal sequence plus the
+   previous 550 ms of slack. It does not depend on animation events, fonts or
+   SVG APIs. */
+const SAFETY_DEADLINE_MS = FONT_WAIT_MS + 6200;
+/* The CSS stage has a second, script-independent emergency deadline. Derive
+   its delay from the same value so the JS and CSS deadlines cannot drift. */
+const SAFETY_CSS_DELAY_MS = SAFETY_DEADLINE_MS + 300;
+const SAFETY_STYLE = { '--intro-safety-delay': `${SAFETY_CSS_DELAY_MS}ms` };
+
+const normalizeFamily = (value) =>
+  String(value).replace(/["']/g, '').trim().toLowerCase();
+
+/**
+ * Explicitly load the exact families, weights and characters used by the
+ * intro, then verify that the custom faces are really available.
+ *
+ * `FontFaceSet.check()` alone is not sufficient: it returns `true` for a
+ * family with no matching @font-face rule because the browser can always use
+ * a fallback. Only a non-empty `load()` result whose faces are `loaded`
+ * proves the custom face was parsed and fetched. `fonts.ready` additionally
+ * waits for the browser to finish layout with those faces before the SVG is
+ * measured.
+ */
+async function introFontsReady() {
+  const fonts = document.fonts;
+  if (
+    !fonts ||
+    typeof fonts.load !== 'function' ||
+    typeof fonts.check !== 'function'
+  ) {
+    return false;
+  }
+  const [syneFaces, spaceFaces] = await Promise.all([
+    fonts.load(SYNE_FONT, SYNE_GLYPHS),
+    fonts.load(SPACE_FONT, SPACE_GLYPHS),
+  ]);
+  const hasLoadedFace = (faces, family) =>
+    faces.some(
+      (face) =>
+        face.status === 'loaded' &&
+        normalizeFamily(face.family) === normalizeFamily(family),
+    );
+  if (
+    !hasLoadedFace(syneFaces, SYNE_FAMILY) ||
+    !hasLoadedFace(spaceFaces, SPACE_FAMILY)
+  ) {
+    return false;
+  }
+  await fonts.ready;
+  return (
+    fonts.check(SYNE_FONT, SYNE_GLYPHS) &&
+    fonts.check(SPACE_FONT, SPACE_GLYPHS)
+  );
+}
+
+/**
+ * Text advance in SVG user units. `getComputedTextLength()` includes CSS
+ * letter-spacing and is the same metric the original layout used. `getBBox()`
+ * is only a defensive fallback for engines that refuse text metrics while the
+ * element is hidden by `visibility`.
+ */
+function textAdvance(element) {
+  try {
+    const length = element.getComputedTextLength();
+    if (Number.isFinite(length) && length > 0) return length;
+  } catch {
+    // Fall through to the bounding box.
+  }
+  try {
+    const width = element.getBBox().width;
+    if (Number.isFinite(width) && width > 0) return width;
+  } catch {
+    // Leave the server-rendered pair in place rather than holding the page.
+  }
+  return 0;
+}
+
 export default function GalacticIntro({ children }) {
   // Identical server/client first render; consult document memory in the effect.
   const [phase, setPhase] = useState('waiting');
   const focusOnReveal = useRef(false);
   const content = useRef(null);
+  const stage = useRef(null);
   const campus = useRef(null);
   const plus = useRef(null);
   const skip = useRef(null);
@@ -29,11 +140,36 @@ export default function GalacticIntro({ children }) {
     }
     let disposed = false;
     let started = false;
-    let frame;
+    let finished = false;
+    let settled = false;
+    let fontTimer;
+    let frame = 0;
     const timers = [];
-    const later = (fn, delay) => timers.push(setTimeout(fn, delay));
+    const later = (fn, delay) => {
+      const id = setTimeout(fn, delay);
+      timers.push(id);
+      return id;
+    };
+    // Resolve after the browser has applied style and layout at least once.
+    // The timer bounds the wait for engines or tabs that throttle animation
+    // frames, so startup can never stall on rAF alone. Keeping the latest
+    // frame id here lets cleanup cancel a pending startup.
+    const nextPaint = () =>
+      new Promise((resolve) => {
+        let done = false;
+        const settlePaint = () => {
+          if (done) return;
+          done = true;
+          resolve();
+        };
+        frame = requestAnimationFrame(() => {
+          frame = requestAnimationFrame(settlePaint);
+        });
+        later(settlePaint, 250);
+      });
     const end = () => {
-      if (disposed) return;
+      if (disposed || finished) return;
+      finished = true;
       focusOnReveal.current = document.activeElement === skip.current;
       completed = true;
       setPhase('done');
@@ -47,49 +183,71 @@ export default function GalacticIntro({ children }) {
       if (event.key === 'Escape') end();
     };
     window.addEventListener('keydown', onKey);
-    // Independent of animation events, fonts and SVG APIs.
-    later(end, 6200);
+    // Independent of animation events, fonts and SVG APIs. Sized to include
+    // the longest font wait plus the full choreography.
+    later(end, SAFETY_DEADLINE_MS);
 
-    function start() {
-      if (disposed || started || completed) return;
+    // Freeze the typography for the whole intro. In the fallback case this
+    // removes every reference to the custom families before measurement, so a
+    // font that arrives after the timeout cannot change the logo, tagline or
+    // Skip intro control mid-animation.
+    function lockTypography(fallback) {
+      if (stage.current) {
+        stage.current.dataset.typography = fallback ? 'fallback' : 'loaded';
+      }
+    }
+
+    function positionLockup() {
+      if (!campus.current || !plus.current) return;
+      // One measurement pass, two derived positions. Both attributes are
+      // applied together before `playing` is committed.
+      const campusLength = textAdvance(campus.current);
+      const plusLength = textAdvance(plus.current);
+      if (!(campusLength > 0 && plusLength > 0)) return;
+      const x = (760 - campusLength - 24 - plusLength) / 2;
+      campus.current.setAttribute('x', String(x));
+      plus.current.setAttribute('x', String(x + campusLength + 24));
+    }
+
+    async function beginPlayback(fallback) {
+      if (disposed || started || finished || completed) return;
+      // Typography is final *before* any measurement or paint.
+      lockTypography(fallback);
+      // Let the browser apply the selected typography and settle the SVG
+      // layout. Measuring in the same task as the style change is what made
+      // the old code depend on engine-specific font application timing.
+      await nextPaint();
+      if (disposed || started || finished || completed) return;
+      positionLockup();
       started = true;
-      // Freeze fallback typography if the bounded font wait expired, so a late
-      // swap cannot invalidate the measured plus position.
-      if (!document.fonts?.check('800 84px "Campus Galactic Syne"')) {
-        campus.current.style.fontFamily = 'sans-serif';
-        plus.current.style.fontFamily = 'sans-serif';
-      }
-      try {
-        const c = campus.current.getComputedTextLength();
-        const p = plus.current.getComputedTextLength();
-        if (!(c > 0 && p > 0)) throw new Error('Invalid text metrics');
-        const x = (760 - c - 24 - p) / 2;
-        campus.current.setAttribute('x', x);
-        plus.current.setAttribute('x', x + c + 24);
-      } catch {
-        // Fallback positioning remains centred; never hold the page for metrics.
-      }
       setPhase('playing');
       later(() => {
-        if (!completed) setPhase('fading');
-      }, 5250);
-      later(end, 5650);
+        if (!disposed && !finished && !completed) setPhase('fading');
+      }, FADE_AT_MS);
+      later(end, FINISH_AT_MS);
     }
+
+    // The font-loaded callback, the bounded timeout and any early exit all
+    // converge here. `settled` makes the startup single-shot; `started` makes
+    // the playback single-shot as well.
+    function settle(fallback) {
+      if (disposed || settled || started || finished || completed) return;
+      settled = true;
+      clearTimeout(fontTimer);
+      beginPlayback(fallback);
+    }
+
     if (motion.matches) {
+      // Reduced motion never needs the choreography or the font wait.
       later(end, 100);
     } else {
-      // Explicitly request the faces: fonts.ready alone can resolve before CSS
-      // has caused a font request. Bound the wait for offline/failing fonts.
-      const fonts = document.fonts;
-      if (fonts) {
-        Promise.all([
-          fonts.load('800 84px "Campus Galactic Syne"'),
-          fonts.load('400 13px "Campus Galactic Space"'),
-        ]).then(() => {
-          if (!disposed) frame = requestAnimationFrame(start);
-        }, start);
-      }
-      later(start, 400);
+      fontTimer = later(() => settle(true), FONT_WAIT_MS);
+      // A rejection (network/parse error) is a definitive failure and falls
+      // back immediately; a hanging request is caught by the timer above.
+      introFontsReady().then(
+        (ready) => settle(!ready),
+        () => settle(true),
+      );
     }
     return () => {
       disposed = true;
@@ -112,8 +270,10 @@ export default function GalacticIntro({ children }) {
     <>
       {visible && (
         <section
+          ref={stage}
           className={styles.stage}
           data-phase={phase}
+          style={SAFETY_STYLE}
           aria-label="Campus+ intro"
         >
           <div aria-hidden="true" className={styles.scenery}>
@@ -134,14 +294,14 @@ export default function GalacticIntro({ children }) {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <text ref={campus} x="112" y="62" className={styles.campus}>
-                    CAMPUS
+                    {CAMPUS_TEXT}
                   </text>
                   <text ref={plus} x="600" y="62" className={styles.plus}>
-                    +
+                    {PLUS_TEXT}
                   </text>
                 </svg>
               </div>
-              <div className={styles.tagline}>THE PCCOE FORUM</div>
+              <div className={styles.tagline}>{TAGLINE_TEXT}</div>
             </div>
           </div>
           <button
@@ -150,7 +310,7 @@ export default function GalacticIntro({ children }) {
             className={styles.skip}
             onClick={finish}
           >
-            Skip intro
+            {SKIP_LABEL}
           </button>
         </section>
       )}
