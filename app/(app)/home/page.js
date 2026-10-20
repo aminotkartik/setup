@@ -11,7 +11,6 @@ import { IslandMotion } from '@/components/home/IslandMotion';
 import { HomePulse, HomeZone, HomeCoda } from '@/components/home/HomePulse';
 import { StreamItem, StreamSlot } from '@/components/home/StreamItem';
 import { HomeRail } from '@/components/home/HomeRail';
-import { HomeReadySignal } from '@/components/layout/HomeLaunchGate';
 
 export const metadata = { title: 'Home' };
 
@@ -95,7 +94,6 @@ export default async function HomePage() {
     <div className="home-stage">
       {/* Loading-layer probe (renders nothing): tells the launch intro that
           Home content has committed so it can complete its reveal and fade. */}
-      <HomeReadySignal />
 
       {/* The environment: one shared canvas behind the whole page, decorative
           and non-interactive, with a CSS composition as its no-WebGL twin. */}
