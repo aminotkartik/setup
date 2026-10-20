@@ -80,6 +80,7 @@ Commands run in this sandbox:
   - 320×844, 360×800, 390×844, 844×390 landscape, 1024×768 and 1440×900: no overflow, tagline/Skip inside the viewport, 24-unit gap;
   - no page errors, console errors or hydration warnings.
 - HTTP smoke requests under the existing unconfigured deployment behavior: `/home`, `/market`, `/user/student`, `/setup` and `/rules` returned 200; `/`, `/login` and `/onboarding` returned their existing 307 to `/setup`. Missing-code `/auth/callback` returned its existing 307 to `/login?error=missing_code`, with no Set-Cookie header. `/fonts/Syne.ttf` (146,980 bytes) and `/fonts/SpaceGrotesk.ttf` (136,676 bytes) both returned 200 with `Content-Type: font/ttf` — no font 404s in the production build.
+- `/user/student` logs one server-side `generateMetadata` TypeError (`Cannot read properties of null (reading 'from')`) because Supabase is unconfigured, while still answering 200. The same error and digest reproduce on the pre-change commit `6f1a371`, so it is pre-existing and outside this change; it is not a browser console or hydration error.
 
 Browser used: Chromium 153 headless shell, supplied by a temporary, untracked `@sparticuz/chromium` npm installation (browser binaries and tooling are not in Git). Command:
 
