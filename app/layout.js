@@ -1,4 +1,5 @@
 import './globals.css';
+import GalacticIntro from '@/components/layout/GalacticIntro';
 
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
@@ -78,7 +79,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" data-theme={theme} suppressHydrationWarning>
       <body className={`${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
-        {children}
+        <GalacticIntro>{children}</GalacticIntro>
       </body>
     </html>
   );
