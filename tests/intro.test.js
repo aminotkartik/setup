@@ -16,7 +16,6 @@ const sfntTables = (buffer) => {
     const record = 12 + index * 16;
     tables.set(buffer.toString('ascii', record, record + 4), {
       offset: buffer.readUInt32BE(record + 8),
-      length: buffer.readUInt32BE(record + 12),
     });
   }
   return tables;
@@ -58,18 +57,10 @@ describe('document-level galactic intro architecture', () => {
   it('declares the real variable-font metadata and matching CSS/JS names', () => {
     // Both self-hosted files are variable fonts. The CSS ranges below are only
     // valid if they match the `fvar` weight axis exactly.
-    expect(weightAxis('public/fonts/Syne.ttf')).toEqual({
-      min: 400,
-      default: 400,
-      max: 800,
-    });
-    expect(weightAxis('public/fonts/SpaceGrotesk.ttf')).toEqual({
-      min: 300,
-      default: 300,
-      max: 700,
-    });
     const syne = weightAxis('public/fonts/Syne.ttf');
     const space = weightAxis('public/fonts/SpaceGrotesk.ttf');
+    expect(syne).toEqual({ min: 400, default: 400, max: 800 });
+    expect(space).toEqual({ min: 300, default: 300, max: 700 });
     expect(css).toContain("font-family: 'Campus Galactic Syne'");
     expect(css).toContain("src: url('/fonts/Syne.ttf')");
     expect(css).toContain(`font-weight: ${syne.min} ${syne.max}`);
