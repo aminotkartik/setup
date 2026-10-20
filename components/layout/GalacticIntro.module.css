@@ -1,13 +1,23 @@
+/* Both files are variable fonts. Their real axes are Syne wght 400–800 and
+   Space Grotesk wght 300–700; the descriptors below must describe those
+   ranges, not a guessed static weight. The wordmark uses Syne 800. `block` for
+   Syne means the hidden wordmark can never flash a fallback before the
+   guarded startup decides; the bounded wait and data-typography fallback in
+   GalacticIntro.js choose the fallback deliberately before it is shown.
+   Space Grotesk stays `swap` so the visible Skip intro control is readable
+   from the first paint while its face arrives. */
 @font-face {
   font-family: 'Campus Galactic Syne';
   src: url('/fonts/Syne.ttf') format('truetype');
-  font-weight: 700 800;
-  font-display: swap;
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: block;
 }
 @font-face {
   font-family: 'Campus Galactic Space';
   src: url('/fonts/SpaceGrotesk.ttf') format('truetype');
   font-weight: 300 700;
+  font-style: normal;
   font-display: swap;
 }
 .stage {
@@ -38,7 +48,10 @@
       #000 100%
     );
   transition: opacity 0.4s ease;
-  animation: safety 0s 6.5s forwards;
+  /* The delay is supplied by GalacticIntro.js (SAFETY_CSS_DELAY_MS) so this
+     script-independent deadline always sits just after the JS safety timer,
+     even when the font wait extends the normal startup. */
+  animation: safety 0s var(--intro-safety-delay, 9.5s) forwards;
 }
 .stage[data-phase='fading'] {
   opacity: 0;
@@ -224,11 +237,23 @@
 .tagline {
   margin-top: 12px;
   font-family: 'Campus Galactic Space', sans-serif;
+  font-weight: 400;
   font-size: clamp(10px, 2.6vw, 12.5px);
   letter-spacing: 0.34em;
   color: transparent;
   text-align: center;
   white-space: nowrap;
+}
+/* Deliberate, whole-intro fallback. GalacticIntro.js sets data-typography
+   before it measures or starts playback when either face is unavailable or
+   the bounded font wait expires. Removing every custom family reference here
+   (logo, plus, tagline and Skip intro) is what prevents a late font response
+   from swapping any glyphs or changing the measured 24-unit gap. */
+.stage[data-typography='fallback'] .campus,
+.stage[data-typography='fallback'] .plus,
+.stage[data-typography='fallback'] .tagline,
+.stage[data-typography='fallback'] .skip {
+  font-family: Arial, Helvetica, sans-serif;
 }
 .stage:not([data-phase='waiting']) .center {
   visibility: visible;
@@ -264,6 +289,7 @@
   color: #e2eaff;
   border-radius: 999px;
   font-family: 'Campus Galactic Space', sans-serif;
+  font-weight: 400;
   font-size: 14px;
   letter-spacing: 0.08em;
   cursor: pointer;

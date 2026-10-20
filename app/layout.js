@@ -1,6 +1,7 @@
 import './globals.css';
 import GalacticIntro from '@/components/layout/GalacticIntro';
 
+import { preload } from 'react-dom';
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
 
@@ -72,6 +73,23 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  /* The galactic intro is mounted on every full document load and paints
+     before any route content, so its two self-hosted faces are genuinely
+     critical for the first paint. Each file is a single variable face covering
+     every weight the intro uses, so these hints do not preload unused weights.
+     `crossOrigin: 'anonymous'` matches the CORS mode browsers use for fonts;
+     without it the preload would be fetched twice. */
+  preload('/fonts/Syne.ttf', {
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
+  });
+  preload('/fonts/SpaceGrotesk.ttf', {
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
+  });
+
   return (
     <html lang="en" data-theme="dark">
       <body className={`${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
