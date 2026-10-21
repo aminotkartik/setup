@@ -61,6 +61,8 @@ export function MobileMenu({ user = null, isStaff = false, canModerate = false, 
             <span className="flex-1">Quick actions</span>
             <span className="text-2xs text-muted-soft">⌘K</span>
           </button>
+          <SheetLink href={ROUTES.gigs} icon="briefcase" label="Gigs" onNavigate={close} />
+          <SheetLink href={ROUTES.clubs} icon="star" label="Clubs" onNavigate={close} />
           <SheetLink href={ROUTES.communities} icon="users" label="Communities" onNavigate={close} />
           <SheetLink href={ROUTES.campus} icon="building" label="Campus" onNavigate={close} />
           <SheetLink href={ROUTES.study} icon="book" label="Study finder" onNavigate={close} />

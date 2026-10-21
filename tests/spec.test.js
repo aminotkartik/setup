@@ -196,6 +196,10 @@ describe('route surface (spec §5, §6)', () => {
       '/home', '/explore', '/market', '/communities', '/campus', '/chat',
       '/profile', '/settings', '/notifications', '/moderator', '/admin',
       '/user/[username]', '/post/[id]', '/community/[slug]', '/market/listing/[id]',
+      '/gigs', '/gigs/new', '/gigs/[id]', '/gigs/[id]/edit',
+      '/clubs', '/clubs/new', '/clubs/[id]', '/clubs/[id]/edit',
+      // The pre-section addresses stay routable: they redirect, so old
+      // notifications and bookmarks keep working.
       '/market/gigs/[id]', '/campus/events/[id]', '/campus/clubs/[id]',
       '/campus/noticeboard/[id]', '/explore/resources/[id]', '/explore/opportunities/[id]',
       '/explore/projects/[id]', '/chat/[id]',
@@ -217,7 +221,7 @@ describe('route surface (spec §5, §6)', () => {
   });
 
   it('ships loading states for the primary surfaces', () => {
-    const withLoading = ['home', 'explore', 'market', 'communities', 'campus', 'chat', 'notifications', 'settings', 'moderator', 'admin', 'profile'];
+    const withLoading = ['home', 'explore', 'market', 'gigs', 'clubs', 'communities', 'campus', 'chat', 'notifications', 'settings', 'moderator', 'admin', 'profile'];
     const missing = withLoading.filter(
       (route) => !fs.existsSync(path.join(ROOT, 'app', '(app)', route, 'loading.js')),
     );

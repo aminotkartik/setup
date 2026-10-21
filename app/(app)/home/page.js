@@ -21,7 +21,7 @@ const QUICK_LINKS = [
   { href: '/campus/lost-found', label: 'Lost & found', icon: 'search' },
   { href: '/explore/resources', label: 'Resources', icon: 'book' },
   { href: '/explore/opportunities', label: 'Opportunities', icon: 'briefcase' },
-  { href: '/campus/clubs', label: 'Clubs', icon: 'star' },
+  { href: ROUTES.clubs, label: 'Clubs', icon: 'star' },
 ];
 
 /**

@@ -123,7 +123,7 @@ export default async function ExplorePage({ searchParams }) {
         />
         <ModuleCard
           title="Clubs"
-          href="/campus/clubs"
+          href={ROUTES.clubs}
           icon="building"
           items={clubs?.map((item) => ({ id: item.id, label: item.name, href: ROUTES.club(item.id), meta: `${compactNumber(item.member_count)} members` }))}
           empty="No clubs listed yet."
