@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
@@ -10,19 +11,21 @@ import { LinkifiedText } from '@/components/content/LinkifiedText';
 
 export const metadata = { title: 'Communities' };
 
+// Clubs are their own section now (/clubs). The hub keeps communities and
+// study groups, which are the spaces students create themselves.
 const TABS = [
-  { key: 'all', label: 'All', kinds: ['community', 'study_group', 'club'] },
+  { key: 'all', label: 'All', kinds: ['community', 'study_group'] },
   { key: 'communities', label: 'Communities', kinds: ['community'] },
   { key: 'study_groups', label: 'Study groups', kinds: ['study_group'] },
-  { key: 'clubs', label: 'Clubs', kinds: ['club'] },
 ];
 
 /**
  * Communities hub (spec §26, §28, §33).
  *
- * Communities, study groups and clubs share one infrastructure: same table,
- * same membership rules, same chat, same moderation. Study groups are simply
- * communities with a subject; clubs are communities that officials own.
+ * Communities and study groups share one infrastructure: same table, same
+ * membership rules, same chat, same moderation. Study groups are simply
+ * communities with a subject. Clubs use the same tables but are presented in
+ * their own /clubs section (staff-managed, with a discovery category).
  */
 export default async function CommunitiesPage({ searchParams }) {
   const user = await requireUser();
@@ -30,6 +33,11 @@ export default async function CommunitiesPage({ searchParams }) {
   const actor = toActor(user);
 
   const params = await searchParams;
+  // Old links to the clubs tab belong to the dedicated section.
+  if (params?.tab === 'clubs') {
+    const q = typeof params?.q === 'string' && params.q.trim() ? `?q=${encodeURIComponent(params.q.trim())}` : '';
+    redirect(`${ROUTES.clubs}${q}`);
+  }
   const tab = TABS.some((item) => item.key === params?.tab) ? params.tab : 'all';
   const q = typeof params?.q === 'string' && params.q.trim().length >= 2 ? params.q.trim() : null;
   const kinds = TABS.find((item) => item.key === tab)?.kinds || null;
@@ -59,7 +67,7 @@ export default async function CommunitiesPage({ searchParams }) {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Communities"
-        description="Communities, study groups and clubs — all built on the same membership and chat."
+        description="Communities and study groups built by students. Looking for campus clubs? They have their own section."
         action={
           canCreate ? (
             <LinkButton href="/communities/new" size="sm" icon="plus">
@@ -84,7 +92,10 @@ export default async function CommunitiesPage({ searchParams }) {
           ))}
         </nav>
         <p className="mt-2 text-2xs text-muted">
-          {counts.communities} communities · {counts.studyGroups} study groups · {counts.clubs} clubs
+          {counts.communities} communities · {counts.studyGroups} study groups ·{' '}
+          <Link href={ROUTES.clubs} className="underline hover:text-ink">
+            {counts.clubs} clubs in the clubs section
+          </Link>
         </p>
         <form method="get" action={ROUTES.communities} className="mt-2 flex items-end gap-2">
           <input type="hidden" name="tab" value={tab} />

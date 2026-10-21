@@ -82,9 +82,9 @@ never rendered.
 | --- | --- |
 | Public shell | `/`, `/setup`, `/login`, `/login/verify`, `/onboarding`, `/rules` |
 | Account state | `/account-status` |
-| Primary | `/home`, `/explore`, `/market`, `/communities`, `/campus`, `/chat`, `/random`, `/profile`, `/settings`, `/notifications` |
-| Deep links | `/user/[username]`, `/post/[id]`, `/communities/[slug]` (+ `/community/[slug]` alias), `/market/listing/[id]`, `/market/gigs/[id]`, `/campus/events/[id]`, `/campus/clubs/[id]`, `/campus/noticeboard/[id]`, `/explore/{resources,opportunities,projects}/[id]`, `/chat/[id]` |
-| Create/edit | `/market/new`, `/market/listing/[id]/edit`, `/communities/new`, `/explore/*/new`, `/campus/{lost-found,housing,rides,teams}/new` |
+| Primary | `/home`, `/explore`, `/market`, `/gigs`, `/clubs`, `/communities`, `/campus`, `/chat`, `/random`, `/profile`, `/settings`, `/notifications` |
+| Deep links | `/user/[username]`, `/post/[id]`, `/communities/[slug]` (+ `/community/[slug]` alias), `/market/listing/[id]`, `/gigs/[id]`, `/clubs/[id]`, `/campus/events/[id]`, `/campus/noticeboard/[id]`, `/explore/{resources,opportunities,projects}/[id]`, `/chat/[id]` |
+| Create/edit | `/market/new`, `/market/listing/[id]/edit`, `/gigs/new`, `/gigs/[id]/edit`, `/clubs/new`, `/clubs/[id]/edit`, `/communities/new`, `/explore/*/new`, `/campus/{lost-found,housing,rides,teams}/new` |
 | Staff | `/moderator`, `/admin` |
 | Endpoints | `GET /api/search`, `GET /api/giphy/search` |
 

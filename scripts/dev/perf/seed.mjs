@@ -80,18 +80,20 @@ export async function seedFixtures(client) {
 
   /* --------------------------------------------------------- communities */
   const { rows: communityRows } = await client.query(
-    `insert into public.communities (kind, name, slug, description, subject, visibility, join_policy, status, is_official, created_by, created_at)
-     select kind::public.community_kind, name, slug, description, subject, 'public'::public.visibility_level, 'open', 'published'::public.content_status, is_official, ($1::uuid[])[creator_idx], now() - (interval '1 day' * age_days)
+    `insert into public.communities (kind, name, slug, description, subject, club_category, recruitment_info, visibility, join_policy, status, is_official, created_by, created_at)
+     select kind::public.community_kind, name, slug, description, subject, club_category, recruitment_info,
+            'public'::public.visibility_level, 'open', 'published'::public.content_status, is_official,
+            ($1::uuid[])[creator_idx], now() - (interval '1 day' * age_days)
      from (values
-       ('community', 'Computer Engineering', 'computer-engineering', 'Everything CSE: labs, deadlines, notes and placement chatter.', 'Computer Engineering', false, 1, 40),
-       ('community', 'Campus General', 'campus-general', 'The everything-else community for PCCOE students.', null, false, 2, 60),
-       ('community', 'Hostel Life', 'hostel-life', 'Mess timings, laundry, room allotments and late-night chai.', null, false, 3, 55),
-       ('community', 'Placements 2027', 'placements-2027', 'Drives, referrals, resumes and interview experiences.', null, true, 4, 30),
-       ('study_group', 'Data Structures Study Group', 'data-structures-study-group', 'Weekly DS sessions before the lab exam.', 'Data Structures', false, 5, 25),
-       ('study_group', 'DBMS Study Group', 'dbms-study-group', 'Normalisation, transactions and past papers.', 'DBMS', false, 6, 22),
-       ('club', 'Coding Club', 'coding-club', 'Hackathons, competitive programming and open source.', null, true, 7, 90),
-       ('club', 'Robotics Club', 'robotics-club', 'Embedded, drones and the annual robotics meet.', null, true, 8, 80)
-     ) as c(kind, name, slug, description, subject, is_official, creator_idx, age_days)
+       ('community', 'Computer Engineering', 'computer-engineering', 'Everything CSE: labs, deadlines, notes and placement chatter.', 'Computer Engineering', null, null, false, 1, 40),
+       ('community', 'Campus General', 'campus-general', 'The everything-else community for PCCOE students.', null, null, null, false, 2, 60),
+       ('community', 'Hostel Life', 'hostel-life', 'Mess timings, laundry, room allotments and late-night chai.', null, null, null, false, 3, 55),
+       ('community', 'Placements 2027', 'placements-2027', 'Drives, referrals, resumes and interview experiences.', null, null, null, true, 4, 30),
+       ('study_group', 'Data Structures Study Group', 'data-structures-study-group', 'Weekly DS sessions before the lab exam.', 'Data Structures', null, null, false, 5, 25),
+       ('study_group', 'DBMS Study Group', 'dbms-study-group', 'Normalisation, transactions and past papers.', 'DBMS', null, null, false, 6, 22),
+       ('club', 'Coding Club', 'coding-club', 'Hackathons, competitive programming and open source.', 'Competitive programming', 'Technical', 'Recruiting first and second year coders.', true, 7, 90),
+       ('club', 'Robotics Club', 'robotics-club', 'Embedded, drones and the annual robotics meet.', 'Embedded systems', 'Technical', 'Open auditions in August.', true, 8, 80)
+     ) as c(kind, name, slug, description, subject, club_category, recruitment_info, is_official, creator_idx, age_days)
      returning id, kind, name, slug`,
     [authorIds.slice(0, 8)],
   );
@@ -210,11 +212,22 @@ export async function seedFixtures(client) {
     ],
   );
   await client.query(
-    `insert into public.gigs (creator_id, title, description, category, compensation, availability, status, created_at)
+    `insert into public.gigs (creator_id, title, description, category, skills, payment_type, compensation,
+                              availability, deadline, contact_details, state, status, created_at)
      select (array[$1::uuid, $2, $3, $4])[1 + (i % 4)], 'Gig: poster design ' || i,
             'Need a poster for the club event by Friday. Text me for the details.',
             (array['design','coding','tutoring','editing'])[1 + (i % 4)],
-            '500-' || (500 + i * 100) || ' per task', 'Weekends', 
+            (case (i % 4)
+               when 0 then array['Design','Figma']::text[]
+               when 1 then array['Coding','React']::text[]
+               when 2 then array['Calculus','Physics']::text[]
+               else array['Editing','Writing']::text[]
+             end),
+            (case when i % 3 = 0 then 'unpaid' else 'paid' end),
+            '500-' || (500 + i * 100) || ' per task', 'Weekends',
+            current_date + (i % 20),
+            'Send a sample of your work and your branch.',
+            (case when i % 7 = 0 then 'closed' else 'open' end)::public.gig_state,
             'published'::public.content_status, now() - (interval '6 hours' * i)
      from generate_series(1, 12) as i`,
     authorIds.slice(0, 4),
