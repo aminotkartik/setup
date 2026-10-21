@@ -4,12 +4,12 @@ import path from 'node:path';
 export default defineConfig({
   // The app writes JSX in .js files (the Next.js convention used throughout
   // app/ and components/). Teach the test transform the same thing, scoped to
-  // components so component-rendering tests can import them; pure lib modules
-  // keep the plain JS loader.
+  // components and the guarded onboarding page so rendering/redirect tests can
+  // import them; pure lib modules keep the plain JS loader.
   oxc: {
     lang: 'jsx',
     jsx: { runtime: 'automatic' },
-    include: /components\/.*\.js$/,
+    include: /(?:components\/.*|app\/onboarding\/page)\.js$/,
     exclude: [],
   },
   test: {

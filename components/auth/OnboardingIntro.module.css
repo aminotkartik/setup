@@ -1,0 +1,175 @@
+/* Field-note details stay local to onboarding. Essential copy uses the UI font;
+   the local display and mono fonts are not handwriting faces. No motion. */
+.page {
+  width: 100%;
+  max-width: 44.5rem;
+  margin-inline: auto;
+}
+
+.intro {
+  color: var(--cp-text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--cp-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.heading {
+  max-width: 23ch;
+  font-size: clamp(1.75rem, 1.35rem + 2vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+.underline {
+  text-decoration: underline;
+  text-decoration-color: var(--cp-text-accent);
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.opening {
+  max-width: 62ch;
+  margin-top: 1rem;
+  color: var(--cp-text-secondary);
+}
+
+.notes {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 1.25rem 0;
+  list-style: none;
+}
+
+.note {
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  background: var(--cp-bg-elevated);
+  border: 1px solid var(--cp-border-subtle);
+  border-radius: 0.4rem 0.8rem 0.5rem 0.7rem;
+}
+
+.number {
+  float: left;
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: var(--cp-text-accent);
+  font-style: italic;
+  font-weight: 600;
+  border-bottom: 1px solid currentColor;
+  border-radius: 45%;
+  transform: rotate(-4deg);
+}
+
+.note h2,
+.guide h2 {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.note p {
+  margin-top: 0.35rem;
+  color: var(--cp-text-secondary);
+}
+
+.guide {
+  padding-block: 1.25rem;
+  border-top: 1px solid var(--cp-border-subtle);
+  border-bottom: 1px solid var(--cp-border-subtle);
+}
+
+.destinations {
+  display: grid;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.destinations > div {
+  min-width: 0;
+}
+
+.destinations dt {
+  display: inline;
+  margin-right: 0.35em;
+  font-weight: 600;
+}
+
+.destinations dd {
+  display: inline;
+  margin: 0;
+  color: var(--cp-text-secondary);
+}
+
+.firstStep {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: var(--cp-text-secondary);
+}
+
+.arrow {
+  color: var(--cp-text-accent);
+  font-size: 1.25rem;
+}
+
+.profile {
+  margin-top: 1.5rem;
+}
+
+.profile h2 {
+  font-size: 1.25rem;
+}
+
+.profileCopy {
+  margin-block: 0.5rem 1rem;
+  color: var(--cp-text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Keep the existing full action label readable on a 320px phone and at zoom. */
+.profile button[type='submit'] {
+  height: auto;
+  min-height: 2.75rem;
+  white-space: normal;
+}
+
+.profile :global(.cp-btn-face) {
+  padding-block: 0.5rem;
+}
+
+.profile :global(.btn-label > span) {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+@media (min-width: 40rem) {
+  .notes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .note:nth-child(2) {
+    border-radius: 0.75rem 0.4rem 0.7rem 0.5rem;
+  }
+
+  .number {
+    float: none;
+    margin-bottom: 0.35rem;
+  }
+
+  .destinations {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

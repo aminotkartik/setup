@@ -44,7 +44,6 @@ export function OnboardingForm() {
             autoCapitalize="none"
             spellCheck="false"
             required
-            autoFocus
             aria-invalid={fieldErrors?.username ? 'true' : undefined}
           />
         </div>
