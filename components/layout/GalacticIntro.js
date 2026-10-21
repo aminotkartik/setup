@@ -1,11 +1,80 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import styles from './GalacticIntro.module.css';
 
 // Memory belongs to this document only. No cookies/storage and no route keys.
 // A completed intro cannot replay even if the boundary is later remounted.
 let completed = false;
+
+/* --------------------------------------------------------------------------
+   Where the intro may appear
+   --------------------------------------------------------------------------
+   The home page is `/home`. `/` is a redirect-only route (`app/page.js` never
+   paints content), so a document that was opened at `/` is still a landing at
+   the home page — signed-in visitors are sent straight to `/home` and the
+   intro must continue there rather than being torn down by the redirect.
+
+   These sets are the whole routing contract: no other route can ever mount
+   the intro, which is why the overlay can no longer cover `/login`, `/setup`,
+   `/profile`, `/market`, `/communities`, `/chat`, `/settings`, `/campus` or
+   any other page. */
+const HOME_ROUTE = '/home';
+const ROOT_ROUTE = '/';
+/** Entry points that count as "arrived at the home page". */
+const HOME_ENTRY_ROUTES = new Set([ROOT_ROUTE, HOME_ROUTE]);
+
+/**
+ * The route this document was opened at, captured once when the client bundle
+ * is evaluated — before any Next client navigation can rewrite the URL. It is
+ * `null` while rendering on the server, where the request pathname is already
+ * the same value, so SSR and hydration always agree.
+ */
+const documentEntryPath =
+  typeof window === 'undefined' ? null : window.location.pathname;
+
+/**
+ * Pure decision used by <LandingIntro> and by the unit tests:
+ * show the intro only on the home page, only for a document that entered at
+ * the home page (or the redirect-only root), and only once per document.
+ */
+export function shouldShowLandingIntro({ pathname, entryPath, done = false }) {
+  if (done) return false;
+  if (pathname !== HOME_ROUTE) return false;
+  return HOME_ENTRY_ROUTES.has(entryPath);
+}
+
+/**
+ * Route gate for the landing animation.
+ *
+ * This is the only place the intro is mounted. It sits in the root layout so
+ * it survives the `/` → `/home` redirect, but the decision below is derived
+ * purely from the route and the document entry, so nothing else can reach it:
+ *
+ *   `/` → `/home`          → plays (the document entered at the site root)
+ *   `/home` (direct/refresh) → plays
+ *   anything else           → nothing, ever
+ *   client navigation to `/home` from another page → plays nothing
+ *   client navigation away from `/home`             → overlay removed
+ *   back to `/home` after the intro finished        → nothing (memory)
+ *
+ * No state and no effect is needed here, which keeps the server render and the
+ * hydration render identical (no mismatch) and means children never remount
+ * when the answer changes.
+ */
+export function LandingIntro({ children }) {
+  const pathname = usePathname();
+  // The server has no `window`; the request pathname is the entry path there.
+  const entryPath = documentEntryPath ?? pathname;
+  const show = shouldShowLandingIntro({
+    pathname,
+    entryPath,
+    done: completed,
+  });
+
+  return <GalacticIntro enabled={show}>{children}</GalacticIntro>;
+}
 
 /* The intro is the only consumer of these two self-hosted variable faces.
    These names must stay in sync with GalacticIntro.module.css: the Font
@@ -117,7 +186,7 @@ function textAdvance(element) {
   return 0;
 }
 
-export default function GalacticIntro({ children }) {
+export default function GalacticIntro({ children, enabled = true }) {
   // Identical server/client first render; consult document memory in the effect.
   const [phase, setPhase] = useState('waiting');
   const focusOnReveal = useRef(false);
@@ -134,6 +203,8 @@ export default function GalacticIntro({ children }) {
   }
 
   useEffect(() => {
+    // Route gate closed: no fonts, timers, listeners or overlay work at all.
+    if (!enabled) return undefined;
     if (completed) {
       const timer = setTimeout(() => setPhase('done'), 0);
       return () => clearTimeout(timer);
@@ -256,7 +327,10 @@ export default function GalacticIntro({ children }) {
       motion.removeEventListener('change', onMotion);
       window.removeEventListener('keydown', onKey);
     };
-  }, []);
+    // `enabled` is the route gate. Leaving the home page re-runs this effect's
+    // cleanup (timers, frames, listeners) and stops the animation immediately;
+    // arriving at the home page after the `/` redirect starts it once.
+  }, [enabled]);
 
   useEffect(() => {
     if (phase === 'done' && focusOnReveal.current) {
@@ -265,7 +339,7 @@ export default function GalacticIntro({ children }) {
     }
   }, [phase]);
 
-  const visible = phase !== 'done';
+  const visible = enabled && phase !== 'done';
   return (
     <>
       {visible && (

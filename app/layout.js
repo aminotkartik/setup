@@ -1,7 +1,6 @@
 import './globals.css';
-import GalacticIntro from '@/components/layout/GalacticIntro';
+import { LandingIntro } from '@/components/layout/GalacticIntro';
 
-import { preload } from 'react-dom';
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
 
@@ -73,27 +72,18 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
-  /* The galactic intro is mounted on every full document load and paints
-     before any route content, so its two self-hosted faces are genuinely
-     critical for the first paint. Each file is a single variable face covering
-     every weight the intro uses, so these hints do not preload unused weights.
-     `crossOrigin: 'anonymous'` matches the CORS mode browsers use for fonts;
-     without it the preload would be fetched twice. */
-  preload('/fonts/Syne.ttf', {
-    as: 'font',
-    type: 'font/ttf',
-    crossOrigin: 'anonymous',
-  });
-  preload('/fonts/SpaceGrotesk.ttf', {
-    as: 'font',
-    type: 'font/ttf',
-    crossOrigin: 'anonymous',
-  });
-
+  /* The landing animation is route-gated, not document-global: <LandingIntro>
+     renders it only on the home page (`/home`, plus the `/` redirect that leads
+     there) and only for a document that was opened there. Every other route —
+     `/login`, `/setup`, `/profile`, `/market`, `/communities`, `/chat`,
+     `/settings`, `/campus`, … — renders its children directly, with no
+     overlay and no inert wrapper. The intro's font preloads therefore live in
+     `app/(app)/home/layout.js`, so no route that cannot show the intro pays for
+     them (and browsers do not warn about unused preloads). */
   return (
     <html lang="en" data-theme="dark">
       <body className={`${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
-        <GalacticIntro>{children}</GalacticIntro>
+        <LandingIntro>{children}</LandingIntro>
       </body>
     </html>
   );
