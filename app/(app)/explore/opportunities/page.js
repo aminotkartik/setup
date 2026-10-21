@@ -17,8 +17,8 @@ const categoryLabel = (value) => OPPORTUNITY_CATEGORIES.find((option) => option.
 // them instead of duplicating their data.
 const SOURCES = [
   { href: ROUTES.teams, icon: 'users', label: 'Team finder', description: 'Project collaboration and teammate recruitment live here.' },
-  { href: '/campus/clubs', icon: 'star', label: 'Club recruitment', description: 'Clubs announce recruitment on their own pages.' },
-  { href: '/market', icon: 'briefcase', label: 'Student gigs', description: 'Paid micro-work lives in the Marketplace.' },
+  { href: ROUTES.clubs, icon: 'star', label: 'Club recruitment', description: 'Clubs announce recruitment on their own pages.' },
+  { href: ROUTES.gigs, icon: 'briefcase', label: 'Student gigs', description: 'Paid and unpaid micro-work has its own board.' },
 ];
 
 function FilterBar({ current }) {

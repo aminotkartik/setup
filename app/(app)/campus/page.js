@@ -14,7 +14,7 @@ export const metadata = { title: 'Campus' };
 const SECTIONS = [
   { href: '/campus/noticeboard', label: 'Noticeboard', icon: 'megaphone', description: 'Official notices and announcements.' },
   { href: '/campus/events', label: 'Events', icon: 'calendar', description: 'What is happening, with RSVP.' },
-  { href: '/campus/clubs', label: 'Clubs', icon: 'star', description: 'Campus clubs and how to join.' },
+  { href: ROUTES.clubs, label: 'Clubs', icon: 'star', description: 'Campus clubs and how to join.' },
   { href: '/campus/lost-found', label: 'Lost & found', icon: 'search', description: 'Lost something? Found something?' },
   { href: '/campus/housing', label: 'Housing', icon: 'building', description: 'Rooms, flats and PG posts.' },
   { href: '/campus/rides', label: 'Rides', icon: 'bus', description: 'Share a ride home or to the station.' },
@@ -135,7 +135,7 @@ export default async function CampusPage() {
         <section aria-label="Clubs" className="flex flex-col gap-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             Clubs
-            <Link href="/campus/clubs" className="text-2xs text-muted underline hover:text-ink">
+            <Link href={ROUTES.clubs} className="text-2xs text-muted underline hover:text-ink">
               All clubs
             </Link>
           </h2>

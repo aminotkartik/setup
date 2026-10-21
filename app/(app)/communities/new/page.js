@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/session';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { ROUTES, BRANCHES, YEARS, LIMITS } from '@/lib/constants';
@@ -8,20 +9,20 @@ import { createCommunity } from '@/lib/actions/communities';
 export const metadata = { title: 'New community' };
 
 /**
- * Create a community, study group or club (spec §26, §28, §33). Student-created
- * spaces are never marked official, and clubs that the campus runs are created
- * by staff from the admin surface.
+ * Create a community or study group (spec §26, §33). Student-created spaces are
+ * never marked official. Clubs are campus-run, live at `/clubs/new`, and old
+ * `?kind=club` links redirect there.
  */
 export default async function NewCommunityPage({ searchParams }) {
   const user = await requireUser();
   const actor = toActor(user);
   const params = await searchParams;
-  const requestedKind = ['community', 'study_group', 'club'].includes(String(params?.kind)) ? String(params.kind) : 'community';
-  const canCreateClubs = can(actor, 'manage_clubs');
-  // A student with no community permissions at all cannot create anything.
-  // Clubs are gated separately (`manage_clubs`, staff-only): students create
-  // communities and study groups, but official clubs are campus-run spaces.
-  if (!can(actor, 'create_communities') && !canCreateClubs) {
+  // Clubs have their own creation flow (staff-managed, with a category).
+  if (params?.kind === 'club') redirect(ROUTES.clubNew);
+  const requestedKind = ['community', 'study_group'].includes(String(params?.kind)) ? String(params.kind) : 'community';
+  // Clubs are gated by `manage_clubs` and live at /clubs/new; this form only
+  // creates the spaces students run.
+  if (!can(actor, 'create_communities')) {
     return (
       <div className="flex flex-col gap-4">
         <PageHeader title="Create" back={{ href: ROUTES.communities, label: 'Communities' }} />
@@ -32,22 +33,8 @@ export default async function NewCommunityPage({ searchParams }) {
     );
   }
 
-  // A student who followed a `?kind=club` link without the permission falls
-  // back to "community" instead of hitting a raw database permission error.
-  const kind = requestedKind === 'club' && !canCreateClubs ? 'community' : requestedKind;
-  if (requestedKind === 'club' && !canCreateClubs) {
-    return (
-      <div className="flex flex-col gap-4">
-        <PageHeader title="Create a club" back={{ href: ROUTES.communities, label: 'Communities' }} />
-        <Notice tone="warning" icon="lock">
-          Clubs are campus-run spaces. Your account cannot create one — create a community or study group instead,
-          or ask an admin to set one up from the admin console.
-        </Notice>
-      </div>
-    );
-  }
-
-  const kindLabel = kind === 'study_group' ? 'study group' : kind === 'club' ? 'club' : 'community';
+  const kind = requestedKind;
+  const kindLabel = kind === 'study_group' ? 'study group' : 'community';
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,7 +52,6 @@ export default async function NewCommunityPage({ searchParams }) {
         {[
           { key: 'community', label: 'Community' },
           { key: 'study_group', label: 'Study group' },
-          ...(canCreateClubs ? [{ key: 'club', label: 'Club' }] : []),
         ].map((option) => (
           <a
             key={option.key}

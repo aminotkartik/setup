@@ -87,16 +87,17 @@ await db.end();
 
 const required = ['/home', '/explore', '/communities', '/chat', '/market', '/notifications', '/settings', '/profile'];
 const extra = [
-  '/campus', '/campus/noticeboard', '/campus/events', '/campus/clubs', '/campus/utilities',
+  '/campus', '/campus/noticeboard', '/campus/events', '/campus/utilities',
   '/campus/lost-found', '/campus/lost-found?kind=lost', '/campus/lost-found?kind=found',
   '/campus/lost-found/new', '/campus/lost-found/new?kind=lost', '/campus/lost-found/new?kind=found',
   '/campus/housing', '/campus/housing/new', '/campus/rides', '/campus/rides/new', '/campus/teams', '/campus/teams/new',
   '/explore/resources', '/explore/resources/new', '/explore/opportunities', '/explore/opportunities/new', '/explore/projects', '/explore/projects/new',
-  '/market?tab=gigs', '/market?tab=deals', '/market/new', '/market/new?type=gig',
+  '/market?tab=deals', '/market/new', '/market/new?type=gig',
   '/communities?tab=study_groups', '/communities/new', '/communities/new?kind=study_group',
   `/communities/${ids.community}`, `/user/${harness.student.username}`, `/chat/${harness.conversationId}`, `/post/${ids.post}`, `/post/${ids.poll}`,
-  `/market/listing/${ids.marketplace_listings}`, `/market/gigs/${ids.gigs}`, `/campus/events/${ids.events}`, `/campus/noticeboard/${ids.notices}`,
-  `/campus/clubs/${ids.club}`, `/explore/resources/${ids.official_resources}`, `/explore/opportunities/${ids.opportunities}`, `/explore/projects/${ids.projects}`,
+  `/market/listing/${ids.marketplace_listings}`, `/campus/events/${ids.events}`, `/campus/noticeboard/${ids.notices}`,
+  `/explore/resources/${ids.official_resources}`, `/explore/opportunities/${ids.opportunities}`, `/explore/projects/${ids.projects}`,
+  '/gigs', '/gigs/new', '/clubs', '/clubs/new', `/gigs/${ids.gigs}`, `/clubs/${ids.club}`,
   ...lostFound.map((item) => `/campus/lost-found/${item.id}`),
   ...['profile', 'username', 'notifications', 'privacy', 'blocked', 'account'].map((tab) => `/settings?tab=${tab}`),
   '/explore?q=no_such_contrast_fixture_result', '/moderator', '/admin', '/post/00000000-0000-0000-0000-000000000001', '/a-missing-campus-page',

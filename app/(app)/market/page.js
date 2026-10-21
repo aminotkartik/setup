@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
-import { listListings, listGigs, listDeals, listCategories, getMarketSummary } from '@/lib/data/marketplace';
+import { listListings, listDeals, listCategories, getMarketSummary } from '@/lib/data/marketplace';
 import { ROUTES } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader, SectionHeader, TiltCard } from '@/components/ui';
 import { ContentCard } from '@/components/content/ContentCard';
@@ -11,19 +12,21 @@ import { formatDate, formatPrice } from '@/lib/utils';
 
 export const metadata = { title: 'Market' };
 
+// Gigs are their own section now. The market keeps things you buy, give away
+// or claim — see /gigs for student work.
 const TABS = [
   { key: 'all', label: 'Everything' },
   { key: 'free', label: 'Free stuff' },
-  { key: 'gigs', label: 'Gigs' },
   { key: 'deals', label: 'Campus deals' },
 ];
 
 /**
  * Marketplace (spec §17–§20).
  *
- * Listings, free items, gigs and official campus deals in one place — the same
- * infrastructure, different intent. Prices and conditions are the only numbers
- * shown; there are no view counts or "trending" badges.
+ * Listings, free items and official campus deals — the same infrastructure,
+ * different intent. Gigs moved to their own /gigs section; this page links
+ * there instead of repeating the board. Prices and conditions are the only
+ * numbers shown; there are no view counts or "trending" badges.
  */
 export default async function MarketPage({ searchParams }) {
   const user = await requireUser();
@@ -31,40 +34,35 @@ export default async function MarketPage({ searchParams }) {
   const actor = toActor(user);
 
   const params = await searchParams;
+  // Old links to the gigs tab (and the "Post a gig" flow) belong to /gigs.
+  if (params?.tab === 'gigs') {
+    const q = typeof params?.q === 'string' && params.q.trim() ? `?q=${encodeURIComponent(params.q.trim())}` : '';
+    redirect(`${ROUTES.gigs}${q}`);
+  }
   const tab = TABS.some((item) => item.key === params?.tab) ? params.tab : 'all';
   const q = typeof params?.q === 'string' && params.q.trim().length >= 2 ? params.q.trim() : null;
   const categoryId = typeof params?.category === 'string' && params.category ? params.category : null;
 
   // The tab's own list, the category list and the summary counts are
   // independent: one fan-out instead of a serial warm-up followed by the list.
-  const [categories, summary, listings, gigs, deals] = await Promise.all([
+  const [categories, summary, listings, deals] = await Promise.all([
     listCategories(supabase),
     getMarketSummary(supabase),
-    tab === 'gigs' || tab === 'deals'
+    tab === 'deals'
       ? Promise.resolve({ items: [], unavailable: false })
       : listListings(supabase, { free: tab === 'free' ? true : null, categoryId, q, limit: 24 }),
-    tab === 'gigs' ? listGigs(supabase, { q, limit: 24 }) : Promise.resolve({ items: [], unavailable: false }),
     tab === 'deals' ? listDeals(supabase, { limit: 24 }) : Promise.resolve({ items: [], unavailable: false }),
   ]);
 
   const canSell = can(actor, 'create_marketplace_listing');
-  const canGig = can(actor, 'create_gigs');
 
-  // Seller/creator identities for whichever list the tab loaded — in parallel.
-  const [sellers, gigCreators] = await Promise.all([
-    (async () => {
-      const ids = [...new Set(listings.items.map((listing) => listing.seller_id))];
-      if (!ids.length) return new Map();
-      const { data } = await supabase.from('public_profiles').select('id, username, display_name, is_staff').in('id', ids);
-      return new Map((data || []).map((person) => [person.id, person]));
-    })(),
-    (async () => {
-      const ids = [...new Set(gigs.items.map((gig) => gig.creator_id))];
-      if (!ids.length) return new Map();
-      const { data } = await supabase.from('public_profiles').select('id, username, display_name').in('id', ids);
-      return new Map((data || []).map((person) => [person.id, person]));
-    })(),
-  ]);
+  // Seller identities for whichever list the tab loaded.
+  const sellers = await (async () => {
+    const ids = [...new Set(listings.items.map((listing) => listing.seller_id))];
+    if (!ids.length) return new Map();
+    const { data } = await supabase.from('public_profiles').select('id, username, display_name, is_staff').in('id', ids);
+    return new Map((data || []).map((person) => [person.id, person]));
+  })();
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,7 +71,9 @@ export default async function MarketPage({ searchParams }) {
         description="Buy, sell, give away and hire — text first, meet on campus."
         action={
           <div className="flex items-center gap-2">
-            {canGig ? <LinkButton href="/market/new?type=gig" size="sm" variant="secondary">Post a gig</LinkButton> : null}
+            <LinkButton href={ROUTES.gigs} size="sm" variant="secondary" icon="briefcase">
+              Student gigs
+            </LinkButton>
             {canSell ? <LinkButton href="/market/new" size="sm" icon="plus">Sell something</LinkButton> : null}
           </div>
         }
@@ -93,7 +93,7 @@ export default async function MarketPage({ searchParams }) {
           ))}
         </nav>
         <p className="mt-2 text-2xs text-muted">
-          {summary.active} available · {summary.free} free · {summary.gigs} gigs · {summary.sold} completed
+          {summary.active} available · {summary.free} free · {summary.sold} completed
         </p>
       </Card>
 
@@ -101,7 +101,7 @@ export default async function MarketPage({ searchParams }) {
         <input type="hidden" name="tab" value={tab} />
         <label className="flex min-w-[12rem] flex-1 flex-col gap-1.5">
           <span className="field-label">Search</span>
-          <input name="q" defaultValue={q || ''} maxLength={80} placeholder="Search listings and gigs" className="control control-input h-9" />
+          <input name="q" defaultValue={q || ''} maxLength={80} placeholder="Search listings" className="control control-input h-9" />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="field-label">Category</span>
@@ -121,7 +121,7 @@ export default async function MarketPage({ searchParams }) {
         </Button>
       </form>
 
-      {listings.unavailable || gigs.unavailable || deals.unavailable ? (
+      {listings.unavailable || deals.unavailable ? (
         <Notice tone="warning" icon="flag">
           Part of the marketplace could not be loaded. Refresh to try again.
         </Notice>
@@ -183,29 +183,6 @@ export default async function MarketPage({ searchParams }) {
         </section>
       ) : null}
 
-      {tab === 'gigs' && gigs.items.length ? (
-        <section aria-label="Gigs" className="flex flex-col gap-3">
-          {gigs.items.map((gig) => {
-            const creator = gigCreators.get(gig.creator_id);
-            return (
-              <ContentCard
-                key={gig.id}
-                href={ROUTES.gig(gig.id)}
-                title={gig.title}
-                description={gig.description}
-                icon="briefcase"
-                timestamp={gig.created_at}
-                badges={[
-                  { label: 'Gig' },
-                  ...(gig.compensation ? [{ label: gig.compensation }] : []),
-                ]}
-                meta={[creator ? `@${creator.username}` : null, gig.category, gig.availability]}
-              />
-            );
-          })}
-        </section>
-      ) : null}
-
       {tab === 'deals' && deals.items.length ? (
         <section aria-label="Campus deals" className="flex flex-col gap-3">
           {deals.items.map((deal) => (
@@ -225,7 +202,7 @@ export default async function MarketPage({ searchParams }) {
         </section>
       ) : null}
 
-      {!listings.unavailable && !gigs.unavailable && !deals.unavailable && !listings.items.length && !gigs.items.length && !deals.items.length ? (
+      {!listings.unavailable && !deals.unavailable && !listings.items.length && !deals.items.length ? (
         <EmptyState
           icon="tag"
           title={q ? 'Nothing matched that search' : 'The marketplace is empty'}
