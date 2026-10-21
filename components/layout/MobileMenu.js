@@ -4,8 +4,8 @@
  * The mobile "everything else" sheet.
  *
  * The bottom bar carries Home, Explore, Market, Chat and Profile, so this holds
- * the rest: communities, campus, notifications, settings, creation shortcuts and
- * the appearance control, plus the staff panels when they apply.
+ * the rest: communities, campus, notifications, settings and creation shortcuts,
+ * plus the staff panels when they apply.
  *
  * It is a real dialog (portalled, focus-managed, Escape and backdrop close) that
  * becomes a bottom sheet on phones.
@@ -15,7 +15,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
-import { IdentityMark, Sheet, StaffDot, ThemeSwitch } from '@/components/ui';
+import { IdentityMark, Sheet, StaffDot } from '@/components/ui';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { openCommandPalette } from '@/components/search/CommandPalette';
 
@@ -35,7 +35,7 @@ function SheetLink({ href, icon, label, count = 0, onNavigate }) {
   );
 }
 
-export function MobileMenu({ user = null, isStaff = false, canModerate = false, canAdmin = false, theme = 'dark', createItems = [] }) {
+export function MobileMenu({ user = null, isStaff = false, canModerate = false, canAdmin = false, createItems = [] }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -61,6 +61,8 @@ export function MobileMenu({ user = null, isStaff = false, canModerate = false, 
             <span className="flex-1">Quick actions</span>
             <span className="text-2xs text-muted-soft">⌘K</span>
           </button>
+          <SheetLink href={ROUTES.gigs} icon="briefcase" label="Gigs" onNavigate={close} />
+          <SheetLink href={ROUTES.clubs} icon="star" label="Clubs" onNavigate={close} />
           <SheetLink href={ROUTES.communities} icon="users" label="Communities" onNavigate={close} />
           <SheetLink href={ROUTES.campus} icon="building" label="Campus" onNavigate={close} />
           <SheetLink href={ROUTES.study} icon="book" label="Study finder" onNavigate={close} />
@@ -80,11 +82,6 @@ export function MobileMenu({ user = null, isStaff = false, canModerate = false, 
             </div>
           </div>
         ) : null}
-
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-line bg-surface-2 px-3 py-2.5">
-          <span className="text-[0.8125rem] font-medium">Dark mode</span>
-          <ThemeSwitch theme={theme} />
-        </div>
 
         {user ? (
           <div className="mt-4 border-t border-line pt-3">

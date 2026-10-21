@@ -1,115 +1,261 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { shouldShowLandingIntro } from '../components/layout/GalacticIntro.js';
 
-/**
- * Campus+ cinematic launch intro — architecture guards.
- *
- * The launch screen is the real `campus.html` choreography, not a spinner:
- * these tests pin the stage set, the resilience contract (reduced motion,
- * cleanup, failsafe) and the loading-layer wiring, so the integration cannot
- * silently degrade into a generic loader.
- */
+const read = (file) => fs.readFileSync(file, 'utf8');
+const source = read('components/layout/GalacticIntro.js');
+const css = read('components/layout/GalacticIntro.module.css');
+const layout = read('app/layout.js');
+const homeLayout = read('app/(app)/home/layout.js');
 
-const ROOT = process.cwd();
-const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+// Minimal TrueType/OpenType reader: the table directory plus the `fvar` weight
+// axis. Enough to prove whether these files are variable and what their real
+// weight range is, without adding a font-parsing dependency.
+const sfntTables = (buffer) => {
+  const tables = new Map();
+  const count = buffer.readUInt16BE(4);
+  for (let index = 0; index < count; index += 1) {
+    const record = 12 + index * 16;
+    tables.set(buffer.toString('ascii', record, record + 4), {
+      offset: buffer.readUInt32BE(record + 8),
+    });
+  }
+  return tables;
+};
+const fixed = (buffer, offset) => buffer.readInt32BE(offset) / 65536;
+const weightAxis = (file) => {
+  const buffer = fs.readFileSync(file);
+  const tables = sfntTables(buffer);
+  if (!tables.has('fvar')) return null;
+  const fvar = tables.get('fvar').offset;
+  const axisSize = buffer.readUInt16BE(fvar + 10);
+  const axisCount = buffer.readUInt16BE(fvar + 8);
+  for (let index = 0; index < axisCount; index += 1) {
+    const axis = fvar + buffer.readUInt16BE(fvar + 4) + index * axisSize;
+    if (buffer.toString('ascii', axis, axis + 4) !== 'wght') continue;
+    return {
+      min: fixed(buffer, axis + 4),
+      default: fixed(buffer, axis + 8),
+      max: fixed(buffer, axis + 12),
+    };
+  }
+  return null;
+};
 
-const LOADER = path.join('components', 'ui', 'CampusIntroLoader.js');
-const GATE = path.join('components', 'layout', 'HomeLaunchGate.js');
-const HOME_LAYOUT = path.join('app', '(app)', 'home', 'layout.js');
-const HOME_PAGE = path.join('app', '(app)', 'home', 'page.js');
-const INTRO_CSS = path.join('app', 'styles', 'intro.css');
+describe('document-level galactic intro architecture', () => {
+  it('mounts the route-gated landing intro, never the animation directly', () => {
+    expect(layout).toContain('<LandingIntro>{children}</LandingIntro>');
+    expect(layout).not.toContain('<GalacticIntro');
+    expect(read('app/(app)/home/layout.js')).not.toContain('HomeLaunchGate');
+  });
 
-describe('cinematic launch choreography (campus.html source of truth)', () => {
-  it('keeps every choreography stage', () => {
-    const source = read(LOADER);
-    for (const stage of [
-      'drawCurve',
-      'moveComet',
-      'endFlare',
-      'revealPlus',
-      'revealCampus',
-      'particleBurst',
-      'lightSweepAnimation',
-      'holdLogo',
-      'fadeScene',
+  it('shows the animation only on the home page reached as the landing route', () => {
+    // `/` is the redirect-only root; `/home` is the page it lands on.
+    expect(source).toContain("const HOME_ROUTE = '/home'");
+    expect(source).toContain("const ROOT_ROUTE = '/'");
+    expect(source).toContain(
+      'const HOME_ENTRY_ROUTES = new Set([ROOT_ROUTE, HOME_ROUTE])',
+    );
+    expect(source).toContain('window.location.pathname');
+    expect(source).toContain('const show = shouldShowLandingIntro({');
+    expect(source).toContain(
+      'return <GalacticIntro enabled={show}>{children}</GalacticIntro>',
+    );
+
+    const visible = (pathname, entryPath, extra = {}) =>
+      shouldShowLandingIntro({ pathname, entryPath, ...extra });
+
+    // Landing routes: a fresh document at `/` or `/home`.
+    expect(visible('/home', '/home')).toBe(true);
+    expect(visible('/home', '/')).toBe(true);
+    // `/` paints nothing (it is a redirect), so it renders no overlay itself.
+    expect(visible('/', '/')).toBe(false);
+    expect(visible('/login', '/')).toBe(false);
+
+    // Client-side navigation to /home from any other page.
+    for (const from of [
+      '/profile',
+      '/settings',
+      '/communities',
+      '/market',
+      '/chat',
+      '/campus/events',
+      '/rules',
+      '/login',
     ]) {
-      expect(source).toContain(stage);
+      expect(visible('/home', from)).toBe(false);
+    }
+
+    // Every other route, however it is entered.
+    for (const pathname of [
+      '/login',
+      '/setup',
+      '/onboarding',
+      '/rules',
+      '/profile',
+      '/settings',
+      '/communities',
+      '/market',
+      '/chat',
+      '/campus',
+      '/campus/events',
+      '/explore',
+      '/notifications',
+      '/moderator',
+      '/admin',
+      '/dashboard',
+      '/marketplace',
+      '/events',
+    ]) {
+      expect(visible(pathname, pathname)).toBe(false);
+      expect(visible(pathname, '/')).toBe(false);
+    }
+
+    // Document memory: once finished, a later return to /home cannot replay.
+    expect(visible('/home', '/home', { done: true })).toBe(false);
+  });
+
+  it('does no animation work at all when the route gate is closed', () => {
+    expect(source).toContain('export default function GalacticIntro({ children, enabled = true })');
+    expect(source).toContain('if (!enabled) return undefined;');
+    expect(source).toContain('}, [enabled]);');
+    expect(source).toContain("const visible = enabled && phase !== 'done';");
+  });
+
+  it('never uses persistent playback state or application routing', () => {
+    expect(source).not.toMatch(
+      /sessionStorage|localStorage|document\.cookie|router\.|supabase|location\.reload|location\.href|location\.assign|location\.replace|next\/navigation.*redirect/,
+    );
+    expect(source).toContain('let completed = false');
+    expect(source).toContain('inert={visible ? true : undefined}');
+  });
+
+  it('declares the real variable-font metadata and matching CSS/JS names', () => {
+    // Both self-hosted files are variable fonts. The CSS ranges below are only
+    // valid if they match the `fvar` weight axis exactly.
+    const syne = weightAxis('public/fonts/Syne.ttf');
+    const space = weightAxis('public/fonts/SpaceGrotesk.ttf');
+    expect(syne).toEqual({ min: 400, default: 400, max: 800 });
+    expect(space).toEqual({ min: 300, default: 300, max: 700 });
+    expect(css).toContain("font-family: 'Campus Galactic Syne'");
+    expect(css).toContain("src: url('/fonts/Syne.ttf')");
+    expect(css).toContain(`font-weight: ${syne.min} ${syne.max}`);
+    expect(css).toContain("font-family: 'Campus Galactic Space'");
+    expect(css).toContain("src: url('/fonts/SpaceGrotesk.ttf')");
+    expect(css).toContain(`font-weight: ${space.min} ${space.max}`);
+
+    // The Font Loading API must ask for the exact family descriptors used by
+    // the @font-face rules above.
+    expect(source).toContain("const SYNE_FAMILY = 'Campus Galactic Syne'");
+    expect(source).toContain("const SPACE_FAMILY = 'Campus Galactic Space'");
+    expect(source).toContain('fonts.load(SYNE_FONT, SYNE_GLYPHS)');
+    expect(source).toContain('fonts.load(SPACE_FONT, SPACE_GLYPHS)');
+  });
+
+  it('verifies loaded faces and glyphs instead of trusting a fixed delay', () => {
+    expect(source).toContain('const SYNE_FONT = `800 84px "${SYNE_FAMILY}"`');
+    expect(source).toContain('const SPACE_FONT = `400 13px "${SPACE_FAMILY}"`');
+    expect(source).toContain('const SYNE_GLYPHS = `${CAMPUS_TEXT}${PLUS_TEXT}`');
+    expect(source).toContain(
+      'const SPACE_GLYPHS = `${TAGLINE_TEXT}${SKIP_LABEL}`',
+    );
+    expect(source).toContain("face.status === 'loaded'");
+    expect(source).toContain('await fonts.ready');
+    expect(source).toContain('fonts.check(SYNE_FONT, SYNE_GLYPHS)');
+    expect(source).toContain('fonts.check(SPACE_FONT, SPACE_GLYPHS)');
+    expect(source).toContain('const FONT_WAIT_MS = 3000');
+    expect(source).toContain('later(() => settle(true), FONT_WAIT_MS)');
+    // The old 400 ms race must not come back.
+    expect(source).not.toContain('later(start, 400)');
+    expect(source).not.toMatch(/setTimeout\([^)]*,\s*400\)/);
+  });
+
+  it('has a single guarded startup and a whole-intro fallback', () => {
+    expect(source).toContain('let settled = false');
+    expect(source).toContain('let started = false');
+    expect(source).toContain(
+      'if (disposed || settled || started || finished || completed) return',
+    );
+    expect(source).toContain(
+      'if (disposed || started || finished || completed) return',
+    );
+    expect(source).toContain('lockTypography(fallback)');
+    expect(source).toContain(
+      "stage.current.dataset.typography = fallback ? 'fallback' : 'loaded'",
+    );
+    for (const className of ['campus', 'plus', 'tagline', 'skip']) {
+      expect(css).toContain(
+        `.stage[data-typography='fallback'] .${className}`,
+      );
     }
   });
 
-  it('rides the comet along the real curve with requestAnimationFrame', () => {
-    const source = read(LOADER);
-    expect(source).toContain('getPointAtLength');
-    expect(source).toContain('getTotalLength');
-    expect(source).toContain('requestAnimationFrame');
-    // The signature curve and its 1200x700 stage survive the port.
-    expect(source).toContain('M 120 560');
-    expect(source).toContain('viewBox');
-    expect(source).toContain('preserveAspectRatio');
+  it('measures once, after typography is final, and applies both positions', () => {
+    expect(source).toContain('positionLockup()');
+    expect(source).toContain('textAdvance(campus.current)');
+    expect(source).toContain('textAdvance(plus.current)');
+    expect(source).toContain('760 - campusLength - 24 - plusLength');
+    expect(source).toContain("campus.current.setAttribute('x'");
+    expect(source).toContain("plus.current.setAttribute('x'");
+    expect(source).toContain('await nextPaint()');
+    // No measurement may happen before the font decision.
+    expect(source.indexOf('lockTypography(fallback);')).toBeLessThan(
+      source.indexOf('positionLockup();'),
+    );
   });
 
-  it('renders responsive scenes instead of forcing desktop geometry on phones', () => {
-    const source = read(LOADER);
-    expect(source).toContain('LAYOUTS');
-    expect(source).toContain('narrow');
-    expect(source).toContain('0 0 1200 700');
-    expect(source).toContain('0 0 720 700');
+  it('preserves the SVG proportions and the CSS choreography delays', () => {
+    expect(source).toContain('viewBox="0 0 760 110"');
+    expect(source).toContain('const FADE_AT_MS = 5250');
+    expect(source).toContain('const FINISH_AT_MS = 5650');
+    expect(css).toContain(
+      'draw 1.65s cubic-bezier(0.77, 0, 0.175, 1) 0.95s',
+    );
+    expect(css).toContain('draw 1s cubic-bezier(0.77, 0, 0.175, 1) 2.45s');
+    expect(css).toContain('fill 1.1s ease 2.8s');
+    expect(css).toContain('fill 1s ease 3.55s');
+    expect(css).toContain('tagIn 0.8s ease 4.45s');
+    expect(css).toContain('breathe 3s ease 5s');
+    expect(css).toContain('flare 2.6s ease 0.2s');
   });
 
-  it('paints only through the intro stylesheet (no colour literals in the component)', () => {
-    expect(/#[0-9a-fA-F]{3,8}\b/.test(read(LOADER))).toBe(false);
-    const css = read(INTRO_CSS);
-    for (const colour of ['#203f98', '#10255e', '#050c29', '#010207', '#6594ff']) {
-      expect(css).toContain(colour);
+  it('aligns the independent JS and CSS safety deadlines', () => {
+    expect(source).toContain('const SAFETY_DEADLINE_MS = FONT_WAIT_MS + 6200');
+    expect(source).toContain(
+      'const SAFETY_CSS_DELAY_MS = SAFETY_DEADLINE_MS + 300',
+    );
+    expect(source).toContain('later(end, SAFETY_DEADLINE_MS)');
+    expect(source).toContain("'--intro-safety-delay'");
+    expect(css).toContain('var(--intro-safety-delay, 9.5s)');
+  });
+
+  it('preloads the two critical faces only on the route that can show them', () => {
+    // The root layout no longer preloads: every other route would pay for fonts
+    // it never renders (and browsers warn about unused preloads).
+    expect(layout).not.toContain('preload(');
+    expect(homeLayout).toContain("preload('/fonts/Syne.ttf'");
+    expect(homeLayout).toContain("preload('/fonts/SpaceGrotesk.ttf'");
+    expect(homeLayout).toContain("crossOrigin: 'anonymous'");
+    expect(homeLayout).toContain("type: 'font/ttf'");
+  });
+
+  it('cleans up timers, frames, motion and keyboard listeners', () => {
+    for (const text of [
+      'timers.forEach(clearTimeout)',
+      'cancelAnimationFrame',
+      "removeEventListener('change'",
+      "removeEventListener('keydown'",
+    ]) {
+      expect(source).toContain(text);
     }
-    expect(read('app/globals.css')).toContain("./styles/intro.css");
-  });
-});
-
-describe('launch resilience (never blocks the app)', () => {
-  it('respects prefers-reduced-motion with a simplified reveal', () => {
-    const source = read(LOADER);
-    expect(source).toContain('prefers-reduced-motion');
-    expect(source).toContain('showFinalFrame');
   });
 
-  it('cleans up every frame and timer on unmount', () => {
-    const source = read(LOADER);
-    expect(source).toContain('cancelAnimationFrame');
-    expect(source).toContain('clearTimeout');
-  });
-
-  it('has a hard display failsafe and a skip path', () => {
-    const source = read(LOADER);
-    expect(source).toContain('MAX_DISPLAY');
-    expect(source).toContain('forceFinish');
-    expect(source).toContain('Escape');
-  });
-});
-
-describe('home loading-layer wiring (once per session, behind the overlay)', () => {
-  it('mounts the gate from the Home layout, decided by a session cookie', () => {
-    const layout = read(HOME_LAYOUT);
-    expect(layout).toContain('readIntroSeen');
-    expect(layout).toContain('HomeLaunchGate');
-    // The launch layer must not do its own data fetching.
-    expect(layout).not.toMatch(/supabase|requireUser|getCampusFeed/);
-  });
-
-  it('marks the intro as seen once per browsing session', () => {
-    const gate = read(GATE);
-    expect(gate).toContain('campus_intro');
-    // Session cookie on purpose — the write never makes it persistent.
-    expect(gate).not.toMatch(/max-age=/i);
-    expect(gate).toContain('sessionStorage');
-  });
-
-  it('lets the Home page signal readiness and renders Home behind the scene', () => {
-    expect(read(HOME_PAGE)).toContain('HomeReadySignal');
-    const gate = read(GATE);
-    expect(gate).toContain('markContentReady');
-    expect(gate).toContain('{children}');
-    expect(gate).toContain('CampusIntroLoader');
+  it('has independent deadlines, immediate skip, and reduced motion', () => {
+    expect(source).toContain('onClick={finish}');
+    expect(source).toContain('prefers-reduced-motion: reduce');
+    expect(source).toContain('later(end, 100)');
+    expect(source).toContain('event.key === \'Escape\'');
+    expect(css).toContain(':focus-visible');
+    expect(css).not.toMatch(/(?:html|body)\s*\{/);
   });
 });

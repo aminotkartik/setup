@@ -3,8 +3,8 @@
 /**
  * The sticky application header.
  *
- * Desktop: search on the left, then notifications, appearance and the account
- * control. Mobile: the brand, search, notifications and account, with the
+ * Desktop: search on the left, then notifications and the account control.
+ * Mobile: the brand, search, notifications and account, with the
  * "everything else" sheet behind the menu button.
  *
  * It is a glass surface — one of the few places Campus+ uses the material — so
@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { BrandLockup } from '@/components/brand/Brand';
 import { Icon } from '@/components/ui/icons';
-import { GlassSurface, ThemeSwitch } from '@/components/ui';
+import { GlassSurface } from '@/components/ui';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { ShellSearch } from '@/components/layout/ShellSearch';
@@ -38,7 +38,7 @@ function NotificationBell({ unreadNotifications = 0 }) {
   );
 }
 
-export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = false, canModerate = false, canAdmin = false, theme = 'dark', createItems = [] }) {
+export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = false, canModerate = false, canAdmin = false, createItems = [] }) {
   return (
     /* Level-2 floating glass — the header is chrome, not a page surface. */
     <GlassSurface as="header" rounded={false} tone="floating" className="sticky top-0 z-30 border-b border-line/70">
@@ -49,7 +49,6 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
           isStaff={isStaff}
           canModerate={canModerate}
           canAdmin={canAdmin}
-          theme={theme}
           createItems={createItems}
         />
         <BrandLockup size="sm" subtitle={null} wordClass="text-[0.9375rem]" />
@@ -58,7 +57,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
             <Icon name="search" size={19} />
           </Link>
           <NotificationBell unreadNotifications={unreadNotifications} />
-          <AccountMenu user={user} isStaff={isStaff} theme={theme} />
+          <AccountMenu user={user} isStaff={isStaff} />
         </div>
       </div>
 
@@ -69,8 +68,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
         <div className="ml-auto flex items-center gap-2">
           <NotificationBell unreadNotifications={unreadNotifications} />
           <span className="rule h-6 w-px" />
-          <ThemeSwitch theme={theme} />
-          <AccountMenu user={user} isStaff={isStaff} theme={theme} />
+          <AccountMenu user={user} isStaff={isStaff} />
         </div>
       </div>
     </GlassSurface>

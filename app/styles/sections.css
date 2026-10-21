@@ -1,0 +1,233 @@
+/* ==========================================================================
+   Sections — the Gigs and Clubs boards
+   --------------------------------------------------------------------------
+   Two dedicated surfaces that share Campus+'s material but not its shape:
+   gigs read as work (accent rail, terms in the footer, a live dot for open
+   work), clubs read as people (a deterministic monogram, a category, a
+   member count). Everything below consumes the existing --cp-* role tokens;
+   nothing here introduces a second palette or a new type scale.
+   ========================================================================== */
+
+@layer components {
+  /* ------------------------------------------------------------------ gigs */
+
+  .gig-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* A thin accent rail: the one visual cue that distinguishes a gig from a
+     marketplace listing at a glance. */
+  .gig-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--c-accent) 82%, transparent),
+      color-mix(in oklab, var(--c-accent) 16%, transparent)
+    );
+  }
+
+  .gig-card:hover::before {
+    background: linear-gradient(
+      to bottom,
+      var(--c-accent),
+      color-mix(in oklab, var(--c-accent) 32%, transparent)
+    );
+  }
+
+  .gig-card__glyph {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in oklab, var(--c-accent) 28%, var(--c-line));
+    background-color: color-mix(in oklab, var(--c-accent) 13%, var(--cp-bg-elevated));
+    color: color-mix(in oklab, var(--c-accent) 70%, var(--cp-text-primary));
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .gig-card:hover .gig-card__glyph {
+    background-color: color-mix(in oklab, var(--c-accent) 20%, var(--cp-bg-elevated));
+    border-color: color-mix(in oklab, var(--c-accent) 44%, var(--c-line));
+  }
+
+  /* Skills are labels, not controls, unless rendered as an <a> in the filter
+     row — the same two states the rest of the product uses. */
+  .gig-skill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--c-accent) 22%, var(--c-line));
+    background-color: color-mix(in oklab, var(--c-accent) 8%, var(--cp-bg-subtle));
+    color: var(--cp-text-secondary);
+    padding: 0.1875rem 0.5625rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .gig-skill--muted {
+    border-style: dashed;
+    color: var(--cp-text-muted);
+    background-color: transparent;
+  }
+
+  a.gig-skill--link {
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  a.gig-skill--link:hover {
+    border-color: color-mix(in oklab, var(--c-accent) 48%, var(--c-line));
+    background-color: color-mix(in oklab, var(--c-accent) 16%, var(--cp-bg-subtle));
+    color: var(--cp-text-primary);
+    text-decoration: none;
+  }
+
+  a.gig-skill--link[data-active='true'],
+  a.gig-skill--link[aria-current='page'] {
+    border-color: var(--cp-selected-border);
+    background-color: var(--cp-selected-bg);
+    color: var(--cp-selected-text);
+  }
+
+  /* The summary strip above the gig board. */
+  .gig-stat {
+    min-width: 0;
+  }
+
+  .gig-stat__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-line);
+    background-color: var(--cp-bg-subtle);
+    color: var(--cp-text-muted);
+  }
+
+  /* "Open" is a state, and the dot says so even before the label is read. */
+  .gig-live-dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 999px;
+    background-color: var(--c-success);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-success) 18%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .gig-live-dot {
+      animation: gig-live-pulse 2.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes gig-live-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-success) 18%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px color-mix(in oklab, var(--c-success) 8%, transparent);
+    }
+  }
+
+  /* ----------------------------------------------------------------- clubs */
+
+  .club-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* A faint wash of the club's own hue: the same seed as its monogram, kept
+     far below text-contrast territory so it reads as lighting, not colour. */
+  .club-card::after {
+    content: '';
+    position: absolute;
+    inset: -40% 45% 55% -20%;
+    border-radius: 999px;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--c-accent) 12%, transparent),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+  }
+
+  .club-card:hover::after {
+    opacity: 1;
+  }
+
+  /* The monogram: initials on a deterministic two-stop gradient. The stops sit
+     at 30% and 22% lightness so white text clears 4.5:1 for every hue. */
+  .club-monogram {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: #f7f9ff;
+    background-image: linear-gradient(
+      145deg,
+      hsl(var(--club-hue-a, 214) 52% 32%),
+      hsl(var(--club-hue-b, 196) 56% 22%)
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.16),
+      0 1px 2px rgb(0 0 0 / 0.3);
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+
+  .club-monogram__initials {
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  .club-hero {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .club-hero::before {
+    content: '';
+    position: absolute;
+    inset: -60% 55% 40% -25%;
+    border-radius: 999px;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--c-accent) 14%, transparent),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .club-hero > * {
+    position: relative;
+  }
+
+  /* On phones the two section boards stay one readable column; the grid
+     utilities do the rest. This only guards the filter row's controls from
+     collapsing below a usable width. */
+  @media (max-width: 640px) {
+    .gig-stat {
+      padding-inline: 0.625rem;
+    }
+
+    .gig-skill {
+      white-space: normal;
+    }
+  }
+}

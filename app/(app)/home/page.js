@@ -11,7 +11,6 @@ import { IslandMotion } from '@/components/home/IslandMotion';
 import { HomePulse, HomeZone, HomeCoda } from '@/components/home/HomePulse';
 import { StreamItem, StreamSlot } from '@/components/home/StreamItem';
 import { HomeRail } from '@/components/home/HomeRail';
-import { HomeReadySignal } from '@/components/layout/HomeLaunchGate';
 
 export const metadata = { title: 'Home' };
 
@@ -22,7 +21,7 @@ const QUICK_LINKS = [
   { href: '/campus/lost-found', label: 'Lost & found', icon: 'search' },
   { href: '/explore/resources', label: 'Resources', icon: 'book' },
   { href: '/explore/opportunities', label: 'Opportunities', icon: 'briefcase' },
-  { href: '/campus/clubs', label: 'Clubs', icon: 'star' },
+  { href: ROUTES.clubs, label: 'Clubs', icon: 'star' },
 ];
 
 /**
@@ -95,7 +94,6 @@ export default async function HomePage() {
     <div className="home-stage">
       {/* Loading-layer probe (renders nothing): tells the launch intro that
           Home content has committed so it can complete its reveal and fade. */}
-      <HomeReadySignal />
 
       {/* The environment: one shared canvas behind the whole page, decorative
           and non-interactive, with a CSS composition as its no-WebGL twin. */}

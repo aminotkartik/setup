@@ -20,7 +20,7 @@
 | Framework | Next.js **16.3.8**, App Router, Turbopack build | `package.json`; `npm run build` ✅ |
 | UI runtime | React and react-dom **19.3.0** | installed packages ✅ |
 | Language | JavaScript only (no TypeScript); `@/*` alias | `jsconfig.json` |
-| Styling | Tailwind CSS **4.3.3** via `@tailwindcss/postcss`; tokens in `app/globals.css`, component CSS in `app/styles/*.css`; dark-default theme kept in a cookie | `postcss.config.mjs`, `lib/theme.js` |
+| Styling | Tailwind CSS **4.3.3** via `@tailwindcss/postcss`; tokens in `app/globals.css`, component CSS in `app/styles/*.css`; permanently dark single theme (`data-theme="dark"` hard-coded in the root layout) | `postcss.config.mjs`, `app/layout.js` |
 | Backend | Supabase: Postgres with RLS, `SECURITY DEFINER` RPCs, Auth (Google OAuth only), Realtime (`postgres_changes` on a private channel) | `supabase/`, `lib/supabase/` |
 | Supabase clients | `@supabase/ssr` **0.12.7**, `@supabase/supabase-js` **2.117.2** | installed packages ✅ |
 | Lint | ESLint **9.39.5** with `eslint-config-next` | `eslint.config.mjs` |
@@ -63,9 +63,11 @@
 | Entry and auth | `/` · `/login` · `/login/verify` · `/setup` · `/onboarding` · `/account-status` · `/rules` | `/` redirects by state. `/login/verify` → `/login?notice=google`. `/rules` is proxy-gated (⚠️ §8.2-7) |
 | Home | `/home` | Feed and composer. `app/(app)/home/layout.js` mounts the one-time launch intro |
 | Explore | `/explore` · `/explore/resources[/new, /[id]]` · `/explore/opportunities[/new, /[id]]` · `/explore/projects[/new, /[id]]` · `/explore/collections/[subject]` | Search hub, resources, opportunities, projects |
-| Market | `/market` · `/market/new` · `/market/listing/[id]` · `/market/listing/[id]/edit` · `/market/gigs/[id]` | |
-| Communities | `/communities` · `/communities/new` · `/communities/[slug]` · `/community/[slug]` (alias) | |
-| Campus | `/campus` · `/campus/events[/new, /[id]]` · `/campus/clubs[/[id]]` · `/campus/noticeboard[/[id]]` · `/campus/lost-found[/new, /[id]]` · `/campus/housing[/new]` · `/campus/rides[/new]` · `/campus/teams[/new]` · `/campus/study[/new, /[id]]` · `/campus/utilities` | Team finder is `/campus/teams`; study finder is `/campus/study` |
+| Market | `/market` · `/market/new` · `/market/listing/[id]` · `/market/listing/[id]/edit` | Listings only; gigs moved to `/gigs` |
+| Gigs | `/gigs` · `/gigs/new` · `/gigs/[id]` · `/gigs/[id]/edit` | Old `/market?tab=gigs`, `/market/new?type=gig` and `/market/gigs/[id]` redirect here |
+| Clubs | `/clubs` · `/clubs/new` · `/clubs/[id]` · `/clubs/[id]/edit` | Clubs are `communities` rows with `kind='club'`; old `/campus/clubs[/[id]]` redirect here |
+| Communities | `/communities` · `/communities/new` · `/communities/[slug]` · `/community/[slug]` (alias) | Study groups and general communities (clubs have their own section) |
+| Campus | `/campus` · `/campus/events[/new, /[id]]` · `/campus/noticeboard[/[id]]` · `/campus/lost-found[/new, /[id]]` · `/campus/housing[/new]` · `/campus/rides[/new]` · `/campus/teams[/new]` · `/campus/study[/new, /[id]]` · `/campus/utilities` | Team finder is `/campus/teams`; study finder is `/campus/study` |
 | Messages | `/chat` · `/chat/[id]` | No Random route |
 | Account | `/profile` · `/settings` · `/user/[username]` · `/notifications` | |
 | Content | `/post/[id]` | |
@@ -92,11 +94,11 @@ Status: ✅ present and statically consistent (no live database, so runtime is n
 | Communities and group chat | `app/(app)/communities/**`, `app/community/[slug]/page.js`, `components/communities/CommunityActions.js` | `communities.js`: `createCommunity`, `joinCommunity`, `leaveCommunity`, `decideJoinRequest`, `openCommunityChat` | `campus.js` (communities) | 004, 007 (`open_community_chat`) | ✅ |
 | Direct messages | `app/(app)/chat/**`, `components/chat/ChatThread.js` (realtime), `components/chat/NewConversation.js`, `components/social/MessageButton.js` | `messaging.js`: `startConversation`, `sendMessage`, `editMessage`, `deleteMessage`, `markConversationRead`, `toggleMuteConversation` | `messaging.js` | 003, 007, 014 (realtime), 020 (inbox) | ✅ (⚠️ realtime mechanism differs from docs) |
 | Marketplace listings | `app/(app)/market/**`, `components/marketplace/ListingActions.js` | `marketplace.js`: `createListing`, `updateListing`, `setListingStatus`, `deleteListing`, `expressInterest`, `markListingSold`, `rateCounterparty` | `marketplace.js` | 008, 015, 016, 017, 021 | ⚠️ moderation integrity (§8.1) |
-| Gigs | `app/(app)/market/gigs/[id]/page.js` | `marketplace.js`: `createGig`, `closeGig` | `marketplace.js` (`listGigs`, `getGig`) | 008 | ⚠️ owner restore via RPC (§8.1-3) |
+| Gigs | `app/(app)/gigs/**`, `components/gigs/*` | `marketplace.js`: `createGig`, `updateGig`, `setGigState`, `closeGig`, `deleteGig`, `applyToGig`, `withdrawGigApplication`, `decideGigApplication` | `marketplace.js` (`listGigs`, `getGig`, `listGigApplications`) | 008, 025 (skills/payment/deadline/state, `gig_applications`) | ✅ |
 | Campus deals | `app/(app)/market/page.js` | `campus.js`: `saveCampusContent` (`campus_deals`, `manage_deals`) | `marketplace.js` (`listDeals`) | 008 | ✅ |
 | Events and RSVPs | `app/(app)/campus/events/**`, `components/campus/RsvpForm.js`, `EventCalendar.js`, `EventSubmissionActions.js` | `campus.js`: `setRsvp`, `saveEvent`, `submitEvent`, `publishEventSubmission`, `rejectEventSubmission`, `withdrawEventSubmission` | `campus.js` (`listEvents`, `getEvent`, `listEventSubmissions`) | 009, 024 (student events are drafts only) | ⚠️ moderation no-op (§8.1-4) |
 | Noticeboard (official) | `app/(app)/campus/noticeboard/**` | `campus.js`: `saveNotice` | `campus.js` (`listNotices`, `getNotice`) | 009; 005 (official-post gate) | ✅ |
-| Clubs | `app/(app)/campus/clubs/**`, `app/(app)/communities/new/page.js` (`?kind=club`) | `communities.js`: `createCommunity` with kind `club` (needs `manage_clubs`) | `campus.js`: `listCommunities({ kind: 'club' })` | 004 (clubs are `communities` rows) | ✅ |
+| Clubs | `app/(app)/clubs/**`, `components/clubs/*` | `communities.js`: `createClub`, `updateClub`, `setCommunityMemberRole`, `removeCommunityMember` (+ join/leave/chat) | `campus.js`: `listCommunities({ kind: 'club', category })`, `countClubsByCategory` | 004 (clubs are `communities` rows), 025 (`club_category`) | ✅ |
 | Team finder | `app/(app)/campus/teams/**` | `campus.js`: `createTeamPost` | `campus.js` (`listTeamPosts`, `listTeamRequests`) | 009 (`team_posts`, `team_post_requests`) | ⚠️ owner status update (§8.1-3) |
 | Study partner finder | `app/(app)/campus/study/**`, `components/study/*` | `campus.js`: `createStudyPost`, `closeStudyPost`, `reopenStudyPost` | `campus.js` (`listStudyPosts`, `getStudyPost`) | 024 | ✅ (unit tests: `tests/study.test.js`) |
 | Resources | `app/(app)/explore/resources/**` | `campus.js`: `submitResource` | `campus.js` (`listResources`, `getResource`) | 009 | ⚠️ approval is SQL only (§8.2-10) |
@@ -114,7 +116,7 @@ Status: ✅ present and statically consistent (no live database, so runtime is n
 | GIFs | `components/media/GifPicker.js` (also exports `GifAttachment`) | none | `lib/giphy/index.js`; `app/api/giphy/search/route.js` | 005, 007 (validated GIF references) | ❓ not exercised (no key) |
 | Achievements and reputation | none (no UI reads achievements) | none | `profiles.js` (reputation counters) | 008 (`ratings`), 009 (`achievements`), 012 (`evaluate_achievements`) | ❌ backend only; definitions in `lib/constants.js` |
 | Random Chat | none (no route, nav or components) | `lib/actions/random.js`, **no importers** | `lib/data/moderation.js` (`listRandomReports`) | 010, 022, 023 (kept for review) | ❌ retired |
-| Launch intro, theme, atmosphere | `app/(app)/home/layout.js`, `components/layout/HomeLaunchGate.js`, `components/ui/CampusIntroLoader.js`, `components/atmosphere/DepthField.js` (Home environment), `components/atmosphere/NightSky.js` (shell sky) | none | `lib/intro.js`, `lib/theme.js` | none | ✅ honours `prefers-reduced-motion` 🔎 |
+| Launch intro, atmosphere | `app/(app)/home/layout.js`, `components/layout/HomeLaunchGate.js`, `components/ui/CampusIntroLoader.js`, `components/atmosphere/DepthField.js` (Home environment), `components/atmosphere/NightSky.js` (shell sky) | none | `lib/intro.js` | none | ✅ honours `prefers-reduced-motion` 🔎 |
 
 ---
 
@@ -211,14 +213,14 @@ Status: ✅ present and statically consistent (no live database, so runtime is n
 - **Errors** (`lib/errors.js`): `AppError` with codes. `fromPostgresError()` maps SQLSTATE codes to safe messages; messages with errcode `22023` and `42901` are shown verbatim by design. `toActionError()` serves actions; `toHttpResponse()` serves route handlers (misused in the GIPHY route, §8.2-8).
 - **Forms:** `lib/forms.js` `useFormAction(action, opts)` returns `{ run, pending, error, fieldErrors }`. `components/forms/ActionForm.js` renders create and edit forms.
 - **Validation:** `lib/validation/primitives.js` (`vString`, `vEnum`, `vUrl`, `vUuid`, `vDate`, …) and `lib/validation/schemas.js` (one schema per domain, `gifRefValidator`).
-- **UI kit:** `components/ui/index.js`: `Button`, `Field`, `Input`, `Textarea`, `Select`, `Checkbox`, `Switch`, `Card`, `Badge`, `Notice`, `EmptyState`, `ErrorState`, `SkeletonList`, `Spinner`, `Modal`, `Sheet`, `Dropdown`, `MenuItem`, `MenuLink`, `Toast`, `PageHeader`, `SectionHeader`, `SearchField`, `GlassSurface`, `OfficialBadge`, `StaffDot`, `IdentityMark`, `ThemeSwitch`, and others.
+- **UI kit:** `components/ui/index.js`: `Button`, `Field`, `Input`, `Textarea`, `Select`, `Checkbox`, `Switch`, `Card`, `Badge`, `Notice`, `EmptyState`, `ErrorState`, `SkeletonList`, `Spinner`, `Modal`, `Sheet`, `Dropdown`, `MenuItem`, `MenuLink`, `Toast`, `PageHeader`, `SectionHeader`, `SearchField`, `GlassSurface`, `OfficialBadge`, `StaffDot`, `IdentityMark`, and others.
 - **Layout:** `AppShell` (sidebar, header, bottom nav, command palette). Components: `Sidebar`, `ShellHeader`, `BottomNav`, `MobileMenu`, `CreateMenu`, `AccountMenu`, `ShellSearch`. Navigation and the Create menu come from `can()` results in `app/(app)/layout.js`.
 - **Identity and content:** `IdentityLine` and `RoleLabel` show `@username` only, never email. `ContentCard`, `ExternalLink` (`http(s)` only), `OfficialBadge` for official content.
 - **Safety UI:** `components/social/ReportDialog.js` (one report flow for every target type), `components/moderation/ModerationPanels.js`.
 - **Chat:** `ChatThread` subscribes to the private `conversation:<id>` channel. The only receipt is Sent or Seen.
 - **Media:** GIFs go through `/api/giphy/search`. The browser never calls GIPHY directly.
 - **Constants:** `lib/constants.js` is the single source for `ROUTES`, `PRIMARY_NAV`, `MOBILE_NAV`, enums, limits, permissions, flags and default settings. The DB seeds mirror it.
-- **Styling:** `app/globals.css` tokens; `app/styles/*.css` by concern; theme read from the `data-theme` cookie (`lib/theme.js`).
+- **Styling:** `app/globals.css` tokens; `app/styles/*.css` by concern; one permanent dark theme; the root layout always renders `data-theme="dark"`.
 
 ---
 
@@ -289,7 +291,7 @@ Status: ✅ present and statically consistent (no live database, so runtime is n
 | `docs/ARCHITECTURE.md` §2 | "Email one-time-code only" | Google OAuth only (`lib/auth/oauth.js`, `app/auth/callback/route.js`) |
 | `docs/ARCHITECTURE.md` §3 | `/random` route; `/onboarding` and `/rules` public | `/random` removed; `/onboarding` needs a session; `/rules` is gated (✅) |
 | `docs/ARCHITECTURE.md` §7 | "Exactly one mechanism: private broadcast" | `ChatThread` uses `postgres_changes` on a private channel |
-| `README.md`, `docs/ARCHITECTURE.md` §10 | "No gradients, no glass, warm off-white palette" | Dark default theme, blue particle sky, glass tiers (`docs/UI-REVAMP.md`, `tests/spec.test.js`). ❓ product direction |
+| `README.md`, `docs/ARCHITECTURE.md` §10 | "No gradients, no glass, warm off-white palette" | Permanent dark theme, blue particle sky, glass tiers (`docs/UI-REVAMP.md`, `tests/spec.test.js`). ❓ product direction |
 | `docs/SECURITY.md` §3; `docs/DEPLOYMENT.md` §3 | 53 permissions, 4 roles | 55 permissions in code and in the DB ✅; 4 roles ✅ |
 | `docs/IMPLEMENTATION-REPORT.md` (top table; §1, §4, §5, §8, §10) | 53 page routes; 6 suites and 81 tests; 19 migrations; 8 database suites | 58 page files; 14 suites and 181 tests ✅; 24 migrations; 10 SQL suites |
 | `docs/DEPLOYMENT.md` §4 | Turn Email **off** | Local `config.toml` has it on. Hosted state not inspected ❓ |

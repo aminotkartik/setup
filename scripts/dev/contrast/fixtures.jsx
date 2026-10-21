@@ -10,7 +10,6 @@ import { Card, GlassSurface, Badge, IdentityMark, Notice, PageHeader } from '@/c
 import { TiltCard, WheelSelector } from '@/components/ui/interactive';
 import { EmptyState, ErrorState, WordLoader, OrbLoader, CascadeLoader, LoadingPanel } from '@/components/ui/states';
 import { Modal, Dropdown, MenuItem, MenuLink, Toast } from '@/components/ui/overlays';
-import { ThemeSwitch, applyTheme } from '@/components/ui/theme';
 import { SearchField } from '@/components/ui/SearchField';
 import { Icon } from '@/components/ui/icons';
 
@@ -75,9 +74,9 @@ function Fixture() {
         <Input disabled defaultValue="Disabled but readable value" />
         <Textarea disabled placeholder="Disabled textarea placeholder" rows={2} />
         <Select disabled aria-label="Disabled selection"><option>Unavailable selection</option></Select>
-        <SearchField hint="A search hint on a theme-paired surface" />
+        <SearchField hint="A search hint on a paired surface" />
       </Section>
-      <Section id="checks" title="Checkboxes, tactile switches, celestial switch">
+      <Section id="checks" title="Checkboxes and tactile switches">
         <Checkbox id="audit-check" label="Receive in-app notifications" note="Unchecked choices stay visible" data-audit="checkbox" />
         <Checkbox id="audit-checked" defaultChecked label="Selected choice" note="The checkmark has its own foreground/background pair" />
         <Checkbox id="audit-check-disabled" disabled label="Unavailable choice" note="Disabled labels are not translucent" />
@@ -86,11 +85,6 @@ function Fixture() {
         <Switch id="audit-switch-checked" defaultChecked label="Selected switch" />
         <Switch id="audit-switch-disabled" disabled label="Unavailable switch" />
         <Switch id="audit-switch-disabled-checked" disabled defaultChecked label="Unavailable selected switch" />
-        <div className="flex items-center gap-4">
-          <ThemeSwitch size="lg" />
-          <ThemeSwitch disabled />
-          <span className="text-sm text-muted">Warm celestial bodies over a contrasting blue sky</span>
-        </div>
       </Section>
       <Section id="chips" title="Badges, pills, avatars and selected states">
         <div className="flex flex-wrap gap-2">
@@ -154,15 +148,15 @@ function Fixture() {
         <IconButton label="Native tooltip and accessible label" icon="info" />
       </Section>
       <Section id="wheel" title="Readable rotating wheel options">
-        <WheelSelector name="audit-wheel" defaultValue="dark" options={[
-          { value: 'light', label: 'Light', note: 'Warm daylight' },
-          { value: 'dark', label: 'Dark', note: 'Low-light campus' },
-          { value: 'system', label: 'System', note: 'Follow this device' },
+        <WheelSelector name="audit-wheel" defaultValue="feed" options={[
+          { value: 'feed', label: 'Feed', note: 'Latest posts first' },
+          { value: 'discussions', label: 'Discussions', note: 'Questions and answers' },
+          { value: 'polls', label: 'Polls', note: 'Quick campus votes' },
         ]} />
-        <WheelSelector name="audit-wheel-disabled" disabled defaultValue="dark" legend="Unavailable appearance selector" options={[
-          { value: 'light', label: 'Light', note: 'Warm daylight' },
-          { value: 'dark', label: 'Dark', note: 'Low-light campus' },
-          { value: 'system', label: 'System', note: 'Follow this device' },
+        <WheelSelector name="audit-wheel-disabled" disabled defaultValue="feed" legend="Unavailable selector" options={[
+          { value: 'feed', label: 'Feed', note: 'Latest posts first' },
+          { value: 'discussions', label: 'Discussions', note: 'Questions and answers' },
+          { value: 'polls', label: 'Polls', note: 'Quick campus votes' },
         ]} />
         <WheelSelector name="audit-wheel-many" legend="A larger option set" options={
           ['One', 'Two', 'Three', 'Four', 'Five'].map((label) => ({ value: label, label, note: 'Every choice stays visible' }))
@@ -171,10 +165,9 @@ function Fixture() {
       <Modal open={modal} onClose={() => setModal(false)} title="Readable dialog" description="Muted content stays visible on a strongly backed floating surface" footer={<><Button variant="secondary" onClick={() => setModal(false)}>Cancel</Button><DeleteButton onClick={() => setModal(false)}>Remove item</DeleteButton></>}>
         <div className="mt-4 flex flex-col gap-3"><SampleCopy /><Input placeholder="Dialog placeholder" aria-label="Dialog input" /><Notice tone="warning" icon="alert">Explain consequences, not just color.</Notice></div>
       </Modal>
-      <Toast tone={toast || 'neutral'} icon="check">{toast ? `${toast} confirmation that remains readable in both themes` : null}</Toast>
+      <Toast tone={toast || 'neutral'} icon="check">{toast ? `${toast} confirmation that remains readable on the night canvas` : null}</Toast>
     </main>
   );
 }
 
-window.__campusContrastSetTheme = applyTheme;
 createRoot(document.getElementById('cp-contrast-root')).render(<Fixture />);

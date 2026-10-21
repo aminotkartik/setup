@@ -43,7 +43,6 @@ for (const viewport of [
   });
   await context.addCookies([
     { name: 'campus_intro', value: '1', url: ORIGIN },
-    { name: 'campus_theme', value: 'dark', url: ORIGIN },
   ]);
   const page = await context.newPage();
   await page.goto(TARGET, { waitUntil: 'networkidle', timeout: 90_000 });
@@ -98,7 +97,7 @@ for (const viewport of [
 
 /* Interaction: pointer depth, entry light, keyboard reachability. */
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-await context.addCookies([{ name: 'campus_intro', value: '1', url: ORIGIN }, { name: 'campus_theme', value: 'dark', url: ORIGIN }]);
+await context.addCookies([{ name: 'campus_intro', value: '1', url: ORIGIN }]);
 const page = await context.newPage();
 await page.goto(TARGET, { waitUntil: 'networkidle', timeout: 90_000 });
 await page.waitForTimeout(1500);

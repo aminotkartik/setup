@@ -1,19 +1,31 @@
-import { readIntroSeen } from '@/lib/intro';
-import { HomeLaunchGate } from '@/components/layout/HomeLaunchGate';
+import { preload } from 'react-dom';
 
 /**
- * Home launch layout — where the cinematic Campus+ intro lives.
+ * Home — the one route that shows the landing animation.
  *
- * The intro is a loading-layer experience, so it is mounted *around* Home
- * (page + route loading state) rather than inside it: the overlay starts the
- * moment Home begins loading, the page streams in behind it untouched, and
- * when the content commits the scene completes its reveal and fades into the
- * interface. The session cookie decides once per browsing session — the very
- * first Home load of a session gets the launch, every later load (including
- * client-side navigation around the already-loaded app) renders Home
- * directly. No Home data, auth or layout logic lives here.
+ * The intro itself is mounted by the root layout's `<LandingIntro>` gate (it
+ * has to sit above the app shell to cover it, and above `/` so the `/` → `/home`
+ * redirect does not tear it down). This layout adds the two self-hosted faces
+ * that only the intro paints, so the critical font hints ship with the only
+ * route that can use them: `/login`, `/setup` and every app page no longer
+ * preload fonts they never render.
+ *
+ * Each file is a single variable face covering every weight the intro uses, so
+ * these hints do not preload unused weights. `crossOrigin: 'anonymous'` matches
+ * the CORS mode browsers use for fonts; without it the preload would be
+ * fetched twice.
  */
-export default async function HomeLaunchLayout({ children }) {
-  if (await readIntroSeen()) return children;
-  return <HomeLaunchGate>{children}</HomeLaunchGate>;
+export default function HomeLayout({ children }) {
+  preload('/fonts/Syne.ttf', {
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
+  });
+  preload('/fonts/SpaceGrotesk.ttf', {
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
+  });
+
+  return children;
 }

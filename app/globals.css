@@ -2,7 +2,6 @@
 @import './styles/surfaces.css';
 @import './styles/controls.css';
 @import './styles/feedback.css';
-@import './styles/theme-switch.css';
 @import './styles/interactive.css';
 @import './styles/navigation.css';
 @import './styles/calendar.css';
@@ -12,14 +11,16 @@
 @import './styles/home.css';
 @import './styles/night.css';
 @import './styles/login.css';
-@import './styles/intro.css';
+@import './styles/sections.css';
 
 /* ==========================================================================
    Campus+ semantic color system
    --------------------------------------------------------------------------
-   Dark is the default, including before a theme attribute is available.
-   light-dark() keeps the two designed palettes in ONE declaration; System
-   changes only color-scheme, so it cannot drift from the explicit themes.
+   Campus+ has exactly one theme: dark. It is mandatory — never selected from
+   a cookie, a saved preference or the operating-system colour setting — and the root
+   layout always renders `data-theme="dark"`, so the first paint is already
+   the night palette and no legacy light preference can resurface. The
+   tokens below are that single designed palette ("the campus after dark").
 
    --cp-* tokens are paired by role, not brightness. Text accents are NOT
    button fills; input ink is NOT sky ink. All normal text (including muted,
@@ -35,124 +36,122 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Reading surfaces.
-     Light  — warm daylight paper, unchanged.
-     Dark   — "the campus after dark": a deep midnight blue canvas, a darker
-              void beneath it for recesses, and a stepped ladder of navy
-              surfaces above. Each rung is deliberately close to its neighbour
-              so depth reads as lighting, not as a stack of boxes. */
-  --cp-bg-page: light-dark(#f7f5f1, #0b1120);
-  --cp-bg-page-deep: light-dark(#efebe4, #060b16);
-  --cp-bg-elevated: light-dark(#ffffff, #121824);
-  --cp-bg-subtle: light-dark(#fbf9f6, #171e2e);
-  --cp-bg-strong: light-dark(#ece8e1, #1e2637);
-  --cp-text-primary: light-dark(#1c1b19, #f0f1f4);
-  --cp-text-secondary: light-dark(#474440, #ccd2de);
-  --cp-text-muted: light-dark(#625c53, #afb9cc);
-  --cp-text-subtle: light-dark(#686156, #a8b3c8);
+  /* Reading surfaces — "the campus after dark": a deep midnight blue canvas,
+     a darker void beneath it for recesses, and a stepped ladder of navy
+     surfaces above. Each rung is deliberately close to its neighbour so
+     depth reads as lighting, not as a stack of boxes. */
+  --cp-bg-page: #0b1120;
+  --cp-bg-page-deep: #060b16;
+  --cp-bg-elevated: #121824;
+  --cp-bg-subtle: #171e2e;
+  --cp-bg-strong: #1e2637;
+  --cp-text-primary: #f0f1f4;
+  --cp-text-secondary: #ccd2de;
+  --cp-text-muted: #afb9cc;
+  --cp-text-subtle: #a8b3c8;
   --cp-text-inverse: #edf3ff;
   --cp-bg-inverse: #151e30;
-  --cp-icon: light-dark(#474440, #ccd2de);
-  --cp-icon-muted: light-dark(#625c53, #afb9cc);
-  --cp-border: light-dark(#b9b2a7, #626f86);
-  --cp-border-subtle: light-dark(#d8d2c8, #3d4960);
-  --cp-border-control: light-dark(#82796c, #7b89a2);
-  --cp-focus: light-dark(#2754cf, #a9c4ff);
+  --cp-icon: #ccd2de;
+  --cp-icon-muted: #afb9cc;
+  --cp-border: #626f86;
+  --cp-border-subtle: #3d4960;
+  --cp-border-control: #7b89a2;
+  --cp-focus: #a9c4ff;
   --cp-focus-gap: var(--cp-bg-elevated);
 
   /* Accent text vs. accent fill, each with its own intentional ink. */
-  --cp-text-accent: light-dark(#2754cf, #9abbff);
-  --cp-text-on-accent-soft: light-dark(#1b3d9c, #d0e0ff);
-  --cp-bg-accent: light-dark(#3566e8, #6f9bff);
-  --cp-text-on-accent: light-dark(#f8faff, #0d1730);
-  --cp-bg-accent-hover: light-dark(#2754cf, #8db1ff);
-  --cp-bg-accent-pressed: light-dark(#1d42a6, #5b89f5);
-  --cp-bg-accent-deep: light-dark(#16307a, #3f6ce0);
-  --cp-bg-accent-soft: light-dark(#e6eeff, #293c5c);
-  --cp-bg-accent-tint: light-dark(#f1f6ff, #23334e);
-  --cp-accent-pale: light-dark(#cddcff, #365582);
-  --cp-accent-highlight: light-dark(#7ea3ff, #a9c4ff);
+  --cp-text-accent: #9abbff;
+  --cp-text-on-accent-soft: #d0e0ff;
+  --cp-bg-accent: #6f9bff;
+  --cp-text-on-accent: #0d1730;
+  --cp-bg-accent-hover: #8db1ff;
+  --cp-bg-accent-pressed: #5b89f5;
+  --cp-bg-accent-deep: #3f6ce0;
+  --cp-bg-accent-soft: #293c5c;
+  --cp-bg-accent-tint: #23334e;
+  --cp-accent-pale: #365582;
+  --cp-accent-highlight: #a9c4ff;
   /* The one cyan in the system: illumination, not a second brand colour. It
      appears in focus rings, the active-navigation indicator and atmospheric
      light fields — never as a large fill. */
-  --cp-accent-cyan: light-dark(#21b8e0, #5cd8f7);
+  --cp-accent-cyan: #5cd8f7;
 
   /* Status text/icons and opaque tinted fills: safe even over glass/images. */
-  --cp-success-text: light-dark(#08613c, #75e4b4);
-  --cp-success-bg: light-dark(#e7f6ee, #1d3c33);
-  --cp-success-border: light-dark(#4c8569, #528e76);
-  --cp-warning-text: light-dark(#754b06, #f8cf7a);
-  --cp-warning-bg: light-dark(#fdf3e0, #403622);
-  --cp-warning-border: light-dark(#967329, #a18a51);
-  --cp-danger-text: light-dark(#a5232c, #ffaba7);
-  --cp-danger-bg: light-dark(#fdeceb, #442d37);
-  --cp-danger-border: light-dark(#b66065, #b37481);
-  --cp-info-text: light-dark(#095f79, #93daf1);
-  --cp-info-bg: light-dark(#e6f3f7, #213d4d);
-  --cp-info-border: light-dark(#4e8293, #578eaa);
+  --cp-success-text: #75e4b4;
+  --cp-success-bg: #1d3c33;
+  --cp-success-border: #528e76;
+  --cp-warning-text: #f8cf7a;
+  --cp-warning-bg: #403622;
+  --cp-warning-border: #a18a51;
+  --cp-danger-text: #ffaba7;
+  --cp-danger-bg: #442d37;
+  --cp-danger-border: #b37481;
+  --cp-info-text: #93daf1;
+  --cp-info-bg: #213d4d;
+  --cp-info-border: #578eaa;
 
   /* Stateful controls: no whole-element opacity to fade their labels. */
-  --cp-hover-bg: light-dark(#e9e4dc, #303c51);
+  --cp-hover-bg: #303c51;
   --cp-hover-text: var(--cp-text-primary);
   --cp-selected-bg: var(--cp-bg-accent-soft);
   --cp-selected-text: var(--cp-text-on-accent-soft);
-  --cp-selected-border: light-dark(#4169b5, #96b9ff);
-  --cp-disabled-bg: light-dark(#e9e4dc, #293347);
-  --cp-disabled-text: light-dark(#615a50, #acb7cc);
-  --cp-disabled-border: light-dark(#92897b, #77859e);
-  --cp-disabled-selected-bg: light-dark(#dae4f5, #344c6b);
-  --cp-disabled-selected-text: light-dark(#3c526f, #c1d5f2);
+  --cp-selected-border: #96b9ff;
+  --cp-disabled-bg: #293347;
+  --cp-disabled-text: #acb7cc;
+  --cp-disabled-border: #77859e;
+  --cp-disabled-selected-bg: #344c6b;
+  --cp-disabled-selected-text: #c1d5f2;
 
   /* Buttons: deep-navy rest face, blue reveal, one readable light label.
      Every reveal stop is dark enough for normal-size light text. */
   --cp-button-bg: #101c35;
   --cp-button-text: #edf3ff;
-  --cp-button-gradient-start: light-dark(#3052b7, #344fa3);
-  --cp-button-gradient-mid: light-dark(#264fbc, #264ba0);
-  --cp-button-gradient-end: light-dark(#136781, #175f80);
+  --cp-button-gradient-start: #344fa3;
+  --cp-button-gradient-mid: #264ba0;
+  --cp-button-gradient-end: #175f80;
   --cp-button-secondary-bg: var(--cp-bg-elevated);
   --cp-button-secondary-text: var(--cp-text-primary);
-  --cp-button-sheen-bg: light-dark(#e8effd, #ccdafa);
-  --cp-button-sheen-text: light-dark(#173052, #162641);
-  --cp-button-sheen-backing: light-dark(rgba(232, 239, 253, 0.94), rgba(204, 218, 250, 0.94));
-  --cp-button-delete-bg: light-dark(#4a2433, #351f31);
+  --cp-button-sheen-bg: #ccdafa;
+  --cp-button-sheen-text: #162641;
+  --cp-button-sheen-backing: rgba(204, 218, 250, 0.94);
+  --cp-button-delete-bg: #351f31;
   --cp-button-delete-text: #fbeef1;
-  --cp-button-delete-border: light-dark(#864d63, #bc829b);
-  --cp-keycap-bg: light-dark(#e5e0d9, #263348);
-  --cp-keycap-face: light-dark(#f5f1eb, #33425d);
-  --cp-keycap-text: light-dark(#39352f, #e6edf9);
+  --cp-button-delete-border: #bc829b;
+  --cp-keycap-bg: #263348;
+  --cp-keycap-face: #33425d;
+  --cp-keycap-text: #e6edf9;
 
   /* Fields own their foregrounds; a field on a sky is still a field. */
-  --cp-input-bg: light-dark(#ffffff, #1a2130);
-  --cp-input-text: light-dark(#1c1b19, #f0f1f4);
-  --cp-input-placeholder: light-dark(#625c53, #afb9cc);
-  --cp-input-focus-bg: light-dark(#f7f9ff, #1b2940);
-  --cp-search-bg-start: light-dark(#e8effc, #223047);
-  --cp-search-bg-end: light-dark(#f3f6fc, #1c293e);
-  --cp-search-glow: light-dark(rgba(53, 102, 232, 0.08), rgba(111, 155, 255, 0.12));
-  --cp-search-glow-soft: light-dark(rgba(53, 102, 232, 0.04), rgba(111, 155, 255, 0.08));
-  --cp-input-icon: light-dark(#244eac, #c3d6ff);
+  --cp-input-bg: #1a2130;
+  --cp-input-text: #f0f1f4;
+  --cp-input-placeholder: #afb9cc;
+  --cp-input-focus-bg: #1b2940;
+  --cp-search-bg-start: #223047;
+  --cp-search-bg-end: #1c293e;
+  --cp-search-glow: rgba(111, 155, 255, 0.12);
+  --cp-search-glow-soft: rgba(111, 155, 255, 0.08);
+  --cp-input-icon: #c3d6ff;
   --cp-check-bg: var(--cp-bg-accent);
   --cp-check-mark: var(--cp-text-on-accent);
-  --cp-switch-thumb: light-dark(#faf8f3, #d4e1f8);
-  --cp-switch-thumb-checked: light-dark(#faf8f3, #102340);
-  --cp-switch-track: light-dark(#817565, #465671);
+  --cp-switch-thumb: #d4e1f8;
+  --cp-switch-thumb-checked: #102340;
+  --cp-switch-track: #465671;
 
   /* Glass is backed, not merely blurred. Opacity bounds the worst case
      over both a white image and the dark sky. Effects stay behind content. */
-  --cp-bg-glass: light-dark(rgba(255, 255, 255, 0.96), rgba(26, 33, 48, 0.97));
-  --cp-bg-glass-soft: light-dark(rgba(255, 255, 255, 0.97), rgba(26, 33, 48, 0.98));
-  --cp-bg-glass-strong: light-dark(rgba(255, 255, 255, 0.98), rgba(26, 33, 48, 0.99));
-  --cp-glass-tint: light-dark(rgba(53, 102, 232, 0.025), rgba(111, 155, 255, 0.035));
+  --cp-bg-glass: rgba(26, 33, 48, 0.97);
+  --cp-bg-glass-soft: rgba(26, 33, 48, 0.98);
+  --cp-bg-glass-strong: rgba(26, 33, 48, 0.99);
+  --cp-glass-tint: rgba(111, 155, 255, 0.035);
   --cp-glass-border: var(--cp-border-subtle);
-  --cp-glass-reflection: light-dark(rgba(255, 255, 255, 0.16), rgba(159, 192, 255, 0.045));
-  --cp-scrim: light-dark(rgba(18, 24, 36, 0.5), rgba(5, 8, 14, 0.7));
+  --cp-glass-reflection: rgba(159, 192, 255, 0.045);
+  --cp-scrim: rgba(5, 8, 14, 0.7);
   --cp-toast-bg: #151e30;
   --cp-toast-text: #edf3ff;
   --cp-toast-border: #8a99b3;
 
-  /* Cinematic contexts keep a dark sky in BOTH themes. This is a named
-     inverse pairing, never a descendant override of .text-* utilities. */
+  /* Cinematic contexts use named inverse pairings (never descendant overrides
+     of .text-* utilities) so entry screens can keep their own deeper sky. */
   --cp-sky-bg: #0c1526;
   --cp-sky-text: #f2f6ff;
   --cp-sky-secondary: #c7d5ef;
@@ -160,38 +159,29 @@
   --cp-sky-icon-bg: #21334d;
   --cp-sky-border: #7a90b2;
   --cp-sky-wash: rgba(8, 17, 33, 0.42);
-  /* The Home depth field: the environment the Campus Islands float over. It is
-     the same restraint in both themes — near-black navy at night, cool paper
-     mist in daylight — with the accent lines carrying the only light. The
+  /* The Home depth field: the environment the Campus Islands float over —
+     near-black navy with the accent lines carrying the only light. The
      canvas reads these, and the ridge/vignette fallbacks paint with them, so
      the WebGL scene and the no-WebGL composition can never disagree. */
-  --cp-depth-base: light-dark(#e9eff8, #05070f);
-  --cp-depth-line-a: light-dark(#4a7cae, #5ad1e6);
-  --cp-depth-line-b: light-dark(#7f9bd6, #6f9bff);
-  --cp-bg-cinematic-glass: light-dark(rgba(250, 248, 244, 0.97), rgba(23, 34, 56, 0.98));
-  --cp-cinematic-border: light-dark(#abb9d0, #6d82a6);
+  --cp-depth-base: #05070f;
+  --cp-depth-line-a: #5ad1e6;
+  --cp-depth-line-b: #6f9bff;
+  --cp-bg-cinematic-glass: rgba(23, 34, 56, 0.98);
+  --cp-cinematic-border: #6d82a6;
   --cp-brand-plate: #fffdf9;
-  --cp-brand-bg: light-dark(#305bbf, #87abff);
-  --cp-brand-bg-end: light-dark(#25489f, #6f9bff);
-  --cp-brand-mark: light-dark(#edf3ff, #102240);
+  --cp-brand-bg: #87abff;
+  --cp-brand-bg-end: #6f9bff;
+  --cp-brand-mark: #102240;
 
-  /* Celestial bodies stay warm; the day sky is deep cyan so the sun reads. */
-  --cp-theme-night: light-dark(#4353d8, #4353d8);
-  --cp-theme-night-deep: light-dark(#2c39ab, #2c39ab);
-  --cp-theme-day: light-dark(#126c86, #126c86);
-  --cp-theme-day-deep: light-dark(#255d91, #255d91);
-  --cp-theme-moon: #ffd365;
-  --cp-theme-sun: #ffedab;
-  --cp-theme-star: #f2f6ff;
-  --cp-loader-track: light-dark(#ded8cf, #3a4962);
+  --cp-loader-track: #3a4962;
   --cp-loader-active: var(--cp-text-accent);
-  --cp-poll-track: light-dark(#e2ded7, #2d3b51);
-  --cp-poll-fill: light-dark(#626e86, #a2b3d3);
+  --cp-poll-track: #2d3b51;
+  --cp-poll-fill: #a2b3d3;
 
   /* Material highlights/shading are decorative, never foreground ink. */
   --cp-highlight: #ffffff;
-  --cp-highlight-soft: light-dark(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.08));
-  --cp-shade: light-dark(rgba(28, 27, 25, 0.06), rgba(0, 0, 0, 0.3));
+  --cp-highlight-soft: rgba(255, 255, 255, 0.08);
+  --cp-shade: rgba(0, 0, 0, 0.3);
 
   /* ------------------------------------------------------------------------
      Lighting language — "the campus after dark"
@@ -204,21 +194,17 @@
        glow-*   tight, localised emission for the few things that are allowed
                 to emit: the active nav indicator, focus rings, featured edges.
        edge-*   hairline highlights that catch the "light from above" on the
-                top edge of a raised surface.
-
-     Light theme keeps the same roles at a fraction of the strength, so a
-     student who switches to daylight gets the same spatial model without the
-     night sky. */
-  --cp-illum-core: light-dark(rgba(39, 84, 207, 0.07), rgba(70, 130, 255, 0.16));
-  --cp-illum-cyan: light-dark(rgba(33, 184, 224, 0.05), rgba(60, 190, 235, 0.11));
-  --cp-illum-deep: light-dark(rgba(28, 27, 25, 0.035), rgba(2, 6, 16, 0.55));
-  --cp-glow-accent: light-dark(rgba(53, 102, 232, 0.3), rgba(111, 155, 255, 0.42));
-  --cp-glow-cyan: light-dark(rgba(33, 184, 224, 0.26), rgba(92, 216, 245, 0.34));
-  --cp-glow-soft: light-dark(rgba(53, 102, 232, 0.14), rgba(111, 155, 255, 0.2));
-  --cp-edge-light: light-dark(rgba(255, 255, 255, 0.75), rgba(168, 200, 255, 0.09));
-  --cp-edge-accent: light-dark(rgba(39, 84, 207, 0.22), rgba(126, 168, 255, 0.3));
-  --cp-grain: light-dark(rgba(28, 27, 25, 0.028), rgba(176, 214, 255, 0.022));
-  --cp-scanline: light-dark(rgba(28, 27, 25, 0.018), rgba(176, 222, 255, 0.02));
+                top edge of a raised surface. */
+  --cp-illum-core: rgba(70, 130, 255, 0.16);
+  --cp-illum-cyan: rgba(60, 190, 235, 0.11);
+  --cp-illum-deep: rgba(2, 6, 16, 0.55);
+  --cp-glow-accent: rgba(111, 155, 255, 0.42);
+  --cp-glow-cyan: rgba(92, 216, 245, 0.34);
+  --cp-glow-soft: rgba(111, 155, 255, 0.2);
+  --cp-edge-light: rgba(168, 200, 255, 0.09);
+  --cp-edge-accent: rgba(126, 168, 255, 0.3);
+  --cp-grain: rgba(176, 214, 255, 0.022);
+  --cp-scanline: rgba(176, 222, 255, 0.02);
 
   /* Compatibility bridge — existing semantic utilities remain supported. */
   --c-canvas: var(--cp-bg-page);
@@ -292,17 +278,6 @@
   --shadow-inset-glow: inset 0 1px 0 var(--cp-edge-light), inset 0 0 0 1px var(--cp-glow-soft);
   --shadow-glow-accent: 0 0 0 1px var(--cp-edge-accent), 0 8px 28px -12px var(--cp-glow-accent);
   --shadow-glow-cyan: 0 0 0 1px var(--cp-edge-accent), 0 6px 22px -10px var(--cp-glow-cyan);
-}
-
-[data-theme='light'],
-[data-theme='system'] {
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  [data-theme='system'] {
-    color-scheme: dark;
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -399,8 +374,7 @@
 
 /* Direct CSS-variable consumers (inline styles, legacy component styles). */
 :root,
-[data-theme='dark'],
-[data-theme='system'] {
+[data-theme='dark'] {
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
   --color-ink: var(--c-ink);
@@ -740,7 +714,7 @@
 /* URLs linkified inside user text (lib/linkify.js). Unlike a mention, a URL
    must be recognisable before hover — especially on touch, where there is no
    hover — so it is underlined at rest. --c-accent-ink / --cp-text-accent are
-   light-dark() pairs, so the link keeps readable contrast in both themes. */
+   tokens, so the link keeps readable contrast on the night canvas. */
 .rich-link {
   color: var(--c-accent-ink);
   text-decoration: underline;

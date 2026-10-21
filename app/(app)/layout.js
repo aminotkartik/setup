@@ -1,8 +1,8 @@
 import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
+import { ROUTES } from '@/lib/constants';
 import { AppShell } from '@/components/layout/AppShell';
-import { readTheme } from '@/lib/theme';
 
 // Every page in this group depends on the signed-in student, so nothing here is
 // cached: a page rendered for one student must never be served to another.
@@ -22,7 +22,6 @@ export const dynamic = 'force-dynamic';
 export default async function AppLayout({ children }) {
   const user = await requireUser();
   const actor = toActor(user);
-  const theme = await readTheme();
 
   // Unread badge: the count is the recipient's own rows, so RLS does the
   // filtering for us.
@@ -44,13 +43,14 @@ export default async function AppLayout({ children }) {
         ]
       : []),
     ...(can(actor, 'create_marketplace_listing') ? [{ href: '/market/new', label: 'Marketplace listing', icon: 'tag' }] : []),
-    ...(can(actor, 'create_gigs') ? [{ href: '/market/new?type=gig', label: 'Gig', icon: 'briefcase' }] : []),
+    ...(can(actor, 'create_gigs') ? [{ href: ROUTES.gigNew, label: 'Gig', icon: 'briefcase' }] : []),
     ...(can(actor, 'create_communities')
       ? [
           { href: '/communities/new', label: 'Community', icon: 'users' },
           { href: '/communities/new?kind=study_group', label: 'Study group', icon: 'book' },
         ]
       : []),
+    ...(can(actor, 'manage_clubs') ? [{ href: ROUTES.clubNew, label: 'Club', icon: 'star' }] : []),
     ...(can(actor, 'create_lost_found') ? [{ href: '/campus/lost-found/new', label: 'Lost & found', icon: 'search' }] : []),
     ...(can(actor, 'create_team_posts') ? [{ href: '/campus/teams/new', label: 'Team post', icon: 'sparkle' }] : []),
     ...(can(actor, 'create_study_posts') ? [{ href: '/campus/study/new', label: 'Study request', icon: 'book' }] : []),
@@ -75,7 +75,8 @@ export default async function AppLayout({ children }) {
     { section: 'Navigation', label: 'Events', href: '/campus/events', icon: 'calendar' },
     { section: 'Navigation', label: 'Study partner finder', href: '/campus/study', icon: 'book' },
     { section: 'Navigation', label: 'Team finder', href: '/campus/teams', icon: 'users' },
-    { section: 'Navigation', label: 'Clubs', href: '/campus/clubs', icon: 'star' },
+    { section: 'Navigation', label: 'Gigs', href: ROUTES.gigs, icon: 'briefcase' },
+    { section: 'Navigation', label: 'Clubs', href: ROUTES.clubs, icon: 'star' },
     { section: 'Navigation', label: 'Noticeboard', href: '/campus/noticeboard', icon: 'megaphone' },
     { section: 'Navigation', label: 'Resources', href: '/explore/resources', icon: 'book' },
     { section: 'Navigation', label: 'Projects', href: '/explore/projects', icon: 'sparkle' },
@@ -107,7 +108,6 @@ export default async function AppLayout({ children }) {
       canAdmin={canAdmin}
       createItems={createItems}
       paletteActions={paletteActions}
-      theme={theme}
     >
       {children}
     </AppShell>

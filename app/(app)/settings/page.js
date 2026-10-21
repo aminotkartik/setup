@@ -7,8 +7,6 @@ import { Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/comp
 import { ActionForm } from '@/components/forms/ActionForm';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { ProfileActions } from '@/components/profile/ProfileActions';
-import { AppearancePanel } from '@/components/profile/AppearancePanel';
-import { readTheme } from '@/lib/theme';
 import { updateProfile, changeUsername, deactivateAccount, reactivateAccount } from '@/lib/actions/profile';
 import { markAllNotificationsRead } from '@/lib/actions/notifications';
 import { formatDate, daysBetween } from '@/lib/utils';
@@ -18,7 +16,6 @@ export const metadata = { title: 'Settings' };
 const TABS = [
   { key: 'profile', label: 'Profile' },
   { key: 'username', label: 'Username' },
-  { key: 'appearance', label: 'Appearance' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'privacy', label: 'Privacy' },
   { key: 'blocked', label: 'Blocked users' },
@@ -57,7 +54,6 @@ export default async function SettingsPage({ searchParams }) {
     ? configuredCooldown
     : DEFAULT_PLATFORM_SETTINGS.username_change_cooldown_days;
 
-  const theme = await readTheme();
   const usernameChangedAt = user.profile.username_changed_at || null;
   const daysSinceChange = usernameChangedAt ? daysBetween(usernameChangedAt) : null;
   const cooldownRemaining = daysSinceChange !== null ? Math.max(0, cooldownDays - daysSinceChange) : 0;
@@ -101,8 +97,6 @@ export default async function SettingsPage({ searchParams }) {
           ]}
         />
       ) : null}
-
-      {tab === 'appearance' ? <AppearancePanel theme={theme} /> : null}
 
       {tab === 'username' ? (
         <div className="flex flex-col gap-3">

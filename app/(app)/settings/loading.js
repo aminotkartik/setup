@@ -6,5 +6,5 @@ import { LoadingPanel } from '@/components/ui';
  * never looks like a different product.
  */
 export default function SettingsLoading() {
-  return <LoadingPanel words={['settings', 'profile', 'privacy', 'appearance']} rows={4} />;
+  return <LoadingPanel words={['settings', 'profile', 'privacy', 'account']} rows={4} />;
 }

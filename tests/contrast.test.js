@@ -68,7 +68,7 @@ function verifyPair(foreground, background, theme, threshold = 4.5) {
 const readingSurfaces = ['bg-page', 'bg-page-deep', 'bg-elevated', 'bg-subtle', 'bg-strong', 'bg-accent-soft', 'bg-accent-tint', 'hover-bg', 'success-bg', 'warning-bg', 'danger-bg', 'info-bg'];
 const textRoles = ['text-primary', 'text-secondary', 'text-muted', 'text-subtle'];
 
-for (const theme of ['dark', 'light']) {
+for (const theme of ['dark']) {
   describe(`${theme} semantic contrast`, () => {
     it('keeps every text tier readable on reading and status surfaces', () => {
       for (const foreground of textRoles) {
@@ -138,7 +138,7 @@ for (const theme of ['dark', 'light']) {
       for (const text of ['sky-text', 'sky-secondary', 'sky-muted']) verifyPair(text, 'sky-bg', theme);
     });
 
-    it('keeps control edges, focus rings, checkmarks and celestial icons distinct', () => {
+    it('keeps control edges, focus rings and checkmarks distinct', () => {
       for (const surface of ['bg-page', 'bg-elevated', 'bg-subtle', 'bg-strong', 'input-bg', 'input-focus-bg', 'search-bg-start', 'search-bg-end']) {
         verifyPair('border-control', surface, theme, 3);
         verifyPair('focus', surface, theme, 3);
@@ -147,8 +147,6 @@ for (const theme of ['dark', 'light']) {
       verifyPair('check-mark', 'check-bg', theme, 3);
       verifyPair('switch-thumb', 'switch-track', theme, 3);
       verifyPair('switch-thumb-checked', 'bg-accent', theme, 3);
-      for (const surface of ['theme-night', 'theme-night-deep']) verifyPair('theme-moon', surface, theme, 3);
-      for (const surface of ['theme-day', 'theme-day-deep']) verifyPair('theme-sun', surface, theme, 3);
       verifyPair('poll-fill', 'poll-track', theme, 3);
     });
   });
@@ -162,12 +160,14 @@ function walk(dir) {
 }
 
 describe('readability architecture guards', () => {
-  it('starts dark and shares one complete palette with System', () => {
+  it('is permanently dark: one palette, with no light or system variant', () => {
     expect(css).toMatch(/:root,\s*\[data-theme='dark'\]\s*\{\s*color-scheme: dark/);
-    expect(css).toMatch(/\[data-theme='light'\],\s*\[data-theme='system'\]\s*\{\s*color-scheme: light/);
-    expect(css).toMatch(/@media \(prefers-color-scheme: dark\)[\s\S]*?\[data-theme='system'\][\s\S]*?color-scheme: dark/);
+    expect(css).not.toContain("[data-theme='light']");
+    expect(css).not.toContain("[data-theme='system']");
+    expect(css).not.toContain('light-dark(');
+    expect(css).not.toMatch(/@media \(prefers-color-scheme/);
+    expect(css).not.toMatch(/color-scheme: light/);
     for (const value of tokens.values()) {
-      expect(() => color(value, 'light')).not.toThrow();
       expect(() => color(value, 'dark')).not.toThrow();
     }
   });
