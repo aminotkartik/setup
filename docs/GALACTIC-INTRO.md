@@ -1,5 +1,19 @@
 # Galactic document intro
 
+## Route scoping (home page only)
+
+The animation used to be mounted in `app/layout.js` as `<GalacticIntro>{children}</GalacticIntro>`, so **every** document load — `/login`, `/setup`, `/profile`, `/market`, `/communities`, `/chat`, `/settings`, `/campus`, any deep link — shipped the overlay and the `inert` boundary, and the full choreography played (or half-played) before the visitor could use the page. Because the root layout survives client navigation, a sequence that had not finished could also stay on screen across a route change.
+
+The fix is a route gate, not a redesign: `components/layout/GalacticIntro.js` now exports `LandingIntro`, and that is the only place the animation is mounted.
+
+- **Where it plays:** the home page, `/home`. `/` is a redirect-only route (`app/page.js` paints nothing), so a document opened at `/` counts as a landing at the home page and the intro keeps playing when the redirect lands on `/home`.
+- **Where it never plays:** every other path. `shouldShowLandingIntro()` requires `pathname === '/home'` *and* a document entry path of `/` or `/home`, so `/login`, `/setup`, `/profile`, `/settings`, `/communities`, `/market`, `/chat`, `/campus/*`, `/explore`, `/notifications`, `/rules`, `/moderator`, `/admin`, `/onboarding` and non-existent paths such as `/dashboard` or `/marketplace` render their children directly.
+- **No replay:** a client-side navigation to `/home` from any other page does not start it (the document did not enter at the home page), and returning to `/home` after the intro finished does not start it again (the existing document-memory `completed` flag). Leaving `/home` unmounts the overlay, which runs the effect cleanup and clears every timer, frame request and listener.
+- **No flash, no hydration mismatch:** the gate is a pure function of the route, so the server and the hydration render agree. `window.location.pathname` is read once, outside React, at bundle evaluation — before any Next client navigation can rewrite the URL — and the server uses the request pathname, which is the same value. The root layout still renders the same wrapper element in every case, so children never remount when the answer changes.
+- **No work when it cannot show:** `GalacticIntro` takes an `enabled` prop; when the gate is closed the effect returns immediately, so no fonts are loaded, no timers are scheduled and no overlay is rendered. The font preload hints that used to sit in the root layout now live in `app/(app)/home/layout.js`, so routes that cannot show the intro no longer preload ~280 KB of fonts they never paint (and browsers no longer warn about unused preloads).
+
+Because `/home` requires a session, an unauthenticated visitor who opens `/home` is redirected by the proxy/app before the overlay ever paints; the intro is therefore only seen by signed-in students on the home page. The animation itself — visuals, timing, transitions, styling and the CSS/JS choreography — is unchanged; there is no GSAP in this repository (the effects are CSS keyframes driven by the phase attribute plus the JS startup/teardown timers), so there was no animation-library lifecycle to change. Unmount cleanup is the existing effect teardown.
+
 ## Root cause of the Edge/browser inconsistency
 
 The intro used two independent startup paths: `document.fonts.load(...).then(start)` and an unconditional `later(start, 400)`. On a cold font cache — the normal first visit in Microsoft Edge, and any slow deployment — the 400 ms timer won. `start()` then called `document.fonts.check(...)`, which returned false while the request was still in flight, and permanently set `font-family: sans-serif` on only the two SVG `<text>` elements. The wordmark was measured and played in the fallback face (428 units instead of Syne's 659 at 84 px/800), while the tagline and Skip intro control could still swap to the custom faces when they arrived. That produced the late font, the different logo position and the mixed typography.
@@ -13,8 +27,8 @@ Three smaller problems made it engine-dependent:
 ## Integration
 
 - `components/layout/GalacticIntro.js` and its CSS module implement the supplied galactic SVG choreography, including the 760×110 stage, 24-unit plus gap, stroke/fill timing, flare, stars, nebula, tagline and breathing glow.
-- `app/layout.js` mounts it above all page routes. Children render immediately underneath an inert boundary; there is no auth/data readiness dependency. It also emits preload hints for the two critical intro faces.
-- `app/(app)/home/layout.js` is a pass-through, and the obsolete readiness signal is removed from `home/page.js`.
+- `app/layout.js` renders `<LandingIntro>{children}</LandingIntro>`: the route gate, not the animation. Only the home page (`/home`, plus the `/` redirect that leads there) mounts the overlay; children elsewhere are rendered directly, never inert.
+- `app/(app)/home/layout.js` carries the two critical intro font preloads, because it is the only route that can show the animation. The obsolete readiness signal is still absent from `home/page.js`.
 - Removed superseded `HomeLaunchGate.js`, `CampusIntroLoader.js`, `lib/intro.js`, and `app/styles/intro.css`, plus its global import. Existing old intro cookies are ignored, not read or modified.
 - `public/fonts/` contains self-hosted Syne and Space Grotesk with their OFL licenses. No dependency manifest changes, external font CDN or new runtime service.
 - `tests/intro.test.js` guards the architecture and font descriptors. `scripts/tests/galactic-intro.mjs` adds executable Playwright checks, including delayed and failed font requests.
@@ -54,11 +68,34 @@ A fallback now looks the same everywhere: all intro text uses `Arial, Helvetica,
 
 ## Lifecycle
 
-The root layout persists across Next client navigation. Component state controls playback; a document-memory completion flag additionally protects against subsequent remounts. A full document load resets that memory. No route mutations, cookies, local storage, or session storage are used.
+The root layout persists across Next client navigation. The route gate decides whether the animation exists at all; component state controls playback; a document-memory completion flag additionally protects against subsequent remounts. A full document load resets that memory, which is why refreshing the home page replays it while navigating back to it does not. No route mutations, cookies, local storage, or session storage are used.
 
 Skip intro and Escape remove the overlay immediately without changing the URL. Focus returns to the content boundary when Skip held focus. Reduced motion reveals the application after approximately 100 ms without waiting for fonts or running the choreography. Timers, frame requests and listeners are cleaned up, including during Strict Mode effect replay. Only the fixed overlay clips overflow; document scroll styles are never changed. CSS is module-scoped.
 
 Authentication, proxy protection, OAuth/PKCE processing, authorization, sign-out implementation and database schema are unchanged. The OAuth server route does not render the root layout or wait for the animation. Existing server redirects still apply; the intro never overrides their destinations.
+
+## Route-scoping verification (2026-10-21)
+
+Commands and results for this change:
+
+- `npm run lint`: passed.
+- `npm test`: 19 files / 231 tests passed, including the new pure route-gate matrix (`shouldShowLandingIntro` for `/`, `/home`, `/login`, `/setup`, `/profile`, `/settings`, `/communities`, `/market`, `/chat`, `/campus/events`, `/dashboard`, `/marketplace`, `/events`, and the client-navigation and document-memory cases).
+- `npm run build`: passed.
+- Server-rendered HTML of the production build (unauthenticated, `curl`): `/home` contains the intro markup and the Syne preload; `/`, `/login`, `/setup`, `/onboarding`, `/rules`, `/profile`, `/settings`, `/communities`, `/market`, `/chat`, `/campus`, `/notifications`, `/explore`, `/moderator`, `/admin` contain neither.
+- `INTRO_BASE_URL=http://127.0.0.1:3000 node scripts/tests/galactic-intro.mjs`: passed — server HTML check, `/login`/`/setup`/`/rules` quiet (no overlay, no `inert`, no scroll lock, no intro font requests), the `/` redirect destination quiet, and no page/console errors. The choreography block prints an explicit **SKIP** because `/home` redirects to `/setup` for an unauthenticated visitor.
+
+Because the signed-in home page cannot be reached in this sandbox (no Supabase credentials, no Google session), the animation-bearing path was verified in a **temporary local stub build** (a throwaway replacement of `app/(app)/layout.js`, `app/(app)/home/page.js`, `app/page.js` and one temporary link on `/rules`, all reverted before committing; the repository contains none of it). Against that build, all eight browser scenarios passed:
+
+1. direct `/home` → intro appears over the real `AppShell` (z-index 99999, full viewport, sidebar and header covered), custom Syne face measured, no console/hydration errors;
+2. `/home` → `/rules` → back to `/home` → no intro, no replay, no `inert` left behind;
+3. `/` (redirecting to `/home`) → intro plays once the redirect lands, with no overlay painted on `/` itself;
+4. direct loads of `/login`, `/setup`, `/rules`, `/profile`, `/settings`, `/communities`, `/market`, `/chat`, `/campus`, `/notifications`, `/explore` → no intro, no `inert`, no scroll lock, no intro font requests from those routes;
+5. landing on `/rules` and client-navigating to `/home` (real Next `<Link>`, verified same document) → no intro;
+6. refreshing `/home` replays; Skip removes the overlay immediately;
+7. `prefers-reduced-motion: reduce` on `/home` reveals the page immediately;
+8. leaving `/home` while the sequence is playing removes the overlay and stops every timer (nothing appears later).
+
+Not verified: a real signed-in `/home` in this sandbox, Microsoft Edge, WebKit, and physical devices.
 
 ## Executed verification (2026-10-20)
 

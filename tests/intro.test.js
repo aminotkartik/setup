@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { shouldShowLandingIntro } from '../components/layout/GalacticIntro.js';
 
 const read = (file) => fs.readFileSync(file, 'utf8');
 const source = read('components/layout/GalacticIntro.js');
 const css = read('components/layout/GalacticIntro.module.css');
 const layout = read('app/layout.js');
+const homeLayout = read('app/(app)/home/layout.js');
 
 // Minimal TrueType/OpenType reader: the table directory plus the `fvar` weight
 // axis. Enough to prove whether these files are variable and what their real
@@ -41,14 +43,88 @@ const weightAxis = (file) => {
 };
 
 describe('document-level galactic intro architecture', () => {
-  it('mounts above every page, not inside a route-specific layout', () => {
-    expect(layout).toContain('<GalacticIntro>{children}</GalacticIntro>');
+  it('mounts the route-gated landing intro, never the animation directly', () => {
+    expect(layout).toContain('<LandingIntro>{children}</LandingIntro>');
+    expect(layout).not.toContain('<GalacticIntro');
     expect(read('app/(app)/home/layout.js')).not.toContain('HomeLaunchGate');
   });
 
-  it('never uses persistent playback state, routing or authentication', () => {
+  it('shows the animation only on the home page reached as the landing route', () => {
+    // `/` is the redirect-only root; `/home` is the page it lands on.
+    expect(source).toContain("const HOME_ROUTE = '/home'");
+    expect(source).toContain("const ROOT_ROUTE = '/'");
+    expect(source).toContain(
+      'const HOME_ENTRY_ROUTES = new Set([ROOT_ROUTE, HOME_ROUTE])',
+    );
+    expect(source).toContain('window.location.pathname');
+    expect(source).toContain('const show = shouldShowLandingIntro({');
+    expect(source).toContain(
+      'return <GalacticIntro enabled={show}>{children}</GalacticIntro>',
+    );
+
+    const visible = (pathname, entryPath, extra = {}) =>
+      shouldShowLandingIntro({ pathname, entryPath, ...extra });
+
+    // Landing routes: a fresh document at `/` or `/home`.
+    expect(visible('/home', '/home')).toBe(true);
+    expect(visible('/home', '/')).toBe(true);
+    // `/` paints nothing (it is a redirect), so it renders no overlay itself.
+    expect(visible('/', '/')).toBe(false);
+    expect(visible('/login', '/')).toBe(false);
+
+    // Client-side navigation to /home from any other page.
+    for (const from of [
+      '/profile',
+      '/settings',
+      '/communities',
+      '/market',
+      '/chat',
+      '/campus/events',
+      '/rules',
+      '/login',
+    ]) {
+      expect(visible('/home', from)).toBe(false);
+    }
+
+    // Every other route, however it is entered.
+    for (const pathname of [
+      '/login',
+      '/setup',
+      '/onboarding',
+      '/rules',
+      '/profile',
+      '/settings',
+      '/communities',
+      '/market',
+      '/chat',
+      '/campus',
+      '/campus/events',
+      '/explore',
+      '/notifications',
+      '/moderator',
+      '/admin',
+      '/dashboard',
+      '/marketplace',
+      '/events',
+    ]) {
+      expect(visible(pathname, pathname)).toBe(false);
+      expect(visible(pathname, '/')).toBe(false);
+    }
+
+    // Document memory: once finished, a later return to /home cannot replay.
+    expect(visible('/home', '/home', { done: true })).toBe(false);
+  });
+
+  it('does no animation work at all when the route gate is closed', () => {
+    expect(source).toContain('export default function GalacticIntro({ children, enabled = true })');
+    expect(source).toContain('if (!enabled) return undefined;');
+    expect(source).toContain('}, [enabled]);');
+    expect(source).toContain("const visible = enabled && phase !== 'done';");
+  });
+
+  it('never uses persistent playback state or application routing', () => {
     expect(source).not.toMatch(
-      /sessionStorage|localStorage|document.cookie|location\.|router\.|supabase|usePathname|location\.reload/,
+      /sessionStorage|localStorage|document\.cookie|router\.|supabase|location\.reload|location\.href|location\.assign|location\.replace|next\/navigation.*redirect/,
     );
     expect(source).toContain('let completed = false');
     expect(source).toContain('inert={visible ? true : undefined}');
@@ -153,11 +229,14 @@ describe('document-level galactic intro architecture', () => {
     expect(css).toContain('var(--intro-safety-delay, 9.5s)');
   });
 
-  it('preloads only the two critical variable faces', () => {
-    expect(layout).toContain("preload('/fonts/Syne.ttf'");
-    expect(layout).toContain("preload('/fonts/SpaceGrotesk.ttf'");
-    expect(layout).toContain("crossOrigin: 'anonymous'");
-    expect(layout).toContain("type: 'font/ttf'");
+  it('preloads the two critical faces only on the route that can show them', () => {
+    // The root layout no longer preloads: every other route would pay for fonts
+    // it never renders (and browsers warn about unused preloads).
+    expect(layout).not.toContain('preload(');
+    expect(homeLayout).toContain("preload('/fonts/Syne.ttf'");
+    expect(homeLayout).toContain("preload('/fonts/SpaceGrotesk.ttf'");
+    expect(homeLayout).toContain("crossOrigin: 'anonymous'");
+    expect(homeLayout).toContain("type: 'font/ttf'");
   });
 
   it('cleans up timers, frames, motion and keyboard listeners', () => {
