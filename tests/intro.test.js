@@ -43,7 +43,8 @@ const weightAxis = (file) => {
 };
 
 describe('document-level galactic intro architecture', () => {
-  it('mounts the route-gated landing intro, never the animation directly', () => {
+  it('keeps the restored cinematic intro behind the original root route gate', () => {
+    expect(layout).toContain("import { LandingIntro } from '@/components/layout/GalacticIntro'");
     expect(layout).toContain('<LandingIntro>{children}</LandingIntro>');
     expect(layout).not.toContain('<GalacticIntro');
     expect(read('app/(app)/home/layout.js')).not.toContain('HomeLaunchGate');
@@ -137,6 +138,10 @@ describe('document-level galactic intro architecture', () => {
     const space = weightAxis('public/fonts/SpaceGrotesk.ttf');
     expect(syne).toEqual({ min: 400, default: 400, max: 800 });
     expect(space).toEqual({ min: 300, default: 300, max: 700 });
+    // The route needs a small Latin/UI subset, not two complete desktop font
+    // distributions. Keep the original variable axes while bounding the bytes.
+    expect(fs.statSync('public/fonts/Syne.ttf').size).toBeLessThan(60_000);
+    expect(fs.statSync('public/fonts/SpaceGrotesk.ttf').size).toBeLessThan(60_000);
     expect(css).toContain("font-family: 'Campus Galactic Syne'");
     expect(css).toContain("src: url('/fonts/Syne.ttf')");
     expect(css).toContain(`font-weight: ${syne.min} ${syne.max}`);
@@ -164,7 +169,8 @@ describe('document-level galactic intro architecture', () => {
     expect(source).toContain('fonts.check(SYNE_FONT, SYNE_GLYPHS)');
     expect(source).toContain('fonts.check(SPACE_FONT, SPACE_GLYPHS)');
     expect(source).toContain('const FONT_WAIT_MS = 3000');
-    expect(source).toContain('later(() => settle(true), FONT_WAIT_MS)');
+    expect(source).toContain('const fontWaitMs = compact ? MOBILE_FONT_WAIT_MS : FONT_WAIT_MS');
+    expect(source).toContain('later(() => settle(true), fontWaitMs)');
     // The old 400 ms race must not come back.
     expect(source).not.toContain('later(start, 400)');
     expect(source).not.toMatch(/setTimeout\([^)]*,\s*400\)/);
@@ -219,6 +225,22 @@ describe('document-level galactic intro architecture', () => {
     expect(css).toContain('flare 2.6s ease 0.2s');
   });
 
+  it('keeps the identity but compresses the phone choreography and font budget', () => {
+    expect(source).toContain('const MOBILE_FONT_WAIT_MS = 1000');
+    expect(source).toContain('const MOBILE_FADE_AT_MS = 1300');
+    expect(source).toContain('const MOBILE_FINISH_AT_MS = 1700');
+    expect(source).toContain("window.matchMedia('(max-width: 767px)')");
+    expect(source).toContain('const fadeAtMs = compact ? MOBILE_FADE_AT_MS : FADE_AT_MS');
+    expect(source).toContain('const finishAtMs = compact ? MOBILE_FINISH_AT_MS : FINISH_AT_MS');
+    expect(source).toContain('later(end, finishAtMs)');
+    expect(css).toContain('@media (max-width: 767px) and (prefers-reduced-motion: no-preference)');
+    expect(css).toContain('draw 0.55s cubic-bezier(0.77, 0, 0.175, 1) 0.1s');
+    expect(css).toContain('fill 0.35s ease 0.85s');
+    expect(css).toContain('tagIn 0.35s ease 1s');
+    // Reduced motion still takes the immediate existing exit, not this sequence.
+    expect(source).toContain('later(end, 100)');
+  });
+
   it('aligns the independent JS and CSS safety deadlines', () => {
     expect(source).toContain('const SAFETY_DEADLINE_MS = FONT_WAIT_MS + 6200');
     expect(source).toContain(
@@ -229,14 +251,30 @@ describe('document-level galactic intro architecture', () => {
     expect(css).toContain('var(--intro-safety-delay, 9.5s)');
   });
 
-  it('preloads the two critical faces only on the route that can show them', () => {
-    // The root layout no longer preloads: every other route would pay for fonts
-    // it never renders (and browsers warn about unused preloads).
+  it('scopes warm Light scene colours while retaining Dark colour defaults', () => {
+    expect(css).toContain('--intro-secondary: var(--color-accent-2)');
+    expect(css).toContain('--intro-edge: var(--color-accent-ink)');
+    expect(css).toContain('--intro-glow: var(--color-accent-ink)');
+    const lightScene = css.match(/:global\(:root\[data-theme='light'\]\) \.stage\s*\{([^}]*)\}/)?.[1];
+    expect(lightScene).toContain('color-scheme: light');
+    expect(lightScene).toContain('--intro-secondary: #D8CEC4');
+    expect(lightScene).toContain('--intro-edge: #D8CEC4');
+    expect(lightScene).toContain('--intro-glow: #F1EBE5');
+    // Only colour inputs are themed; the original gradient geometry and
+    // opacity stops remain shared by both scenes.
+    expect(css).toContain('ellipse 78% 60% at 22% 20%');
+    expect(css).toContain('transparent 60%');
+    expect(css).toContain('var(--intro-edge) 88%');
+    expect(css).toContain('var(--intro-edge) 100%');
+    expect(css).toContain('color-mix(in oklab, var(--intro-glow) 34%, transparent)');
+    expect(css).not.toContain(":global(:root[data-theme='dark']) .stage");
+  });
+
+  it('preloads the exclusive cinematic faces only on the Home route', () => {
     expect(layout).not.toContain('preload(');
     expect(homeLayout).toContain("preload('/fonts/Syne.ttf'");
     expect(homeLayout).toContain("preload('/fonts/SpaceGrotesk.ttf'");
-    expect(homeLayout).toContain("crossOrigin: 'anonymous'");
-    expect(homeLayout).toContain("type: 'font/ttf'");
+    expect(homeLayout).toContain("from 'react-dom'");
   });
 
   it('cleans up timers, frames, motion and keyboard listeners', () => {

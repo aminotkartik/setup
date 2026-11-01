@@ -5,7 +5,21 @@ import { describe, expect, it } from 'vitest';
 /** Fast guards for the semantic pairings. The rendered/pixel audit complements
  * these: tokens alone cannot prove contrast under a blend, gradient or canvas. */
 const css = fs.readFileSync('app/globals.css', 'utf8');
-const tokens = new Map([...css.matchAll(/(--cp-[\w-]+):\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
+const canonicalTokens = fs.readFileSync('app/tokens.css', 'utf8');
+function makeTokenMap(source) {
+  return new Map(
+    [...source.matchAll(/(--(?:cp|c|color|brand)-[\w-]+):\s*([^;]+);/g)].map((match) => [
+      match[1],
+      match[2].trim(),
+    ]),
+  );
+}
+
+const lightCanonical = canonicalTokens.replace(/:root\[data-theme='dark'\]\s*\{[^}]*\}/, '');
+const tokenMaps = {
+  light: makeTokenMap(`${lightCanonical}\n${css}`),
+  dark: makeTokenMap(`${canonicalTokens}\n${css}`),
+};
 
 function splitPair(value) {
   let depth = 0;
@@ -17,16 +31,97 @@ function splitPair(value) {
   throw new Error(`Not a light-dark pair: ${value}`);
 }
 
+function oklabToSrgb(L, a, b, alpha = 1) {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linear = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+  return linear
+    .map((channel) => {
+      const encoded = channel <= 0.0031308 ? 12.92 * channel : 1.055 * Math.max(channel, 0) ** (1 / 2.4) - 0.055;
+      return Math.min(1, Math.max(0, encoded)) * 255;
+    })
+    .concat(alpha);
+}
+
+function srgbToOklab(value) {
+  const [r, g, b] = value.slice(0, 3).map((channel) => {
+    const encoded = channel / 255;
+    return encoded <= 0.04045 ? encoded / 12.92 : ((encoded + 0.055) / 1.055) ** 2.4;
+  });
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+    value[3],
+  ];
+}
+
+function splitArguments(value) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    if (value[i] === '(') depth += 1;
+    if (value[i] === ')') depth -= 1;
+    if (value[i] === ',' && depth === 0) {
+      parts.push(value.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(value.slice(start).trim());
+  return parts;
+}
+
+function mixStop(value, theme, seen) {
+  const match = /^(.*\S)\s+(\d+(?:\.\d+)?)%$/.exec(value.trim());
+  return {
+    color: srgbToOklab(color(match ? match[1] : value, theme, seen)),
+    weight: match ? Number(match[2]) / 100 : null,
+  };
+}
+
 function color(value, theme, seen = new Set()) {
   const text = value.trim();
   if (text.startsWith('var(')) {
     const name = text.slice(4, -1);
+    const tokens = tokenMaps[theme];
     if (seen.has(name) || !tokens.has(name)) throw new Error(`Invalid token dependency: ${name}`);
     return color(tokens.get(name), theme, new Set([...seen, name]));
   }
   if (text.startsWith('light-dark(')) {
     return color(splitPair(text.slice(11, -1))[theme === 'light' ? 0 : 1], theme, seen);
   }
+  if (text.startsWith('color-mix(')) {
+    const [space, firstValue, secondValue] = splitArguments(text.slice(10, -1));
+    expect(space).toBe('in oklab');
+    const first = mixStop(firstValue, theme, seen);
+    const second = mixStop(secondValue, theme, seen);
+    if (first.weight === null && second.weight === null) first.weight = second.weight = 0.5;
+    else if (first.weight === null) first.weight = 1 - second.weight;
+    else if (second.weight === null) second.weight = 1 - first.weight;
+    const mixed = [0, 1, 2, 3].map((i) => first.color[i] * first.weight + second.color[i] * second.weight);
+    return oklabToSrgb(...mixed);
+  }
+  if (text.startsWith('oklch(')) {
+    const [components, alpha] = text.slice(6, -1).split('/');
+    const [lightness, chroma, hue] = components.trim().split(/\s+/).map(parseFloat);
+    const radians = (hue * Math.PI) / 180;
+    return oklabToSrgb(
+      lightness / 100,
+      chroma * Math.cos(radians),
+      chroma * Math.sin(radians),
+      alpha === undefined ? 1 : Number(alpha),
+    );
+  }
+  if (text === 'transparent') return [0, 0, 0, 0];
   if (text.startsWith('#')) {
     let hex = text.slice(1);
     if (hex.length === 3) hex = hex.split('').map((letter) => letter + letter).join('');
@@ -37,6 +132,7 @@ function color(value, theme, seen = new Set()) {
 }
 
 function read(name, theme) {
+  const tokens = tokenMaps[theme];
   expect(tokens.has(`--cp-${name}`), `Missing semantic token: ${name}`).toBe(true);
   return color(tokens.get(`--cp-${name}`), theme);
 }
@@ -68,7 +164,7 @@ function verifyPair(foreground, background, theme, threshold = 4.5) {
 const readingSurfaces = ['bg-page', 'bg-page-deep', 'bg-elevated', 'bg-subtle', 'bg-strong', 'bg-accent-soft', 'bg-accent-tint', 'hover-bg', 'success-bg', 'warning-bg', 'danger-bg', 'info-bg'];
 const textRoles = ['text-primary', 'text-secondary', 'text-muted', 'text-subtle'];
 
-for (const theme of ['dark']) {
+for (const theme of ['light', 'dark']) {
   describe(`${theme} semantic contrast`, () => {
     it('keeps every text tier readable on reading and status surfaces', () => {
       for (const foreground of textRoles) {
@@ -120,6 +216,41 @@ for (const theme of ['dark']) {
       }
     });
 
+    it('keeps dropdown menus dependable: backed glass, opaque fallback, portalled', () => {
+      // The sidebar Create menu's invisibility was never a background-alpha
+      // problem: `.side-panel > *` makes every sidebar child a z-index:1
+      // stacking context, so the nav rows after the Create wrapper painted
+      // OVER the anchored menu, and the panel's overflow clipped it. The
+      // menu therefore renders through a body portal now, and its glass is
+      // backed: the mix composites to >=90% opaque over ANY underlay, with a
+      // fully opaque fallback where backdrop-filter does not exist.
+      const feedback = fs.readFileSync('app/styles/feedback.css', 'utf8');
+      const mix = feedback.match(/\.cp-menu\s*\{[^}]*background-color: color-mix\(in oklab, var\(--cp-bg-glass-strong\) (\d+)%, var\(--cp-bg-elevated\)\)/);
+      expect(mix, '.cp-menu must mix the strong glass token over the opaque elevated token').toBeTruthy();
+      expect(feedback).toMatch(/@supports not \(\(backdrop-filter: blur\(1px\)\)[^{]*\{\s*\.cp-menu \{\s*background-color: var\(--cp-bg-elevated\)/);
+
+      const share = Number(mix[1]) / 100;
+      const glassStrong = read('bg-glass-strong', theme);
+      const elevated = read('bg-elevated', theme);
+      const mixedAlpha = share * glassStrong[3] + (1 - share) * elevated[3];
+      expect(mixedAlpha).toBeGreaterThanOrEqual(0.9);
+      const mixed = glassStrong
+        .slice(0, 3)
+        .map((channel, i) => (share * glassStrong[3] * channel + (1 - share) * elevated[3] * elevated[i]) / mixedAlpha)
+        .concat(mixedAlpha);
+      for (const underlay of [[0, 0, 0, 1], [255, 255, 255, 1]]) {
+        const background = composite(mixed, underlay);
+        for (const text of textRoles) {
+          const ratio = contrast(read(text, theme), background);
+          expect(ratio, `${theme} ${text} over menu glass: ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+
+      const overlays = fs.readFileSync('components/ui/overlays.js', 'utf8');
+      expect(overlays).toContain("'cp-menu fixed z-[80]");
+      expect(overlays).not.toContain("'cp-menu absolute");
+    });
+
     it('bounds glass contrast over even the darkest/brightest underlays', () => {
       for (const surface of ['bg-glass', 'bg-glass-soft', 'bg-glass-strong', 'bg-cinematic-glass']) {
         for (const underlay of [[0, 0, 0, 1], [255, 255, 255, 1]]) {
@@ -160,15 +291,18 @@ function walk(dir) {
 }
 
 describe('readability architecture guards', () => {
-  it('is permanently dark: one palette, with no light or system variant', () => {
-    expect(css).toMatch(/:root,\s*\[data-theme='dark'\]\s*\{\s*color-scheme: dark/);
-    expect(css).not.toContain("[data-theme='light']");
+  it('resolves explicit light and dark palettes without a system variant', () => {
+    expect(canonicalTokens).toContain(":root[data-theme='light']");
+    expect(canonicalTokens).toContain(":root[data-theme='dark']");
+    expect(canonicalTokens).toContain('color-scheme: light');
+    expect(canonicalTokens).toContain('color-scheme: dark');
     expect(css).not.toContain("[data-theme='system']");
     expect(css).not.toContain('light-dark(');
     expect(css).not.toMatch(/@media \(prefers-color-scheme/);
-    expect(css).not.toMatch(/color-scheme: light/);
-    for (const value of tokens.values()) {
-      expect(() => color(value, 'dark')).not.toThrow();
+    for (const theme of ['light', 'dark']) {
+      for (const value of tokenMaps[theme].values()) {
+        expect(() => color(value, theme)).not.toThrow();
+      }
     }
   });
 

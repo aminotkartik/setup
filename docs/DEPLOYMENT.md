@@ -38,6 +38,12 @@ cp .env.example .env.local
 | `GIPHY_CONTENT_RATING` | optional | `g` \| `pg` \| `pg-13` \| `r`, default `pg-13` |
 | `NEXT_PUBLIC_PLATFORM_NAME` | optional | display name, default `Campus+` |
 | `NEXT_PUBLIC_COLLEGE_NAME` | optional | display name, default `PCCOE` |
+| `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | recommended | public mailbox shown on `/legal` for rights-holder enquiries; until set, the page states that no dedicated address has been published (the app never invents one) |
+| `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET` | backups only | existing **Drive-only** Google OAuth client (separate from the student sign-in client); see `docs/BACKUPS.md` §4 |
+| `BACKUP_ENCRYPTION_KEYS`, `BACKUP_ENCRYPTION_KEY_ID` | backups only | 32-byte base64 AES key ring and the id used for new objects |
+| `BACKUP_DATABASE_URL`, `BACKUP_RESTORE_DATABASE_URL` | backups only | direct Postgres connection for consistent snapshots; separate disposable restore target |
+| `CRON_SECRET` | backups only | bearer token Vercel Cron sends to `/api/backup/worker` and `/api/backup/snapshot`. **Must be named exactly `CRON_SECRET`** — Vercel can only inject that name; `BACKUP_CRON_SECRET` is accepted as a legacy alias and should hold the same value |
+| `BACKUP_DRIVE_REDIRECT_URI`, `BACKUP_PUBLIC_ORIGIN` | development only | local callback override; production is pinned to `https://pccoe.in/api/backup/drive/callback` |
 
 `npm run check:env` verifies all of this, refuses placeholders, and fails if a
 secret has been placed in a `NEXT_PUBLIC_*` variable. Campus+ boots without
@@ -46,11 +52,17 @@ fabricates credentials.
 
 ## 3. Migrations
 
-The schema lives in `supabase/migrations/` (19 ordered files: extensions and
+The schema lives in `supabase/migrations/` (37 ordered files: extensions and
 enums, identity/roles, blocks, communities, social, moderation core, messaging,
 marketplace, campus, Random, platform, auth hooks, reference data, realtime and
 grants, column privileges, staff actions, marketplace hardening, function grants,
-staff visibility).
+staff visibility, chat inbox, messaging live read model, the transactional backup
+outbox and Drive worker state (027–028), live feed delivery (029), Realtime
+channel-authorization hardening (030), club governance and its directory column
+(031–032), bounded messaging/feed/Admin lookups (033–036), and the idempotent
+Realtime grant repair (037)). Run `public.backup_sync_triggers()` (or re-run
+migration 027) after adding new public application tables so every table stays covered
+by change capture.
 
 **Option A — Supabase CLI (recommended)**
 
@@ -59,10 +71,17 @@ supabase link --project-ref <your-project-ref>
 supabase db push
 ```
 
+For an existing deployment, apply **every pending migration in filename order**.
+In particular, 037 only reasserts function grants: it does not replace 030's
+private-channel policy predicates or 031's real `communities.organization_type`
+column and constraints. Running 037 alone cannot repair a database that is still
+on 029, and the complete bundle below is for a new empty project, not an in-place
+production upgrade.
+
 **Option B — SQL editor (one script)**
 
 The whole schema is committed as a single script at
-**`supabase/bundle/campus-plus-schema.sql`** (~349 KB, 19 migrations). Open it on
+**`supabase/bundle/campus-plus-schema.sql`** (~570 KB, 37 migrations). Open it on
 GitHub (Raw → copy all), then Supabase → **SQL Editor → New query**, paste, Run.
 No CLI, no database password, no local tooling — this is the Dashboard-only path.
 
@@ -90,7 +109,7 @@ you prefer to watch each step.
 Reference data included in the migrations, ready to use:
 
 * the `pccoe` college row with the `pccoepune.org` domain,
-* 4 roles and 53 permissions with their default role→permission mapping,
+* 4 roles and 56 permissions (including `manage_backups`) with their default role→permission mapping,
 * marketplace categories, notice categories, branches, years, divisions,
 * ~30 feature flags and ~16 platform settings,
 * the notification/summary helper functions, realtime policies and audits.
@@ -98,8 +117,8 @@ Reference data included in the migrations, ready to use:
 After migrating, confirm the schema is intact:
 
 ```bash
-npm run verify:db     # throwaway Postgres: applies every migration + 8 suites
-npm run audit:db      # 54 static assertions: RLS, policies, grants, columns
+npm run verify:db     # throwaway Postgres: applies 37 migrations + 18 suites
+npm run audit:db      # static assertions: RLS, policies, grants, columns
 ```
 
 ## 4. Authentication configuration
@@ -124,6 +143,13 @@ Supabase dashboard → **Authentication**:
    reach the provider at all.
 
 No SMTP configuration is needed: Campus+ never sends email.
+
+**Administration backups use a separate OAuth flow.** Student sign-in above is
+untouched. The existing **Drive-only** Google OAuth client gets one additional
+Authorized redirect URI — exactly
+`https://pccoe.in/api/backup/drive/callback` — with the `drive.file` scope. Its
+ID/secret go into `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET`, never
+into the Supabase Auth provider. See `docs/BACKUPS.md` §4.
 
 Domain enforcement is server-side and lives in the database
 (`colleges.email_domains`, `platform_settings.allowed_email_domains`,
@@ -156,7 +182,28 @@ address before the session is used. Adding a second domain is a row update — s
    npm run start
    ```
 
-Campus+ needs no cron jobs, no background workers and no extra services.
+The student application still needs no background service. The **backup
+subsystem does**: `vercel.json` schedules `/api/backup/worker` (incremental
+outbox drain) and `/api/backup/snapshot` (full snapshot) **once each per day**,
+both protected by the `CRON_SECRET` bearer token (`BACKUP_CRON_SECRET` is also
+accepted). Vercel's Hobby plan rejects more frequent cron expressions at deploy
+time, so for a shorter RPO use a Pro-plan cron (`*/5 * * * *`) or an external
+scheduler, or run `npm run backup:worker -- --loop` and `npm run backup:snapshot`
+from a trusted host. Nothing on a student request path calls Google Drive. See
+`docs/BACKUPS.md` §5. Super Admins can also **process the queue from
+Admin → Backups** without a terminal or a cron hit; that path is authorized by
+`manage_backups`, not by the cron secret, and shares the same run lease.
+
+The installable offline timetable needs **nothing** here: no environment
+variable, no `vercel.json` entry, no dashboard switch. Its service worker is a
+static file under `/timetable` and both headers it depends on
+(`Service-Worker-Allowed: /` and `no-cache` for `/timetable/sw.js`) are emitted by
+`next.config.mjs`, which travels with the build. Its manifests, its snapshot
+route and its offline shell are public like the timetable page itself, and it
+reads no secret — so there is no Preview/Production variable to add and no
+permission to grant. The only preconditions are the platform's own: HTTPS (this
+deployment has it) and one online visit per batch to save it.
+See `docs/TIMETABLE-OFFLINE.md` §10.
 
 ## 7. First Super Admin
 
@@ -237,10 +284,12 @@ information, settings and flags — is editable inside the application.
 ## 9. Verification before handing over
 
 ```bash
-npm run check:env        # configuration complete, no secret in NEXT_PUBLIC_*
-npm run verify           # lint + migrations + audit + tests
-npm run verify:security  # live probe with the public key
-npm run build            # production build covers every route
+npm run check:env             # configuration complete, no secret in NEXT_PUBLIC_*
+npm run verify                # lint + migrations + audit + tests
+npm run db:bundle -- --check  # committed SQL bundle matches the migrations
+npm run backup:verify-restore # offline snapshot + incremental restore test
+npm run verify:security       # live probe with the public key
+npm run build                 # production build covers every route
 ```
 
 Then walk through the operator checklist (§9 of `docs/SECURITY.md`) and confirm
@@ -260,8 +309,11 @@ sample or invented content.
 * **Suspensions and bans**: Admin → Users → *Change account status*, with a reason
   that is recorded in the audit log and shown to the student on
   `/account-status`.
-* **Backups**: use Supabase's scheduled backups; Campus+ keeps no second copy of
-  anything and stores no user files.
+* **Backups**: Supabase's platform backups remain the primary recovery tool. A
+  separate encrypted Drive copy of schema `public` is written asynchronously by
+  the backup worker; see **Admin → Backups** and `docs/BACKUPS.md`. It is not
+  complete disaster recovery: Auth, Storage, secrets, roles and cron config are
+  not included and must be reprovisioned.
 * **Retention**: `purge_random_data(retention_days)` clears expired Random
   sessions. Run it from the SQL editor (or a scheduled query) if you want the
   data minimised on a timetable.

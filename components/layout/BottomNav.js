@@ -2,42 +2,58 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MOBILE_NAV } from '@/lib/constants';
+import { MOBILE_NAV, ROUTES } from '@/lib/constants';
 import { Icon } from '@/components/ui/icons';
 import { GlassSurface } from '@/components/ui';
+import { isActivePath } from '@/lib/navigation/active';
+import { MessageUnreadBadge } from '@/components/layout/MessageUnreadBadge';
 
 /**
  * Mobile navigation: Home · Explore · Market · Chat · Profile.
  *
  * The same routes render on both form factors — this is one responsive
- * codebase, not a separate mobile app. The bar is a floating glass pill with
- * the safe area respected, so a glimpse of content shows underneath and the
- * thumb always lands on the same five targets.
+ * codebase, not a separate mobile app. The bar is a floating glass pill
+ * suspended above the environment: the page scrolls visibly *under* it, the
+ * safe area is respected, and the thumb always lands on the same five targets.
+ *
+ * Each tab is a large touch target (44px minimum). The active tab is marked
+ * three ways — a lit icon, a soft teal wash, and a short blade of light along
+ * the top edge — so the current section survives colour-vision differences and
+ * greyscale. The marker is a shape, not only a hue.
  */
-export function BottomNav({ unreadNotifications = 0 }) {
+export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+    <div className="bottom-dock fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
       <GlassSurface
         as="nav"
         tone="floating"
         aria-label="Primary"
-        className="mx-auto flex max-w-md rounded-2xl border border-glass-border"
+        className="bottom-dock__bar mx-auto flex max-w-md rounded-[1.6rem] border border-glass-border"
       >
-        <div className="flex w-full items-stretch">
+        {/* The gutter is the focus ring's room: 2px offset + 2px ring, plus
+            breathing space, so the dock's rounded clip never eats it. */}
+        <div className="flex w-full items-stretch px-1.5 py-1.5">
           {MOBILE_NAV.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            // Same rule as the desktop rail: the tab is current on its own
+            // path and any child of it (`/chat/123` → Chat).
+            const active = isActivePath(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                // Home owns the intro's unique route CSS and two display fonts.
+                // Keep the other dock warmups; do not fetch those assets here.
+                prefetch={item.href === ROUTES.home ? false : undefined}
                 aria-current={active ? 'page' : undefined}
                 className="tab-item rounded-2xl"
               >
-                <span className="relative">
+                {/* The five destinations and their dimensions stay unchanged.
+                    Only the existing Chat glyph carries the live unread count. */}
+                <span className="relative flex">
                   <Icon name={item.icon} size={20} className="tab-icon" />
-                  {item.icon === 'bell' && unreadNotifications > 0 ? <span className="unread-dot absolute -right-1.5 -top-1" /> : null}
+                  {item.href === ROUTES.chat ? <MessageUnreadBadge variant="icon" /> : null}
                 </span>
                 {item.label}
               </Link>

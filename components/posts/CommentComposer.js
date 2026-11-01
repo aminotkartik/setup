@@ -37,7 +37,7 @@ export function CommentComposer({ postId, parentId = null, compact = false, labe
     <form
       ref={formRef}
       action={run}
-      className={compact ? 'flex flex-col gap-2' : 'card flex flex-col gap-2.5 p-3'}
+      className={compact ? 'comment-composer comment-composer--compact flex flex-col gap-2' : 'comment-composer card flex flex-col gap-2.5 p-3'}
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);

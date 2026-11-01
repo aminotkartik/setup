@@ -5,8 +5,8 @@
 
      1. THE THRESHOLD (`.home-pulse`) — an open band of environment: a small
         live marker, the greeting set as editorial display type, one primary
-        action, the search door, and a thin column of real campus counts. No
-        surface: this is the world, not a card.
+        action, the search door, real campus counts, and four navigation tiles.
+        The greeting sits directly in the environment, not in a card.
      2. THE WORKS (`.home-body`) — the composer and the stream on the left, the
         rail of small destinations on the right. Every entry is an island with
         its own proportion, elevation and surface treatment, connected by the
@@ -26,12 +26,12 @@
 
 .home-pulse {
   position: relative;
+  container: home-hero / inline-size;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: clamp(1.75rem, 4vh, 3rem);
-  min-height: clamp(17rem, 38vh, 25rem);
-  padding-block: clamp(2.25rem, 6vh, 4.5rem) clamp(1.5rem, 3vh, 2.25rem);
+  gap: var(--home-column-gap);
+  min-height: 0;
+  padding-block: clamp(1.5rem, 3vw, 2.5rem) var(--space-xl);
 }
 
 /* A single soft light behind the greeting — the only place on the page where
@@ -46,16 +46,97 @@
    overflow, so the glow still reaches the screen edge and the page still cannot
    be dragged sideways. Nothing about the composition changed — only what the
    browser is allowed to scroll. */
+/* The band's light: teal from the leading edge, sand through the middle, a
+   reach of sunset on the trailing side. It is the room's light catching the
+   greeting — the only place the three brand colours meet. */
 .home-pulse__aurora {
   position: absolute;
   z-index: 0;
-  inset: -30% -20% auto -20%;
-  height: 120%;
+  inset: -34% -20% auto -20%;
+  height: 128%;
   pointer-events: none;
-  opacity: 0.85;
+  opacity: 0.9;
   background-image:
-    radial-gradient(46% 62% at 18% 42%, color-mix(in oklab, var(--cp-accent-cyan) 13%, transparent) 0%, transparent 72%),
-    radial-gradient(38% 52% at 62% 22%, color-mix(in oklab, var(--cp-accent-highlight) 10%, transparent) 0%, transparent 76%);
+    radial-gradient(44% 60% at 16% 40%, color-mix(in oklab, var(--cp-bg-accent) 22%, transparent) 0%, transparent 72%),
+    radial-gradient(34% 48% at 54% 18%, color-mix(in oklab, var(--brand-sand) 9%, transparent) 0%, transparent 74%),
+    radial-gradient(30% 44% at 92% 62%, color-mix(in oklab, var(--cp-accent-warm) 12%, transparent) 0%, transparent 76%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-pulse__aurora {
+    animation: aurora-breathe 18s var(--ease-settle) infinite alternate;
+  }
+}
+
+@keyframes aurora-breathe {
+  from {
+    transform: translate3d(-1.5%, 0, 0) scale(1);
+    opacity: 0.78;
+  }
+  to {
+    transform: translate3d(1.5%, -1%, 0) scale(1.04);
+    opacity: 0.95;
+  }
+}
+
+/* Two specks of light in the empty band — the only decorations on the page
+   that are not attached to anything. They drift a few pixels on transform, are
+   invisible to assistive technology and disappear under reduced motion. */
+.home-pulse__spark {
+  position: absolute;
+  z-index: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.home-pulse__spark--teal {
+  top: 18%;
+  left: 58%;
+  background-color: var(--cp-accent-cyan);
+  box-shadow:
+    0 0 10px 2px var(--cp-glow-cyan),
+    0 0 30px 6px var(--cp-glow-soft);
+}
+
+.home-pulse__spark--warm {
+  top: 52%;
+  left: 88%;
+  width: 0.25rem;
+  height: 0.25rem;
+  background-color: var(--cp-text-warm);
+  box-shadow:
+    0 0 10px 2px var(--cp-glow-warm),
+    0 0 26px 8px var(--cp-glow-warm);
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-pulse__spark--teal {
+    animation: spark-drift 13s var(--ease-settle) infinite alternate;
+  }
+
+  .home-pulse__spark--warm {
+    animation: spark-drift 17s var(--ease-settle) infinite alternate-reverse;
+  }
+}
+
+@keyframes spark-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0.75rem, -1.25rem, 0);
+  }
+}
+
+@media (max-width: 767px) {
+  .home-pulse__spark--warm,
+  .home-pulse__spark--teal {
+    display: none;
+  }
 }
 
 .home-pulse__grid {
@@ -63,27 +144,28 @@
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(1.5rem, 3vw, 2.5rem);
-  align-items: end;
+  gap: var(--home-column-gap);
+  align-items: start;
 }
 
-@media (min-width: 1024px) {
+/* The shell's navigation rail consumes space, so compose by actual content
+   width instead of assuming a desktop viewport always has room. */
+@container home-hero (min-width: 52rem) {
   .home-pulse__grid {
-    /* Asymmetric on purpose: the greeting takes the room, the data column is a
-       thin instrument at the right edge. */
-    grid-template-columns: minmax(0, 1.6fr) minmax(15rem, 20rem);
+    grid-template-columns: var(--home-columns);
   }
 }
 
 .home-pulse__eyebrow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-micro), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--cp-text-secondary);
+  gap: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--cp-text-muted);
 }
 
 .home-pulse__dot {
@@ -97,22 +179,124 @@
 }
 
 .home-pulse__title {
-  margin-top: clamp(0.75rem, 2vh, 1.25rem);
-  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  max-width: none;
+  margin-top: var(--space-md);
+  font-family: var(--font-body);
   font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--cp-text-muted);
+  letter-spacing: 0;
+  line-height: 1.1;
+  color: var(--cp-text-secondary);
+}
+
+.home-pulse__greet {
+  display: block;
+  font-size: clamp(1.25rem, 1.125rem + 0.5cqi, 1.5rem);
+  line-height: 1.35;
 }
 
 .home-pulse__name {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: clamp(2.25rem, 1.35rem + 3.9vw, 4rem);
-  font-weight: 640;
-  line-height: 0.96;
-  letter-spacing: -0.038em;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: clamp(0.625rem, 0.18em, 1rem);
+  margin-top: var(--space-2xs);
+  font-family: var(--font-body);
+  font-size: clamp(3.5rem, 2.75rem + 3cqi, 5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.055em;
   color: var(--cp-text-primary);
-  text-wrap: balance;
+}
+
+/* Long first names stay on one line with the hand, even at increased zoom.
+   The full name remains in the heading's text and its native tooltip. */
+.home-pulse__name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The greeting is a real, compact button with a stable 44px target. Only the
+   artwork moves: one short wave on arrival, replayed by remounting that artwork
+   on click/Enter/Space. It never loops or changes the headline's layout. */
+.home-pulse__wave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: inherit;
+  font-size: 0.65em;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 4px 14px var(--cp-glow-accent));
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.home-pulse__wave:hover {
+  background: color-mix(in oklab, currentColor 8%, transparent);
+}
+
+.home-pulse__wave:active {
+  transform: scale(0.96);
+}
+
+.home-pulse__wave:focus-visible {
+  outline: 2px solid var(--color-focus, var(--cp-focus));
+  outline-offset: 1px;
+}
+
+.home-pulse__wave-art {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  transform-origin: 72% 84%;
+}
+
+.home-pulse__wave svg {
+  display: block;
+}
+
+/* Inside the gradient name, the hand keeps its own colours. */
+.home-pulse__name .home-pulse__wave {
+  color: var(--cp-accent-highlight);
+  -webkit-text-fill-color: initial;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-pulse__wave-art {
+    animation: pulse-wave var(--dur-gesture) var(--ease-out) both;
+  }
+}
+
+@keyframes pulse-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(12deg);
+  }
+  45% {
+    transform: rotate(-8deg);
+  }
+  70% {
+    transform: rotate(6deg);
+  }
 }
 
 /* One selective electric-blue highlight, on the largest type on the page: the
@@ -122,74 +306,184 @@
 @supports (background-clip: text) or (-webkit-background-clip: text) {
   .home-pulse__name {
     background-image: linear-gradient(
-      104deg,
-      color-mix(in oklab, var(--cp-accent-highlight) 82%, var(--cp-text-primary)) 0%,
-      color-mix(in oklab, var(--cp-accent-cyan) 46%, var(--cp-text-primary)) 38%,
-      var(--cp-text-primary) 82%
+      102deg,
+      color-mix(in oklab, var(--cp-accent-highlight) 90%, var(--cp-text-primary)) 0%,
+      color-mix(in oklab, var(--cp-text-accent) 52%, var(--cp-text-primary)) 30%,
+      color-mix(in oklab, var(--brand-sand) 72%, var(--cp-text-primary)) 68%,
+      var(--cp-text-primary) 96%
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+
+  /* The wave sits outside the gradient's text clip. */
+  .home-pulse__name .home-pulse__wave {
+    -webkit-text-fill-color: initial;
+    color: var(--cp-text-primary);
+  }
 }
 
-/* A hairline of light under the name: the horizon of the typography. */
 .home-pulse__lead {
   position: relative;
-  display: inline-block;
-  margin-top: 0.9rem;
   max-width: 46ch;
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  margin-top: var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.65;
+  letter-spacing: 0;
   color: var(--cp-text-secondary);
 }
 
 .home-pulse__actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
-  gap: 0.75rem 1rem;
-  margin-top: clamp(1.25rem, 3vh, 2rem);
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
 }
 
 .home-pulse__search {
-  flex: 1 1 19rem;
-  max-width: 27rem;
+  min-width: 0;
 }
 
-@media (min-width: 1024px) {
-  .home-pulse__search {
-    flex: 0 1 22rem;
+/* Match the existing primary action, without changing the shared search field
+   on Explore, in the header, or in any other route. */
+.home-pulse__search .search-pill__shell {
+  height: 3rem;
+  padding: 1px;
+}
+
+.home-pulse__search .search-pill__input {
+  height: 100%;
+  padding-block: 0.5rem;
+}
+
+.home-pulse__search .search-pill__icon {
+  height: 2.75rem;
+}
+
+@container home-hero (max-width: 21rem) {
+  .home-pulse__actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-/* The instrument column: real counts of what this page actually loaded. */
+/* The "keep exploring" row: frosted chips, each one a real destination. It sits
+   after the feed, so it wraps rather than scrolls — a horizontal scroller on a
+   phone is a hidden control. */
+.home-discover {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-top: 0.25rem;
+  max-width: 46rem;
+}
+
+.home-discover__label {
+  flex-basis: 100%;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--cp-text-muted);
+}
+
+.discover-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.6875rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--cp-glass-border) 85%, transparent);
+  background-color: color-mix(in oklab, var(--cp-bg-glass-soft) 66%, transparent);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.07), transparent 58%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  color: var(--cp-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--cp-edge-light) 90%, transparent);
+  transition:
+    transform var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-base) ease;
+}
+
+.discover-chip:hover {
+  border-color: color-mix(in oklab, var(--cp-bg-accent) 58%, var(--cp-glass-border));
+  background-color: color-mix(in oklab, var(--cp-bg-accent) 14%, transparent);
+  color: var(--cp-text-primary);
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 22px -16px var(--cp-glow-accent);
+}
+
+.discover-chip:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.discover-chip:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .discover-chip,
+  .home-pulse__stats {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in oklab, var(--cp-bg-elevated) 92%, transparent);
+  }
+}
+
+/* A compact strip of real counts from what this page actually loaded. */
 .home-pulse__stats {
   display: grid;
+  grid-template-columns: repeat(var(--home-stat-count, 4), minmax(0, 1fr));
   gap: 0;
-  border-top: 1px solid var(--cp-border-subtle);
+  margin-top: var(--space-lg);
+  padding: var(--space-xs);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--cp-glass-border);
+  background-color: color-mix(in oklab, var(--cp-bg-glass-soft) 62%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  backdrop-filter: blur(20px) saturate(155%);
+  box-shadow:
+    inset 0 1px 0 var(--cp-edge-light),
+    0 20px 40px -34px var(--cp-scrim);
 }
 
 .home-pulse__stat {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-block: 0.6rem;
-  border-bottom: 1px solid var(--cp-border-subtle);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
 }
 
 .home-pulse__stat dt {
-  font-family: var(--font-micro), ui-monospace, monospace;
-  font-size: 0.625rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  line-height: 1.4;
   color: var(--cp-text-muted);
 }
 
 .home-pulse__stat dd {
-  font-size: 1.0625rem;
-  font-weight: 620;
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   color: var(--cp-text-primary);
@@ -197,34 +491,6 @@
 
 .home-pulse__stat[data-empty='true'] dd {
   color: var(--cp-text-subtle);
-}
-
-/* Below the desktop breakpoint the column of counts becomes a row of chips you
-   can swipe: the same information, still early in the page. */
-@media (max-width: 1023px) {
-  /* Wrapped chips rather than a horizontal scroller: a scroll container on a
-     phone is either a hidden control or a keyboard trap, and four counts fit
-     without one. */
-  .home-pulse__stats {
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-    gap: 0.5rem;
-    border-top: 0;
-  }
-
-  .home-pulse__stat {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--cp-border-subtle);
-    border-radius: var(--radius-md);
-    background-color: color-mix(in oklab, var(--cp-bg-subtle) 80%, transparent);
-  }
-
-  .home-pulse__stat dd {
-    order: -1;
-    font-size: 1.0625rem;
-  }
 }
 
 /* The horizon: a hairline at the foot of the threshold with one slow travelling
@@ -283,19 +549,151 @@
 }
 
 /* --------------------------------------------------------------------------
+   CAMPUS AT A GLANCE — compact, equal navigation tiles in the hero.
+   The cards use dark, opaque-enough surfaces in both themes so the ambient
+   artwork stays visible around them without compromising their text.
+   -------------------------------------------------------------------------- */
+.home-features {
+  container: home-features / inline-size;
+  min-width: 0;
+}
+
+.home-features__title {
+  margin-bottom: var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--cp-text-muted);
+}
+
+.home-features__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+  gap: var(--space-md);
+}
+
+@container home-features (min-width: 19rem) {
+  .home-features__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* When the hero stacks on a tablet, use the width instead of oversized cards.
+   The desktop rail and phone keep their existing 2×2 grid. */
+@container home-features (min-width: 40rem) {
+  .home-features__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.feature-tile {
+  --tile-accent: var(--color-accent-text);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.125rem;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-paper-2);
+  box-shadow: none;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.feature-tile--events {
+  --tile-accent: var(--color-accent-2);
+}
+
+.feature-tile--timetable {
+  --tile-accent: var(--color-accent-text);
+}
+
+.feature-tile--clubs {
+  --tile-accent: var(--color-success);
+}
+
+.feature-tile__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--tile-accent);
+}
+
+.feature-tile__icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid color-mix(in oklab, var(--tile-accent) 30%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in oklab, var(--tile-accent) 10%, transparent);
+}
+
+.feature-tile__arrow {
+  opacity: 0.75;
+  transition: transform 200ms ease;
+}
+
+.feature-tile__title {
+  margin-top: var(--space-sm);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.feature-tile__copy {
+  margin-top: var(--space-xs);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .feature-tile:hover {
+    color: var(--color-ink);
+    text-decoration: none;
+    border-color: var(--tile-accent);
+    background: var(--color-paper-3);
+    transform: translateY(-2px);
+  }
+  .feature-tile:hover .feature-tile__arrow { transform: translate(2px, -2px); }
+}
+
+.feature-tile:focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-tile, .feature-tile__arrow { transition: none; }
+  .feature-tile:hover .feature-tile__arrow { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
    2. THE WORKS
    -------------------------------------------------------------------------- */
 
 .home-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(1.5rem, 3vw, 2.25rem);
-  padding-bottom: 1rem;
+  gap: var(--home-column-gap);
+  padding-block: var(--home-column-gap) var(--space-md);
 }
 
-@media (min-width: 1200px) {
+@container home-page (min-width: 52rem) {
   .home-body {
-    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-columns: var(--home-columns);
     align-items: start;
   }
 }
@@ -303,23 +701,23 @@
 .home-body__main {
   display: flex;
   flex-direction: column;
-  gap: clamp(1.5rem, 3vw, 2.25rem);
+  gap: var(--home-column-gap);
   min-width: 0;
 }
 
 .home-body__rail {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-lg);
   min-width: 0;
 }
 
-@media (min-width: 1200px) {
+@container home-page (min-width: 52rem) {
   .home-body__rail {
     position: sticky;
-    top: 5rem;
+    top: 5.5rem;
     align-self: start;
-    max-height: calc(100dvh - 6rem);
+    max-height: calc(100dvh - 6.5rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-bottom: 1rem;
@@ -327,61 +725,107 @@
   }
 }
 
-/* A zone heading: mono eyebrow, editorial title, and the quiet explanation on
-   the right. Used once per movement so the page has a spine. */
+/* Keep the editorial section face, a quiet count, and readable supporting copy
+   beneath the heading instead of competing with it for the same row. */
 .home-zone {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.5rem 1.5rem;
-  padding-bottom: 0.875rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-sm) var(--space-lg);
+  padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--cp-border-subtle);
 }
 
 .home-zone__eyebrow {
-  font-family: var(--font-micro), ui-monospace, monospace;
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
   color: var(--cp-text-muted);
 }
 
 .home-zone__title {
-  margin-top: 0.5rem;
-  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
-  font-weight: 620;
+  margin-top: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.25rem + 0.75cqi, 1.875rem);
+  font-weight: 400;
   letter-spacing: -0.025em;
   line-height: 1.15;
   color: var(--cp-text-primary);
 }
 
 .home-zone__note {
-  max-width: 34ch;
-  font-size: 0.75rem;
-  line-height: 1.55;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  max-width: 65ch;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1.65;
   color: var(--cp-text-muted);
 }
 
 .home-zone__count {
+  grid-column: 2;
+  grid-row: 1;
+  padding-bottom: 0.125rem;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+/* Official notices are the exception in the column: a teal rim and a stronger
+   marker, so a college announcement is identifiable at a glance without a
+   second badge vocabulary. */
+.stream-slot[data-kind='notice'] .stream-card {
+  border-color: color-mix(in oklab, var(--cp-accent-cyan) 34%, var(--cp-glass-border));
+  background-image:
+    linear-gradient(180deg, var(--cp-edge-light) 0, transparent 1px),
+    linear-gradient(155deg, color-mix(in oklab, var(--cp-bg-accent) 12%, transparent), transparent 58%),
+    linear-gradient(160deg, var(--cp-glass-tint), transparent 62%);
 }
 
 /* The composer sits on the stream like a command line for the campus. */
 .home-composer {
   position: relative;
+  isolation: isolate;
+  padding: var(--space-md);
+}
+
+/* A teal pool of light beneath the composer: it is what the sheet appears to
+   be floating over, which is what makes its blur legible as glass. */
+.home-composer::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -1.25rem -0.75rem -1rem;
+  pointer-events: none;
+  border-radius: 2rem;
+  background-image:
+    radial-gradient(46% 68% at 20% 0%, color-mix(in oklab, var(--cp-bg-accent) 20%, transparent), transparent 74%),
+    radial-gradient(34% 54% at 92% 22%, color-mix(in oklab, var(--cp-accent-warm) 10%, transparent), transparent 76%);
+  filter: blur(18px);
 }
 
 .home-composer__label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.625rem;
-  font-family: var(--font-micro), ui-monospace, monospace;
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
   color: var(--cp-text-muted);
+}
+
+.home-composer__label::before {
+  content: '';
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 999px;
+  background-color: var(--cp-accent-cyan);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--cp-accent-cyan) 16%, transparent);
 }
 
 /* --------------------------------------------------------------------------
@@ -395,7 +839,29 @@
 .home-stream {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-md);
+}
+
+.home-feed-loading__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 5.5rem;
+  color: var(--color-muted);
+}
+
+.home-feed-loading__status .cascade {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+  transform: scale(0.72);
+  transform-origin: right center;
+}
+
+/* Entries are separated by their own lit edge, never by a box drawn around the
+   column: the gap is the separator, and every card carries the same 1px rim. */
+.stream-slot + .stream-slot {
+  position: relative;
 }
 
 .home-stream__head {
@@ -418,17 +884,35 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--cp-border-subtle);
-  background-color: color-mix(in oklab, var(--cp-bg-elevated) 94%, transparent);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--cp-edge-light) 42%, transparent) 0%,
-    transparent 12%
-  );
+  border: 1px solid color-mix(in oklab, var(--cp-glass-border) 78%, transparent);
+  background-color: var(--cp-bg-glass-soft);
+  background-image:
+    linear-gradient(180deg, var(--cp-edge-light) 0, transparent 1px),
+    linear-gradient(150deg, color-mix(in oklab, var(--cp-glass-reflection) 88%, transparent), transparent 36%),
+    linear-gradient(160deg, var(--cp-glass-tint), transparent 62%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
   color: var(--cp-text-primary);
   box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 1px 1px var(--cp-shade),
-    0 20px 40px -38px var(--cp-scrim);
+    0 24px 48px -40px var(--cp-scrim);
+  transition:
+    border-color 320ms var(--ease-out-soft),
+    box-shadow 360ms var(--ease-out-soft),
+    transform 240ms var(--ease-out-soft);
+}
+
+/* On a phone the blur is the most expensive thing in a scrolling feed: the
+   sheet becomes more opaque instead of more blurred. The glass reading
+   survives (it is a lit, translucent-looking surface over a moving field); the
+   cost does not. */
+@media (pointer: coarse), (max-width: 767px) {
+  .stream-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in oklab, var(--cp-bg-elevated) 96%, transparent);
+  }
 }
 
 .stream-card--row {
@@ -452,33 +936,38 @@
 }
 
 .stream-slot[data-kind='notice'] {
-  --stream-marker: color-mix(in oklab, var(--cp-accent-cyan) 78%, transparent);
+  --stream-marker: color-mix(in oklab, var(--cp-accent-cyan) 88%, transparent);
   --stream-marker-opacity: 1;
 }
 
+/* Events are the warm half of the campus: sunset orange marks them. */
 .stream-slot[data-kind='event'] {
-  --stream-marker: color-mix(in oklab, var(--cp-accent-highlight) 70%, transparent);
+  --stream-marker: color-mix(in oklab, var(--cp-accent-warm) 78%, transparent);
 }
 
 .stream-slot[data-kind='listing'] {
   --stream-marker: color-mix(in oklab, var(--cp-success-text) 62%, transparent);
 }
 
+/* Opportunities and projects are the sand thread: warm, quieter than events. */
 .stream-slot[data-kind='opportunity'],
 .stream-slot[data-kind='resource'],
 .stream-slot[data-kind='project'] {
-  --stream-marker: color-mix(in oklab, var(--cp-text-muted) 70%, transparent);
+  --stream-marker: color-mix(in oklab, var(--brand-sand) 62%, transparent);
 }
 
 /* Post entries carry their marker from the design system's accent. */
 .stream-slot[data-kind='post'],
 .stream-slot[data-kind='discussion'],
 .stream-slot[data-kind='poll'] {
-  --stream-marker: color-mix(in oklab, var(--cp-bg-accent) 55%, transparent);
+  --stream-marker: color-mix(in oklab, var(--cp-bg-accent) 72%, transparent);
 }
 
 .stream-card__title {
   display: block;
+  /* A pasted URL or a very long word wraps inside the card instead of pushing
+     the column wider than the phone. */
+  overflow-wrap: anywhere;
   font-size: 0.9688rem;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -495,6 +984,7 @@
   display: block;
   margin-top: 0.375rem;
   max-width: 68ch;
+  overflow-wrap: anywhere;
   font-size: 0.875rem;
   line-height: 1.65;
   color: var(--cp-text-secondary);
@@ -510,6 +1000,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.625rem;
+  overflow-wrap: anywhere;
   margin-top: 0.5rem;
   font-size: 0.6875rem;
   color: var(--cp-text-muted);
@@ -599,11 +1090,13 @@
   }
 
   .stream-slot:hover .stream-card {
-    border-color: color-mix(in oklab, var(--cp-bg-accent) 20%, var(--cp-border));
+    border-color: color-mix(in oklab, var(--cp-bg-accent) 46%, var(--cp-glass-border));
+    transform: translateY(-3px);
     box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
       0 1px 1px var(--cp-shade),
-      0 24px 48px -38px var(--cp-scrim),
-      0 0 28px -22px var(--cp-glow-cyan);
+      0 30px 56px -38px var(--cp-scrim),
+      0 0 34px -20px var(--cp-glow-accent);
   }
 
   /* The travelling light along the top edge of the hovered entry. */
@@ -642,7 +1135,21 @@
    -------------------------------------------------------------------------- */
 
 .rail-island {
+  padding: var(--space-lg);
   border-radius: var(--radius-lg);
+}
+
+.home-body__rail .island__head {
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.home-body__rail .island__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  text-transform: none;
 }
 
 /* Events — a timeline, with the next one lit. */
@@ -650,7 +1157,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: var(--space-md);
   padding-left: 1.125rem;
 }
 
@@ -722,16 +1229,17 @@
 
 .rail-event__title {
   display: block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.35;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.45;
   color: var(--cp-text-primary);
 }
 
 .rail-event__meta {
   display: block;
-  margin-top: 0.125rem;
-  font-size: 0.6875rem;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-xs);
+  line-height: 1.5;
   color: var(--cp-text-muted);
 }
 
@@ -840,7 +1348,11 @@
 
 .rail-activity__bar {
   display: block;
-  width: 100%;
+  /* Auto width accounts for the rank-column offset instead of adding that
+     offset on top of a full-width track. */
+  width: auto;
+  min-width: 0;
+  box-sizing: border-box;
   height: 3px;
   margin-top: 0.3125rem;
   margin-left: 1.75rem;
@@ -1013,11 +1525,36 @@
 @media (max-width: 767px) {
   .home-pulse {
     min-height: 0;
-    padding-block: 1.5rem 1.25rem;
+    padding-block: var(--space-lg);
+    gap: var(--space-lg);
   }
 
-  .home-pulse__name {
-    font-size: clamp(2rem, 1.4rem + 6vw, 2.75rem);
+  /* Real stats can mount after the first paint. Keep the decorative light's
+     geometry independent of that data-driven band growth; these values match
+     the composed phone glow without turning percentage inset/size into CLS. */
+  .home-pulse__aurora {
+    top: -16rem;
+    height: 60rem;
+  }
+
+  /* Wrap the real counts when their labels need more room. This later mobile
+     rule also wins over the base material declaration above: the early compact
+     rule alone left the stats blur active because of source order. */
+  .home-pulse__stats {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in oklab, var(--cp-bg-elevated) 96%, transparent);
+  }
+
+  /* A blurred, static glow behind the composer is cheap on a desktop and pure
+     fill-rate on a phone: the sheet keeps its rim and highlight instead. */
+  .home-composer::before {
+    display: none;
+  }
+
+  .discover-chip {
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.75rem;
   }
 
   .stream-card--row {
@@ -1029,12 +1566,27 @@
     height: 1.75rem;
   }
 
-  .home-zone {
-    align-items: flex-start;
+  .feature-tile {
+    padding: var(--space-md);
   }
 
-  .home-zone__note {
-    max-width: none;
+  .rail-island {
+    padding: var(--space-md);
   }
 }
 
+/* On phones the composer label and its description compete for one row and the
+   description wraps into a stub two-line block above the dock. The description
+   is supplementary, so narrow screens keep only the primary label and the
+   leading dot. */
+@media (max-width: 639px) {
+  .home-composer__label {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .home-composer__label > span[aria-hidden='true'],
+  .home-composer__label > .text-muted-soft {
+    display: none;
+  }
+}

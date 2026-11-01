@@ -44,6 +44,7 @@ export function PostCard({
   canModerate = false,
   reactions = { count: 0, mine: false },
   poll = null,
+  onPollVote = null,
   showCommunity = true,
   detail = false,
   variant = 'card',
@@ -81,6 +82,7 @@ export function PostCard({
         />
         <div className="flex shrink-0 items-center gap-1.5">
           {post.is_official ? <OfficialBadge /> : null}
+          {post.pinned ? <Badge tone="accent">Pinned</Badge> : null}
           {kindLabel ? (
             <Badge icon={post.kind === 'poll' ? 'trend' : 'comment'}>{kindLabel}</Badge>
           ) : null}
@@ -130,7 +132,9 @@ export function PostCard({
           </div>
         ) : null}
 
-        {poll && !isDeleted ? <PollBlock postId={post.id} poll={poll} canVote={Boolean(currentUserId)} /> : null}
+        {poll && !isDeleted ? (
+          <PollBlock postId={post.id} poll={poll} canVote={Boolean(currentUserId)} onVoteChange={onPollVote} />
+        ) : null}
 
         {showCommunity && post.community_slug ? (
           <p className="mt-2.5 text-2xs text-muted">
@@ -148,7 +152,7 @@ export function PostCard({
           stream ? 'stream-card__footer' : null,
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <ReactionBar
             targetType="post"
             targetId={post.id}
@@ -165,7 +169,7 @@ export function PostCard({
           </Link>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="text-2xs text-muted-soft lg:hidden">{relativeTime(post.created_at)}</span>
           <PostActions postId={post.id} status={post.status} canManage={isOwner} />
         </div>

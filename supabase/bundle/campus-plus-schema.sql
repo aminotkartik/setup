@@ -9,7 +9,7 @@
 --      script; run it once on an empty project.
 --   3. Confirm the reference data loaded:
 --        select count(*) from public.roles;             -- 4
---        select count(*) from public.permissions;       -- 47
+--        select count(*) from public.permissions;       -- 56
 --        select key, value from public.platform_settings where key = 'allowed_email_domains';
 --   4. Sign in with an @pccoepune.org address, then grant the first Super Admin
 --      (see docs/DEPLOYMENT.md §7).
@@ -23,14 +23,16 @@
 --   Random → platform → auth hooks → reference data (college, roles,
 --   permissions, categories, feature flags, platform settings) → realtime
 --   policies and grants → column privileges → staff actions → marketplace
---   hardening → function grants → staff visibility.
+--   hardening → function grants → staff visibility → chat inbox → messaging
+--   live read model → transactional backup outbox / worker state (027) →
+--   admin-authorized backup processing with durable run leases (028).
 --
 -- Safety
 --   Every statement is idempotent or new-object only, so a re-run on a project
 --   that already has the schema is refused by Postgres rather than half-applied.
 --   Take a database backup from the dashboard before the first run.
 --
--- Contents (25 files):
+-- Contents (38 files):
 --   01  20261005000001_001_extensions_and_enums.sql  (117 lines)
 --   02  20261005000002_002_identity_roles.sql  (589 lines)
 --   03  20261005000003_003_blocks.sql  (143 lines)
@@ -56,9 +58,22 @@
 --   23  20261005000023_023_random_chat_flag_retired.sql  (26 lines)
 --   24  20261005000024_024_study_partners_and_discovery.sql  (469 lines)
 --   25  20261005000025_025_gigs_and_clubs.sql  (290 lines)
+--   26  20261024000001_026_messaging_live_read_model.sql  (116 lines)
+--   27  20261025000001_027_backup_change_capture.sql  (1262 lines)
+--   28  20261025000002_028_backup_admin_processing.sql  (323 lines)
+--   29  20261026000001_029_feed_realtime_delivery.sql  (113 lines)
+--   30  20261027000001_030_random_channel_authorization.sql  (189 lines)
+--   31  20261028000001_031_club_governance.sql  (1049 lines)
+--   32  20261028000002_032_club_catalogue.sql  (210 lines)
+--   33  20261029000001_033_unread_count_lookup.sql  (54 lines)
+--   34  20261029000002_034_inbox_membership_lookup.sql  (88 lines)
+--   35  20261029000003_035_feed_visibility_reconciliation.sql  (52 lines)
+--   36  20261029000004_036_admin_dashboard_counts.sql  (60 lines)
+--   37  20261029000005_037_realtime_authorization_grants.sql  (32 lines)
+--   38  20261101000001_038_post_pin_ordering.sql  (314 lines)
 
 -- ==========================================================================
--- FILE 01/25  20261005000001_001_extensions_and_enums.sql
+-- FILE 01/38  20261005000001_001_extensions_and_enums.sql
 -- ==========================================================================
 
 -- Campus+ migration 001 — extensions and enums
@@ -179,7 +194,7 @@ comment on function public.touch_updated_at() is
   'BEFORE UPDATE trigger that stamps updated_at. Attached to every mutable table.';
 
 -- ==========================================================================
--- FILE 02/25  20261005000002_002_identity_roles.sql
+-- FILE 02/38  20261005000002_002_identity_roles.sql
 -- ==========================================================================
 
 -- Campus+ migration 002 — identity roles
@@ -771,7 +786,7 @@ create trigger user_roles_no_escalation
 -- very first version of the view.
 
 -- ==========================================================================
--- FILE 03/25  20261005000003_003_blocks.sql
+-- FILE 03/38  20261005000003_003_blocks.sql
 -- ==========================================================================
 
 -- Campus+ migration 003 — blocks
@@ -918,7 +933,7 @@ comment on view public.public_profiles is
   'Public projection of profiles. Institutional email, auth ids and moderation state are structurally absent.';
 
 -- ==========================================================================
--- FILE 04/25  20261005000004_004_communities.sql
+-- FILE 04/38  20261005000004_004_communities.sql
 -- ==========================================================================
 
 -- Campus+ migration 004 — communities
@@ -1325,7 +1340,7 @@ create policy community_join_requests_cancel on public.community_join_requests
   for delete to authenticated using (user_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 05/25  20261005000005_005_social.sql
+-- FILE 05/38  20261005000005_005_social.sql
 -- ==========================================================================
 
 -- Campus+ migration 005 — social
@@ -1948,7 +1963,7 @@ comment on function public.record_mentions(text, uuid, text[]) is
   'Records @mentions for a post/comment/message. Blocks and inactive accounts are filtered server-side.';
 
 -- ==========================================================================
--- FILE 06/25  20261005000006_006_moderation_core.sql
+-- FILE 06/38  20261005000006_006_moderation_core.sql
 -- ==========================================================================
 
 -- Campus+ migration 006 — moderation core
@@ -2423,7 +2438,7 @@ create trigger notifications_guard_update
   for each row execute function public.guard_notification_update();
 
 -- ==========================================================================
--- FILE 07/25  20261005000007_007_messaging.sql
+-- FILE 07/38  20261005000007_007_messaging.sql
 -- ==========================================================================
 
 -- Campus+ migration 007 — messaging
@@ -3012,7 +3027,7 @@ create policy message_reads_update_self on public.message_reads
   with check (user_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 08/25  20261005000008_008_marketplace.sql
+-- FILE 08/38  20261005000008_008_marketplace.sql
 -- ==========================================================================
 
 -- Campus+ migration 008 — marketplace
@@ -3534,7 +3549,7 @@ create policy ratings_delete_own on public.ratings
   for delete to authenticated using (rater_id = public.current_profile_id());
 
 -- ==========================================================================
--- FILE 09/25  20261005000009_009_campus.sql
+-- FILE 09/38  20261005000009_009_campus.sql
 -- ==========================================================================
 
 -- Campus+ migration 009 — campus
@@ -4568,7 +4583,7 @@ create policy user_achievements_select on public.user_achievements
 -- Awarded rows are written by evaluate_achievements() only.
 
 -- ==========================================================================
--- FILE 10/25  20261005000010_010_random.sql
+-- FILE 10/38  20261005000010_010_random.sql
 -- ==========================================================================
 
 -- Campus+ migration 010 — random
@@ -5220,7 +5235,7 @@ comment on function public.sweep_random_state() is
   'Callable by any authenticated user (it only expires stale rows) and by the scheduled maintenance script.';
 
 -- ==========================================================================
--- FILE 11/25  20261005000011_011_platform.sql
+-- FILE 11/38  20261005000011_011_platform.sql
 -- ==========================================================================
 
 -- Campus+ migration 011 — platform
@@ -5960,7 +5975,7 @@ create policy feature_flags_manage on public.feature_flags
 -- rate_limits: intentionally no policies. Only the definer function touches it.
 
 -- ==========================================================================
--- FILE 12/25  20261005000012_012_auth_hooks.sql
+-- FILE 12/38  20261005000012_012_auth_hooks.sql
 -- ==========================================================================
 
 -- Campus+ migration 012 — auth hooks
@@ -6417,7 +6432,7 @@ create policy reserved_usernames_manage on public.reserved_usernames
   with check (public.has_permission('manage_platform_settings'));
 
 -- ==========================================================================
--- FILE 13/25  20261005000013_013_reference_data.sql
+-- FILE 13/38  20261005000013_013_reference_data.sql
 -- ==========================================================================
 
 -- Campus+ migration 013 — reference data
@@ -6691,7 +6706,7 @@ insert into public.platform_settings (key, value, description, category, is_publ
 on conflict (key) do nothing;
 
 -- ==========================================================================
--- FILE 14/25  20261005000014_014_realtime_and_grants.sql
+-- FILE 14/38  20261005000014_014_realtime_and_grants.sql
 -- ==========================================================================
 
 -- Campus+ migration 014 — realtime and grants
@@ -6904,7 +6919,7 @@ end;
 $$;
 
 -- ==========================================================================
--- FILE 15/25  20261005000015_015_column_privileges.sql
+-- FILE 15/38  20261005000015_015_column_privileges.sql
 -- ==========================================================================
 
 -- Campus+ migration 015 — column privileges
@@ -7132,7 +7147,7 @@ revoke update on public.reserved_usernames from authenticated, anon;
 grant all on all tables in schema public to service_role;
 
 -- ==========================================================================
--- FILE 16/25  20261005000016_016_staff_actions.sql
+-- FILE 16/38  20261005000016_016_staff_actions.sql
 -- ==========================================================================
 
 -- Campus+ migration 016 — staff actions
@@ -7839,7 +7854,7 @@ comment on function public.admin_set_platform_setting(text, jsonb) is
   'Admin/Super Admin entry point for platform configuration. Validates the value per key and writes an audit entry.';
 
 -- ==========================================================================
--- FILE 17/25  20261005000017_017_marketplace_hardening.sql
+-- FILE 17/38  20261005000017_017_marketplace_hardening.sql
 -- ==========================================================================
 
 -- Campus+ migration 017 — marketplace hardening
@@ -8037,7 +8052,7 @@ comment on view public.listing_interests_view is
   'Students who expressed interest in a listing. Visible only to the seller and staff (security_invoker + base-table RLS).';
 
 -- ==========================================================================
--- FILE 18/25  20261005000018_018_function_grants.sql
+-- FILE 18/38  20261005000018_018_function_grants.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8152,7 +8167,7 @@ grant select on public.random_session_view to authenticated;
 grant select on public.random_messages_view to authenticated;
 
 -- ==========================================================================
--- FILE 19/25  20261005000019_019_staff_visibility.sql
+-- FILE 19/38  20261005000019_019_staff_visibility.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8228,7 +8243,7 @@ comment on view public.public_profiles is
 grant select on public.public_profiles to authenticated;
 
 -- ==========================================================================
--- FILE 20/25  20261005000020_020_chat_inbox.sql
+-- FILE 20/38  20261005000020_020_chat_inbox.sql
 -- ==========================================================================
 
 -- =============================================================================
@@ -8322,7 +8337,7 @@ comment on function public.conversation_inbox(integer) is
   'Inbox read model (RLS-scoped): newest message plus the unread count within the newest 30 messages per visible conversation.';
 
 -- ==========================================================================
--- FILE 21/25  20261005000021_021_marketplace_and_security_fixes.sql
+-- FILE 21/38  20261005000021_021_marketplace_and_security_fixes.sql
 -- ==========================================================================
 
 -- Campus+ migration 021 — marketplace lifecycle fixes + security hardening
@@ -8660,7 +8675,7 @@ alter function public.content_moderation_permission(text) set search_path = publ
 -- correct fix is not to add it.
 
 -- ==========================================================================
--- FILE 22/25  20261005000022_022_random_views_invoker_fix.sql
+-- FILE 22/38  20261005000022_022_random_views_invoker_fix.sql
 -- ==========================================================================
 
 -- Campus+ migration 022 — restore random_session_view / random_messages_view
@@ -8733,7 +8748,7 @@ comment on view public.random_messages_view is
   'policy either.';
 
 -- ==========================================================================
--- FILE 23/25  20261005000023_023_random_chat_flag_retired.sql
+-- FILE 23/38  20261005000023_023_random_chat_flag_retired.sql
 -- ==========================================================================
 
 -- 023: Random Chat removed from the UI — reflect it in the feature flag.
@@ -8763,7 +8778,7 @@ set
 where key = 'random_chat';
 
 -- ==========================================================================
--- FILE 24/25  20261005000024_024_study_partners_and_discovery.sql
+-- FILE 24/38  20261005000024_024_study_partners_and_discovery.sql
 -- ==========================================================================
 
 -- Campus+ migration 024 — study partners and discovery
@@ -9236,7 +9251,7 @@ comment on function public.global_search(text, text, integer, integer) is
   'Conventional PostgreSQL search across public entities. SECURITY INVOKER so RLS enforces blocks, visibility and privacy.';
 
 -- ==========================================================================
--- FILE 25/25  20261005000025_025_gigs_and_clubs.sql
+-- FILE 25/38  20261005000025_025_gigs_and_clubs.sql
 -- ==========================================================================
 
 -- Campus+ migration 025 — dedicated gigs and clubs
@@ -9528,6 +9543,3920 @@ grant update (state, skills, payment_type, deadline, contact_details)
 
 grant update (club_category)
   on public.communities to authenticated;
+
+-- ==========================================================================
+-- FILE 26/38  20261024000001_026_messaging_live_read_model.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 026 — exact unread state for live messaging
+-- =============================================================================
+-- No new tables or client-writable columns. The navigation badge and reconnect
+-- path need the caller's per-conversation read position and exact unread count,
+-- including counts above the old 30-message presentation window. Both functions
+-- remain SECURITY INVOKER: conversation, membership, message, block and account
+-- visibility continue to be decided by the existing RLS policies.
+-- Existing index used by both reads: messages_conversation_idx
+-- (conversation_id, created_at DESC).
+-- =============================================================================
+
+create or replace function public.conversation_inbox(p_limit integer default 30)
+returns table (
+  id                      uuid,
+  kind                    public.conversation_kind,
+  title                   text,
+  community_id            uuid,
+  status                  public.content_status,
+  last_message_at         timestamptz,
+  created_at              timestamptz,
+  is_muted                boolean,
+  last_read_at            timestamptz,
+  unread                  integer,
+  last_message_id         uuid,
+  last_message_sender_id  uuid,
+  last_message_body       text,
+  last_message_gif        jsonb,
+  last_message_created_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  with mine as (
+    select m.conversation_id, m.is_muted, m.last_read_at
+    from public.conversation_members m
+    where m.user_id = public.current_profile_id()
+      and m.status = 'active'
+  )
+  select
+    c.id,
+    c.kind,
+    c.title,
+    c.community_id,
+    c.status,
+    c.last_message_at,
+    c.created_at,
+    mine.is_muted,
+    mine.last_read_at,
+    (
+      select count(*)::integer
+      from public.messages msg
+      where msg.conversation_id = c.id
+        and msg.sender_id <> public.current_profile_id()
+        and (mine.last_read_at is null or msg.created_at > mine.last_read_at)
+    ) as unread,
+    latest.id,
+    latest.sender_id,
+    latest.body,
+    latest.gif,
+    latest.created_at
+  from public.conversations c
+  join mine on mine.conversation_id = c.id
+  left join lateral (
+    select msg.id, msg.sender_id, msg.body, msg.gif, msg.created_at
+    from public.messages msg
+    where msg.conversation_id = c.id
+    order by msg.created_at desc
+    limit 1
+  ) latest on true
+  order by c.last_message_at desc
+  limit coalesce(p_limit, 30);
+$$;
+
+comment on function public.conversation_inbox(integer) is
+  'RLS-scoped inbox: newest message preview and exact unread count per visible conversation.';
+
+/** A small shell snapshot: no message bodies, member lists, or profile joins. */
+create or replace function public.messaging_unread_counts()
+returns table (
+  conversation_id uuid,
+  last_read_at    timestamptz,
+  unread_count    integer
+)
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  select
+    mine.conversation_id,
+    mine.last_read_at,
+    (
+      select count(*)::integer
+      from public.messages msg
+      where msg.conversation_id = mine.conversation_id
+        and msg.sender_id <> public.current_profile_id()
+        and (mine.last_read_at is null or msg.created_at > mine.last_read_at)
+    ) as unread_count
+  from public.conversation_members mine
+  join public.conversations c on c.id = mine.conversation_id
+  where mine.user_id = public.current_profile_id()
+    and mine.status = 'active'
+  order by mine.conversation_id;
+$$;
+
+comment on function public.messaging_unread_counts() is
+  'RLS-scoped exact unread counts and read positions for the signed-in member; used by the private navigation badge and reconnect sync.';
+
+revoke all on function public.conversation_inbox(integer) from public, anon;
+grant execute on function public.conversation_inbox(integer) to authenticated, service_role;
+revoke all on function public.messaging_unread_counts() from public, anon;
+grant execute on function public.messaging_unread_counts() to authenticated, service_role;
+
+-- ==========================================================================
+-- FILE 27/38  20261025000001_027_backup_change_capture.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 027 — asynchronous Google Drive backup (database half)
+-- =============================================================================
+-- Supabase Postgres remains the ONE primary database. Nothing here and nothing
+-- in the application ever calls Google Drive while serving a student request.
+--
+-- What lands in this migration:
+--   1. `public.backup_change_log` — a durable transactional outbox. A row is
+--      inserted by an AFTER ROW trigger *in the same transaction* as the
+--      application write. Inserts, updates and deletes are all captured;
+--      deletes store the primary key as a tombstone (row_data IS NULL).
+--   2. A generic trigger attached to EVERY existing public application table,
+--      and `backup_sync_triggers()` so a future migration can re-attach it to
+--      new tables. All `backup_*` tables are excluded: the outbox can never
+--      capture its own bookkeeping (no recursion, no amplification).
+--   3. `public.backup_batches`, `backup_checkpoints`, `backup_snapshots`,
+--      `backup_jobs`, `backup_drive_connections`, `backup_tracked_tables` —
+--      the durable worker state, verified checkpoint, snapshot manifest state,
+--      admin authorization and Drive connection metadata.
+--   4. `backup_private` — a non-API schema for encrypted OAuth verifiers and
+--      refresh credentials. It is NOT in PostgREST's exposed schemas, has no
+--      grants for `anon`/`authenticated`, and is reachable only through a
+--      handful of `SECURITY DEFINER` functions that check the caller.
+--   5. `manage_backups` — a new permission granted to Super Admin only.
+--
+-- SCOPE (also written into every upload's manifest by the worker):
+--   INCLUDED:  schema `public`, every application table listed in
+--              `backup_tracked_tables` (65 at the time of writing).
+--   EXCLUDED:  `auth.*` (Supabase Auth users/sessions/refresh tokens),
+--              `storage.*`, `realtime.*`, `supabase_functions.*`, extension
+--              schemas, `backup_private`, and every `public.backup_*` table.
+--   THIS IS NOT COMPLETE DISASTER RECOVERY. Restoring it does not recreate
+--   Supabase Auth accounts, OAuth provider configuration, RLS/grants, Storage
+--   objects, secrets, or cron configuration. Those must be reprovisioned.
+--
+-- Safety properties enforced here:
+--   * A change row is only ever removed by `backup_prune_change_log()`, which
+--     refuses to prune anything above the last VERIFIED checkpoint or above
+--     the oldest retained verified snapshot watermark.
+--   * `backup_complete_batch()` is the ONLY writer of the checkpoint and runs
+--     in the same transaction as the batch's `verified` transition.
+--   * `backup_claim_batch()` takes a short quiesce lock on the outbox before
+--     computing its horizon, so a transaction that allocated a lower change id
+--     but has not committed yet can never be skipped.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Private schema for encrypted OAuth state
+-- -----------------------------------------------------------------------------
+
+create schema if not exists backup_private;
+revoke all on schema backup_private from public, anon, authenticated;
+grant usage on schema backup_private to service_role;
+
+-- Belt and braces: even if the API roles were granted usage later, no table in
+-- this schema is readable by them.
+alter default privileges in schema backup_private revoke all on tables from public, anon, authenticated;
+alter default privileges in schema backup_private grant all on tables to service_role;
+
+create table if not exists backup_private.oauth_credentials (
+  connection_ref       uuid primary key,
+  credential_ciphertext text not null,
+  iv_b64               text not null,
+  tag_b64              text not null,
+  key_ref              text not null,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+alter table backup_private.oauth_credentials enable row level security;
+
+create table if not exists backup_private.oauth_flows (
+  state_hash           text primary key,
+  profile_ref          uuid not null,
+  verifier_ciphertext  text not null,
+  iv_b64               text not null,
+  tag_b64              text not null,
+  key_ref              text not null,
+  redirect_uri         text not null,
+  expires_at           timestamptz not null,
+  created_at           timestamptz not null default now()
+);
+alter table backup_private.oauth_flows enable row level security;
+
+-- No policies at all: service_role bypasses RLS; SECURITY DEFINER functions
+-- owned by postgres are the only other path in.
+revoke all on backup_private.oauth_credentials from public, anon, authenticated;
+revoke all on backup_private.oauth_flows from public, anon, authenticated;
+grant all on backup_private.oauth_credentials, backup_private.oauth_flows to service_role;
+
+comment on schema backup_private is
+  'Encrypted Google Drive OAuth verifiers and refresh credentials. Not exposed by PostgREST; no API-role grants. Plaintext tokens are never stored in the database.';
+
+-- -----------------------------------------------------------------------------
+-- 2. Permission (Super Admin only by default)
+-- -----------------------------------------------------------------------------
+
+insert into public.permissions (key, label, description, group_name) values
+  ('manage_backups', 'Manage encrypted Drive backups',
+   'Connect the admin-only Google Drive account, inspect backup health, request a manual backup and retry a failed batch.',
+   'Platform')
+on conflict (key) do update
+  set label = excluded.label, description = excluded.description, group_name = excluded.group_name;
+
+insert into public.role_permissions (role_key, permission_key)
+values ('super_admin', 'manage_backups')
+on conflict do nothing;
+
+-- -----------------------------------------------------------------------------
+-- 3. Worker state tables
+-- -----------------------------------------------------------------------------
+
+create table public.backup_tracked_tables (
+  schema_name    text not null default 'public',
+  table_name     text not null,
+  key_columns    text[] not null default '{}'::text[],
+  capture        boolean not null default true,
+  snapshot       boolean not null default true,
+  created_at     timestamptz not null default now(),
+  primary key (schema_name, table_name),
+  constraint backup_tracked_tables_scope check (schema_name = 'public'),
+  constraint backup_tracked_tables_not_system check (table_name not like 'backup_%'),
+  constraint backup_tracked_tables_key_columns check (cardinality(key_columns) > 0)
+);
+
+create table public.backup_change_log (
+  id              bigint generated always as identity primary key,
+  schema_name     text not null default 'public',
+  table_name      text not null,
+  operation       text not null check (operation in ('insert', 'update', 'delete')),
+  row_pk          jsonb not null,
+  row_data        jsonb,
+  transaction_ref text not null,
+  occurred_at     timestamptz not null default now(),
+  created_at      timestamptz not null default now(),
+  constraint backup_change_log_tombstone check (
+    (operation = 'delete' and row_data is null) or (operation <> 'delete' and row_data is not null)
+  ),
+  constraint backup_change_log_not_system check (table_name not like 'backup_%'),
+  constraint backup_change_log_pk check (jsonb_typeof(row_pk) = 'object')
+);
+create index backup_change_log_table_id_idx on public.backup_change_log (table_name, id);
+create index backup_change_log_created_idx on public.backup_change_log (created_at);
+comment on table public.backup_change_log is
+  'Transactional outbox for the Drive backup worker. Written only by AFTER ROW triggers inside the application transaction; never by a webhook.';
+comment on column public.backup_change_log.row_data is
+  'Full row image for insert/update; NULL for a delete. Deletes are tombstones identified by row_pk, so they survive removal of the source row.';
+
+create table public.backup_drive_connections (
+  id                uuid primary key default gen_random_uuid(),
+  google_subject    text not null,
+  account_label     text not null default 'Google Drive',
+  folder_ref        text not null,
+  folder_restricted boolean not null default true,
+  scope             text not null default 'https://www.googleapis.com/auth/drive.file',
+  status            text not null default 'active'
+                    check (status in ('active', 'expired', 'revoked', 'error')),
+  connected_by      uuid references public.profiles (id) on delete set null,
+  connected_at      timestamptz not null default now(),
+  last_success_at   timestamptz,
+  last_error        text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  constraint backup_drive_connections_private check (folder_restricted),
+  constraint backup_drive_connections_scope check (scope = 'https://www.googleapis.com/auth/drive.file')
+);
+create index backup_drive_connections_status_idx on public.backup_drive_connections (status, connected_at desc);
+create index backup_drive_connections_actor_idx on public.backup_drive_connections (connected_by);
+comment on table public.backup_drive_connections is
+  'Metadata only. OAuth verifiers and refresh credentials live encrypted in backup_private, never here and never in the browser.';
+
+create table public.backup_snapshots (
+  id                uuid primary key default gen_random_uuid(),
+  watermark         bigint not null,
+  previous_watermark bigint not null default 0,
+  status            text not null default 'building'
+                    check (status in ('building', 'uploading', 'verified', 'failed')),
+  manifest          jsonb not null default '{}'::jsonb,
+  drive_file_ref    text,
+  content_sha256    text,
+  byte_size         bigint,
+  attempt_count     integer not null default 0,
+  last_error        text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  verified_at       timestamptz
+);
+create index backup_snapshots_created_idx on public.backup_snapshots (created_at desc);
+create index backup_snapshots_status_idx on public.backup_snapshots (status, watermark desc);
+
+create table public.backup_batches (
+  id               uuid primary key default gen_random_uuid(),
+  kind             text not null check (kind in ('incremental', 'snapshot')),
+  status           text not null default 'pending'
+                   check (status in ('pending', 'uploading', 'verified', 'failed')),
+  range_key        text not null unique,
+  first_change_id  bigint,
+  last_change_id   bigint,
+  snapshot_ref     uuid references public.backup_snapshots (id) on delete set null,
+  connection_ref   uuid references public.backup_drive_connections (id) on delete set null,
+  manifest         jsonb,
+  drive_file_ref   text,
+  content_sha256   text,
+  byte_size        bigint,
+  attempt_count    integer not null default 0,
+  lease_owner      text,
+  lease_until      timestamptz,
+  next_attempt_at  timestamptz not null default now(),
+  last_error       text,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  verified_at      timestamptz,
+  constraint backup_batches_incremental_range check (
+    kind <> 'incremental' or (first_change_id is not null and last_change_id is not null
+                              and last_change_id >= first_change_id)
+  ),
+  constraint backup_batches_verified_file check (
+    status <> 'verified' or (drive_file_ref is not null and content_sha256 is not null)
+  )
+);
+create index backup_batches_work_idx on public.backup_batches (status, next_attempt_at, created_at);
+create index backup_batches_verified_idx on public.backup_batches (verified_at desc);
+create index backup_batches_snapshot_idx on public.backup_batches (snapshot_ref);
+create index backup_batches_connection_idx on public.backup_batches (connection_ref);
+comment on table public.backup_batches is
+  'One durable attempt per ordered change range. range_key makes retries idempotent; a batch is verified only after a Drive download+checksum check.';
+
+create table public.backup_checkpoints (
+  name                    text primary key default 'primary',
+  last_change_id          bigint not null default 0,
+  last_success_at         timestamptz,
+  last_file_ref           text,
+  last_content_sha256     text,
+  last_snapshot_watermark bigint not null default 0,
+  last_snapshot_at        timestamptz,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now(),
+  constraint backup_checkpoints_singleton check (name = 'primary')
+);
+insert into public.backup_checkpoints (name, last_change_id) values ('primary', 0)
+on conflict (name) do nothing;
+comment on table public.backup_checkpoints is
+  'Durable, monotonically advancing, successfully verified checkpoint. Only backup_complete_batch() writes last_change_id.';
+
+create table public.backup_jobs (
+  id             uuid primary key default gen_random_uuid(),
+  kind           text not null check (kind in ('incremental', 'snapshot')),
+  status         text not null default 'pending'
+                 check (status in ('pending', 'running', 'done', 'failed')),
+  requested_by   uuid references public.profiles (id) on delete set null,
+  note           text,
+  last_error     text,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  completed_at   timestamptz
+);
+create index backup_jobs_pending_idx on public.backup_jobs (status, created_at);
+create index backup_jobs_actor_idx on public.backup_jobs (requested_by);
+comment on table public.backup_jobs is
+  'Admin-authorized manual backup requests. The UI only enqueues; the background worker performs the Drive work.';
+
+-- -----------------------------------------------------------------------------
+-- 4. RLS — admin read only, no client writes, no change-log payload exposure
+-- -----------------------------------------------------------------------------
+
+alter table public.backup_tracked_tables    enable row level security;
+alter table public.backup_change_log        enable row level security;
+alter table public.backup_drive_connections enable row level security;
+alter table public.backup_snapshots         enable row level security;
+alter table public.backup_batches           enable row level security;
+alter table public.backup_checkpoints       enable row level security;
+alter table public.backup_jobs              enable row level security;
+
+-- 018's default privileges give new tables SELECT/INSERT/DELETE to
+-- authenticated. Backup state is written exclusively by the worker (service
+-- role) and by permission-checked SECURITY DEFINER functions, so take all of
+-- that away and grant back a narrow, read-only view.
+do $$
+declare
+  v_table text;
+begin
+  for v_table in
+    select unnest(array[
+      'backup_tracked_tables', 'backup_change_log', 'backup_drive_connections',
+      'backup_snapshots', 'backup_batches', 'backup_checkpoints', 'backup_jobs'
+    ])
+  loop
+    execute format('revoke all on public.%I from public, anon, authenticated', v_table);
+    execute format('grant all on public.%I to service_role', v_table);
+    execute format('grant select on public.%I to authenticated', v_table);
+    execute format(
+      'create policy %I on public.%I for select to authenticated using (public.has_permission(''manage_backups''))',
+      v_table || '_select_admin', v_table
+    );
+  end loop;
+end $$;
+
+-- The outbox contains full row images of private messages. Even a Super Admin
+-- reading the admin page must not be able to select those columns through the
+-- API; the worker uses service_role. Only safe metadata columns are exposed.
+revoke select on public.backup_change_log from authenticated;
+grant select (id, schema_name, table_name, operation, transaction_ref, occurred_at, created_at)
+  on public.backup_change_log to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 5. Generic change-capture trigger
+-- -----------------------------------------------------------------------------
+
+create or replace function public.backup_capture_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_op    text;
+  v_row   jsonb;
+  v_keys  text[];
+  v_pk    jsonb;
+begin
+  -- Hard recursion guard. Backup bookkeeping tables never get a trigger, but
+  -- this also protects against a future migration attaching one by accident.
+  if tg_table_schema = 'public' and tg_table_name like 'backup%' then
+    return null;
+  end if;
+
+  v_op := lower(tg_op);
+  if v_op = 'delete' then
+    v_row := to_jsonb(old);
+  else
+    v_row := to_jsonb(new);
+  end if;
+
+  select coalesce(array_agg(a.attname order by k.ord), '{}'::text[])
+    into v_keys
+  from pg_index i
+  join unnest(i.indkey) with ordinality k(attnum, ord) on true
+  join pg_attribute a on a.attrelid = i.indrelid and a.attnum = k.attnum
+  where i.indrelid = tg_relid and i.indisprimary;
+
+  select coalesce(jsonb_object_agg(e.key, e.value), '{}'::jsonb)
+    into v_pk
+  from jsonb_each(v_row) e
+  where e.key = any(v_keys);
+
+  insert into public.backup_change_log (
+    schema_name, table_name, operation, row_pk, row_data, transaction_ref, occurred_at
+  ) values (
+    tg_table_schema,
+    tg_table_name,
+    v_op,
+    v_pk,
+    case when v_op = 'delete' then null else v_row end,
+    pg_current_xact_id()::text,
+    now()
+  );
+
+  -- AFTER trigger: the return value is ignored. No network call, no HTTP
+  -- extension, no pg_net — this insert commits or rolls back WITH the write.
+  return null;
+end $$;
+
+comment on function public.backup_capture_change() is
+  'Transactional outbox writer. One row per insert/update/delete in the application tables; delete rows are tombstones carrying only the primary key. Never calls Drive.';
+
+/**
+ * Attach (or re-attach) capture to every non-backup public table and record it
+ * in the snapshot catalogue. Idempotent: safe to call from a later migration
+ * after adding new application tables, and safe for the validation workflow to
+ * call before asserting coverage.
+ */
+create or replace function public.backup_sync_triggers()
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_table record;
+  v_count integer := 0;
+begin
+  for v_table in
+    select c.oid, c.relname as table_name
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind = 'r'
+      and c.relname not like 'backup%'
+      and c.relname not like '\_\_test%'
+    order by c.relname
+  loop
+    insert into public.backup_tracked_tables (schema_name, table_name, key_columns)
+    select
+      'public',
+      v_table.table_name,
+      coalesce(array_agg(a.attname order by k.ord), '{}'::text[])
+    from pg_index i
+    join unnest(i.indkey) with ordinality k(attnum, ord) on true
+    join pg_attribute a on a.attrelid = i.indrelid and a.attnum = k.attnum
+    where i.indrelid = v_table.oid and i.indisprimary
+    on conflict (schema_name, table_name) do update
+      set key_columns = excluded.key_columns, capture = true, snapshot = true;
+
+    execute format('drop trigger if exists backup_capture on public.%I', v_table.table_name);
+    execute format(
+      'create trigger backup_capture after insert or update or delete on public.%I for each row execute function public.backup_capture_change()',
+      v_table.table_name
+    );
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end $$;
+
+comment on function public.backup_sync_triggers() is
+  'Idempotently attaches the outbox trigger to every public application table and refreshes the snapshot table catalogue. Excludes all backup_* tables.';
+
+select public.backup_sync_triggers();
+
+-- -----------------------------------------------------------------------------
+-- 6. Worker RPCs (service_role only)
+-- -----------------------------------------------------------------------------
+
+/**
+ * Establish a clean horizon. `SHARE ROW EXCLUSIVE` conflicts with the
+ * `ROW EXCLUSIVE` lock held by every transaction that inserted into the outbox,
+ * so this waits for in-flight application transactions to finish and blocks new
+ * ones for the few milliseconds needed to read max(id). A transaction that
+ * allocated a lower id but commits later therefore cannot be skipped.
+ */
+create or replace function public.backup_snapshot_watermark()
+returns bigint
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_watermark bigint;
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_snapshot_watermark is worker-only' using errcode = '42501';
+  end if;
+  lock table public.backup_change_log in share row exclusive mode;
+  select coalesce(max(id), 0) into v_watermark from public.backup_change_log;
+  return v_watermark;
+end $$;
+
+/** Ordered, visible change rows for one claimed range. */
+create or replace function public.backup_pending_changes(p_first bigint, p_last bigint)
+returns setof public.backup_change_log
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select c.*
+  from public.backup_change_log c
+  where c.id >= p_first and c.id <= p_last
+  order by c.id asc
+$$;
+
+/**
+ * Claim exactly one unit of work. Serialized by an advisory lock, so two
+ * workers can never claim the same range. A failed batch or an expired lease is
+ * reclaimed before a new range is created. `range_key` is deterministic, so a
+ * duplicate attempt reuses the same batch row and the same Drive object name.
+ */
+create or replace function public.backup_claim_batch(
+  p_worker_id     text,
+  p_batch_size    integer default 500,
+  p_lease_seconds integer default 300
+)
+returns setof public.backup_batches
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_batch     public.backup_batches;
+  v_horizon   bigint;
+  v_checkpoint bigint;
+  v_first     bigint;
+  v_last      bigint;
+  v_key       text;
+  v_limit     integer := greatest(1, least(coalesce(p_batch_size, 500), 5000));
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_claim_batch is worker-only' using errcode = '42501';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('campus_plus_backup_claim'));
+
+  -- Reclaim a failed batch whose backoff has elapsed, an expired lease, or a
+  -- pending snapshot batch before looking for fresh changes.
+  update public.backup_batches b
+     set status          = 'uploading',
+         lease_owner     = p_worker_id,
+         lease_until     = now() + make_interval(secs => greatest(30, p_lease_seconds)),
+         attempt_count   = b.attempt_count + 1,
+         last_error      = null,
+         updated_at      = now()
+   where b.id = (
+     select candidate.id
+     from public.backup_batches candidate
+     where candidate.status = 'pending'
+        or (candidate.status = 'failed' and candidate.next_attempt_at <= now())
+        or (candidate.status = 'uploading' and candidate.lease_until < now())
+     order by candidate.created_at asc
+     limit 1
+     for update skip locked
+   )
+   returning * into v_batch;
+
+  if found then
+    return next v_batch;
+    return;
+  end if;
+
+  lock table public.backup_change_log in share row exclusive mode;
+  select coalesce(max(id), 0) into v_horizon from public.backup_change_log;
+  select c.last_change_id into v_checkpoint
+    from public.backup_checkpoints c where c.name = 'primary';
+
+  select min(s.id), max(s.id) into v_first, v_last
+  from (
+    select c.id
+    from public.backup_change_log c
+    where c.id > coalesce(v_checkpoint, 0) and c.id <= v_horizon
+    order by c.id asc
+    limit v_limit
+  ) s;
+
+  if v_first is null then
+    return;
+  end if;
+
+  v_key := 'incremental:' || v_first || ':' || v_last;
+  insert into public.backup_batches (
+    kind, status, range_key, first_change_id, last_change_id,
+    attempt_count, lease_owner, lease_until, created_at, updated_at
+  ) values (
+    'incremental', 'uploading', v_key, v_first, v_last,
+    1, p_worker_id, now() + make_interval(secs => greatest(30, p_lease_seconds)), now(), now()
+  )
+  -- A duplicate range can only be an already-stored attempt. Reclaim it ONLY
+  -- when its lease is dead or it was marked failed/pending; never steal a live
+  -- lease from another worker, and never re-open a verified batch.
+  on conflict (range_key) do update
+    set status = 'uploading',
+        lease_owner = excluded.lease_owner,
+        lease_until = excluded.lease_until,
+        attempt_count = public.backup_batches.attempt_count + 1,
+        updated_at = now()
+    where public.backup_batches.status in ('pending', 'failed')
+       or (public.backup_batches.status = 'uploading' and public.backup_batches.lease_until < now())
+  returning * into v_batch;
+
+  if found then
+    return next v_batch;
+  end if;
+  return;
+end $$;
+
+/**
+ * The ONLY checkpoint writer. Requires a still-valid lease and a positive
+ * verification flag from the worker. Marking the batch verified and advancing
+ * the checkpoint happen in one transaction: there is no window in which the
+ * checkpoint points at an unverified Drive object.
+ */
+create or replace function public.backup_complete_batch(
+  p_worker_id       text,
+  p_batch_id        uuid,
+  p_drive_file_ref  text,
+  p_sha256          text,
+  p_byte_size       bigint,
+  p_manifest        jsonb default '{}'::jsonb
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_batch public.backup_batches;
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_complete_batch is worker-only' using errcode = '42501';
+  end if;
+  if coalesce(p_drive_file_ref, '') = '' or coalesce(p_sha256, '') = '' then
+    raise exception 'a verified Drive file id and checksum are required';
+  end if;
+
+  select * into v_batch from public.backup_batches b
+   where b.id = p_batch_id for update;
+  if not found then
+    raise exception 'unknown backup batch %', p_batch_id;
+  end if;
+  if v_batch.status = 'verified' then
+    -- Idempotent duplicate completion: never rewinds the checkpoint.
+    return true;
+  end if;
+  if v_batch.status <> 'uploading' or v_batch.lease_owner <> p_worker_id
+     or v_batch.lease_until < now() then
+    raise exception 'batch lease is no longer owned by this worker';
+  end if;
+
+  update public.backup_batches
+     set status = 'verified',
+         drive_file_ref = p_drive_file_ref,
+         content_sha256 = p_sha256,
+         byte_size = p_byte_size,
+         manifest = p_manifest,
+         verified_at = now(),
+         updated_at = now(),
+         lease_owner = null,
+         lease_until = null,
+         last_error = null
+   where id = p_batch_id;
+
+  if v_batch.kind = 'incremental' then
+    update public.backup_checkpoints
+       set last_change_id = greatest(last_change_id, v_batch.last_change_id),
+           last_success_at = now(),
+           last_file_ref = p_drive_file_ref,
+           last_content_sha256 = p_sha256,
+           updated_at = now()
+     where name = 'primary';
+  end if;
+
+  update public.backup_drive_connections
+     set last_success_at = now(), last_error = null, updated_at = now()
+   where status = 'active';
+
+  return true;
+end $$;
+
+/** Record a retryable failure. Pending events are left untouched. */
+create or replace function public.backup_fail_batch(
+  p_worker_id           text,
+  p_batch_id            uuid,
+  p_error               text,
+  p_retry_delay_seconds integer default 60
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_fail_batch is worker-only' using errcode = '42501';
+  end if;
+  update public.backup_batches
+     set status = 'failed',
+         last_error = left(coalesce(p_error, 'unknown error'), 2000),
+         next_attempt_at = now() + make_interval(secs => greatest(5, least(coalesce(p_retry_delay_seconds, 60), 86400))),
+         updated_at = now(),
+         lease_owner = null,
+         lease_until = null
+   where id = p_batch_id
+     and status = 'uploading'
+     and lease_owner = p_worker_id;
+
+  update public.backup_drive_connections
+     set last_error = left(coalesce(p_error, 'unknown error'), 2000), updated_at = now()
+   where status = 'active';
+end $$;
+
+/**
+ * Retention. Only change rows that are (a) at or below the last VERIFIED
+ * checkpoint AND (b) at or below the watermark of the OLDEST retained verified
+ * snapshot AND (c) older than p_min_age_days may be discarded. Without a
+ * verified snapshot the cutoff stays at zero: incrementals alone can never
+ * justify pruning the log, because a restore needs a base to replay onto.
+ */
+create or replace function public.backup_prune_change_log(
+  p_keep_snapshots  integer default 14,
+  p_min_age_days    integer default 7
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_cutoff bigint := 0;
+  v_oldest bigint;
+  v_checkpoint bigint;
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_prune_change_log is worker-only' using errcode = '42501';
+  end if;
+
+  select min(watermark) into v_oldest
+  from (
+    select watermark from public.backup_snapshots
+     where status = 'verified'
+     order by created_at desc
+     limit greatest(1, least(coalesce(p_keep_snapshots, 14), 365))
+  ) kept;
+
+  select last_change_id into v_checkpoint
+    from public.backup_checkpoints where name = 'primary';
+
+  if v_oldest is not null then
+    v_cutoff := least(v_oldest, coalesce(v_checkpoint, 0));
+  end if;
+
+  if v_cutoff > 0 then
+    delete from public.backup_change_log c
+     where c.id <= v_cutoff
+       and c.created_at < now() - make_interval(days => greatest(0, p_min_age_days));
+  end if;
+  return v_cutoff;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 6b. Snapshot + scheduled-job RPCs (service_role only)
+-- -----------------------------------------------------------------------------
+
+/** Register the start of a full snapshot at a previously established horizon. */
+create or replace function public.backup_start_snapshot(
+  p_watermark          bigint,
+  p_previous_watermark bigint default 0,
+  p_manifest           jsonb default '{}'::jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id uuid;
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_start_snapshot is worker-only' using errcode = '42501';
+  end if;
+  insert into public.backup_snapshots (watermark, previous_watermark, manifest, status)
+  values (p_watermark, greatest(0, p_previous_watermark), p_manifest, 'building')
+  returning id into v_id;
+  return v_id;
+end $$;
+
+/**
+ * Mark a snapshot verified ONLY after the Drive object has been downloaded and
+ * its checksum matched. Updates the snapshot watermark in the same durable
+ * checkpoint row used by incremental exports.
+ */
+create or replace function public.backup_complete_snapshot(
+  p_snapshot_id    uuid,
+  p_drive_file_ref text,
+  p_sha256         text,
+  p_byte_size      bigint,
+  p_manifest       jsonb default '{}'::jsonb
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_snapshot public.backup_snapshots;
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_complete_snapshot is worker-only' using errcode = '42501';
+  end if;
+  if coalesce(p_drive_file_ref, '') = '' or coalesce(p_sha256, '') = '' then
+    raise exception 'a verified Drive file id and checksum are required';
+  end if;
+
+  select * into v_snapshot from public.backup_snapshots where id = p_snapshot_id for update;
+  if not found then raise exception 'unknown snapshot %', p_snapshot_id; end if;
+  if v_snapshot.status = 'verified' then return true; end if;
+
+  update public.backup_snapshots
+     set status = 'verified', drive_file_ref = p_drive_file_ref, content_sha256 = p_sha256,
+         byte_size = p_byte_size, manifest = p_manifest, verified_at = now(),
+         updated_at = now(), last_error = null
+   where id = p_snapshot_id;
+
+  update public.backup_checkpoints
+     set last_snapshot_watermark = greatest(last_snapshot_watermark, v_snapshot.watermark),
+         last_snapshot_at = now(), updated_at = now()
+   where name = 'primary';
+
+  -- A snapshot batch is also visible in the admin history.
+  insert into public.backup_batches (
+    kind, status, range_key, snapshot_ref, manifest,
+    drive_file_ref, content_sha256, byte_size, verified_at
+  ) values (
+    'snapshot', 'verified', 'snapshot:' || v_snapshot.watermark || ':' || p_snapshot_id,
+    p_snapshot_id, p_manifest, p_drive_file_ref, p_sha256, p_byte_size, now()
+  ) on conflict (range_key) do nothing;
+
+  update public.backup_drive_connections
+     set last_success_at = now(), last_error = null, updated_at = now()
+   where status = 'active';
+  return true;
+end $$;
+
+create or replace function public.backup_fail_snapshot(p_snapshot_id uuid, p_error text)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_fail_snapshot is worker-only' using errcode = '42501';
+  end if;
+  update public.backup_snapshots
+     set status = 'failed', last_error = left(coalesce(p_error, 'unknown error'), 2000),
+         attempt_count = attempt_count + 1, updated_at = now()
+   where id = p_snapshot_id and status <> 'verified';
+end $$;
+
+/** Claim one admin-authorized or scheduled job. */
+create or replace function public.backup_claim_job(p_kind text, p_worker_id text)
+returns setof public.backup_jobs
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_claim_job is worker-only' using errcode = '42501';
+  end if;
+  return query
+  update public.backup_jobs j
+     set status = 'running', updated_at = now()
+   where j.id = (
+     select candidate.id from public.backup_jobs candidate
+      where candidate.kind = p_kind and candidate.status = 'pending'
+      order by candidate.created_at asc limit 1 for update skip locked
+   )
+  returning j.*;
+end $$;
+
+create or replace function public.backup_finish_job(p_job_id uuid, p_error text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_finish_job is worker-only' using errcode = '42501';
+  end if;
+  update public.backup_jobs
+     set status = case when p_error is null then 'done' else 'failed' end,
+         last_error = left(p_error, 2000), completed_at = now(), updated_at = now()
+   where id = p_job_id;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 7. Admin RPCs (RLS-authenticated, permission-checked, audited)
+-- -----------------------------------------------------------------------------
+
+create or replace function public.backup_status()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_result jsonb;
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to view backups.' using errcode = '42501';
+  end if;
+
+  select jsonb_build_object(
+    'connection', (
+      select jsonb_build_object(
+        'status', c.status, 'account_label', c.account_label,
+        'folder_ref', c.folder_ref, 'folder_restricted', c.folder_restricted,
+        'connected_at', c.connected_at, 'last_success_at', c.last_success_at,
+        'last_error', c.last_error
+      )
+      from public.backup_drive_connections c
+      order by c.connected_at desc limit 1
+    ),
+    'checkpoint', (
+      select jsonb_build_object(
+        'last_change_id', c.last_change_id, 'last_success_at', c.last_success_at,
+        'last_file_ref', c.last_file_ref, 'last_snapshot_watermark', c.last_snapshot_watermark,
+        'last_snapshot_at', c.last_snapshot_at
+      )
+      from public.backup_checkpoints c where c.name = 'primary'
+    ),
+    'queue_depth', (
+      select count(*) from public.backup_change_log c
+       where c.id > (select last_change_id from public.backup_checkpoints where name = 'primary')
+    ),
+    'oldest_pending_at', (
+      select min(c.occurred_at) from public.backup_change_log c
+       where c.id > (select last_change_id from public.backup_checkpoints where name = 'primary')
+    ),
+    'failed_batches', (
+      select count(*) from public.backup_batches b where b.status = 'failed'
+    ),
+    'pending_jobs', (
+      select count(*) from public.backup_jobs j where j.status in ('pending', 'running')
+    ),
+    'errors', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', b.id, 'range_key', b.range_key, 'attempt_count', b.attempt_count,
+        'last_error', b.last_error, 'next_attempt_at', b.next_attempt_at,
+        'updated_at', b.updated_at
+      ) order by b.updated_at desc)
+      from (
+        select * from public.backup_batches b where b.status = 'failed' order by b.updated_at desc limit 5
+      ) b
+    ), '[]'::jsonb),
+    'history', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', h.id, 'kind', h.kind, 'range_key', h.range_key,
+        'first_change_id', h.first_change_id, 'last_change_id', h.last_change_id,
+        'verified_at', h.verified_at, 'byte_size', h.byte_size,
+        'drive_file_ref', h.drive_file_ref, 'attempt_count', h.attempt_count
+      ) order by coalesce(h.verified_at, h.created_at) desc)
+      from (
+        select * from public.backup_batches b
+         where b.status = 'verified' or b.status = 'failed'
+         order by coalesce(b.verified_at, b.created_at) desc limit 20
+      ) h
+    ), '[]'::jsonb),
+    'snapshots', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', s.id, 'watermark', s.watermark, 'status', s.status,
+        'created_at', s.created_at, 'verified_at', s.verified_at,
+        'byte_size', s.byte_size, 'drive_file_ref', s.drive_file_ref,
+        'last_error', s.last_error
+      ) order by s.created_at desc)
+      from (select * from public.backup_snapshots order by created_at desc limit 14) s
+    ), '[]'::jsonb),
+    'scope', jsonb_build_object(
+      'schemas', jsonb_build_array('public'),
+      'tracked_tables', (select count(*) from public.backup_tracked_tables where snapshot),
+      'excluded', jsonb_build_array('auth.*', 'storage.*', 'realtime.*', 'backup_private', 'public.backup_*'),
+      'complete_disaster_recovery', false
+    )
+  ) into v_result;
+  return v_result;
+end $$;
+
+/** Enqueue an admin-authorized manual run. Idempotent for 60 seconds. */
+create or replace function public.backup_request_job(p_kind text, p_note text default null)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id uuid;
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to run backups.' using errcode = '42501';
+  end if;
+  if p_kind not in ('incremental', 'snapshot') then
+    raise exception 'unknown backup kind';
+  end if;
+
+  select id into v_id from public.backup_jobs
+   where kind = p_kind and status = 'pending' and created_at > now() - interval '60 seconds'
+   order by created_at desc limit 1;
+  if found then
+    return v_id;
+  end if;
+
+  insert into public.backup_jobs (kind, requested_by, note)
+  values (p_kind, public.current_profile_id(), left(coalesce(p_note, ''), 500))
+  returning id into v_id;
+
+  perform public.log_audit(
+    'backup.request', 'backup_job', v_id::text,
+    jsonb_build_object('kind', p_kind), false, null, 'admin'::public.moderation_visibility
+  );
+  return v_id;
+end $$;
+
+/** Authorized retry: reset a failed batch to immediately claimable. */
+create or replace function public.backup_retry_failed(p_batch_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_count integer := 0;
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to retry backups.' using errcode = '42501';
+  end if;
+  update public.backup_batches
+     set status = 'pending', next_attempt_at = now(), last_error = null,
+         lease_owner = null, lease_until = null, updated_at = now()
+   where id = p_batch_id and status = 'failed';
+  get diagnostics v_count = row_count;
+  if v_count > 0 then
+    perform public.log_audit(
+      'backup.retry', 'backup_batch', p_batch_id::text,
+      '{}'::jsonb, false, null, 'admin'::public.moderation_visibility
+    );
+  end if;
+  return v_count > 0;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 8. Encrypted private-store RPCs
+-- -----------------------------------------------------------------------------
+
+/** Store a one-time PKCE verifier for the admin OAuth round trip. */
+create or replace function public.backup_start_oauth_flow(
+  p_state_hash    text,
+  p_redirect_uri  text,
+  p_ciphertext    text,
+  p_iv_b64        text,
+  p_tag_b64       text,
+  p_key_ref       text,
+  p_expires_at    timestamptz
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to connect Drive.' using errcode = '42501';
+  end if;
+  delete from backup_private.oauth_flows where expires_at < now();
+  insert into backup_private.oauth_flows (
+    state_hash, profile_ref, verifier_ciphertext, iv_b64, tag_b64, key_ref, redirect_uri, expires_at
+  ) values (
+    p_state_hash, public.current_profile_id(), p_ciphertext, p_iv_b64, p_tag_b64, p_key_ref,
+    p_redirect_uri, p_expires_at
+  );
+  perform public.log_audit(
+    'backup.oauth_start', 'backup_connection', null,
+    '{}'::jsonb, false, null, 'admin'::public.moderation_visibility
+  );
+end $$;
+
+/** Consume (single use) a PKCE flow. Returns the encrypted verifier. */
+create or replace function public.backup_take_oauth_flow(p_state_hash text)
+returns table (
+  redirect_uri        text,
+  verifier_ciphertext text,
+  iv_b64              text,
+  tag_b64             text,
+  key_ref             text
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to connect Drive.' using errcode = '42501';
+  end if;
+  return query
+    delete from backup_private.oauth_flows f
+     where f.state_hash = p_state_hash
+       and f.profile_ref = public.current_profile_id()
+       and f.expires_at > now()
+    returning f.redirect_uri, f.verifier_ciphertext, f.iv_b64, f.tag_b64, f.key_ref;
+end $$;
+
+/**
+ * Finish the connection: create the public metadata row, mark older
+ * connections revoked, and store the refresh credential encrypted in the
+ * private schema. `p_folder_ref` must be a folder the app itself created and
+ * verified as unshared; the callback path enforces that before calling.
+ */
+create or replace function public.backup_store_connection(
+  p_subject     text,
+  p_label       text,
+  p_folder_ref  text,
+  p_ciphertext  text,
+  p_iv_b64      text,
+  p_tag_b64     text,
+  p_key_ref     text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id uuid;
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to connect Drive.' using errcode = '42501';
+  end if;
+  if coalesce(p_folder_ref, '') = '' or coalesce(p_ciphertext, '') = '' then
+    raise exception 'a restricted folder and an encrypted credential are required';
+  end if;
+
+  update public.backup_drive_connections set status = 'revoked', updated_at = now()
+   where status = 'active';
+
+  insert into public.backup_drive_connections (
+    google_subject, account_label, folder_ref, folder_restricted, connected_by
+  ) values (
+    p_subject, left(coalesce(p_label, 'Google Drive'), 120), p_folder_ref, true,
+    public.current_profile_id()
+  ) returning id into v_id;
+
+  insert into backup_private.oauth_credentials (
+    connection_ref, credential_ciphertext, iv_b64, tag_b64, key_ref
+  ) values (
+    v_id, p_ciphertext, p_iv_b64, p_tag_b64, p_key_ref
+  );
+
+  perform public.log_audit(
+    'backup.oauth_connected', 'backup_connection', v_id::text,
+    jsonb_build_object('folder_ref', p_folder_ref), false, null, 'admin'::public.moderation_visibility
+  );
+  return v_id;
+end $$;
+
+/** Worker-only: load the encrypted refresh credential. */
+create or replace function public.backup_private_get_credentials(p_connection_ref uuid)
+returns table (
+  credential_ciphertext text,
+  iv_b64                text,
+  tag_b64               text,
+  key_ref               text
+)
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'credentials are worker-only' using errcode = '42501';
+  end if;
+  return query
+    select c.credential_ciphertext, c.iv_b64, c.tag_b64, c.key_ref
+    from backup_private.oauth_credentials c
+    where c.connection_ref = p_connection_ref;
+end $$;
+
+/** Worker-only: persist a rotated refresh credential. */
+create or replace function public.backup_private_rotate_credentials(
+  p_connection_ref uuid,
+  p_ciphertext     text,
+  p_iv_b64         text,
+  p_tag_b64        text,
+  p_key_ref        text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'credentials are worker-only' using errcode = '42501';
+  end if;
+  update backup_private.oauth_credentials
+     set credential_ciphertext = p_ciphertext, iv_b64 = p_iv_b64,
+         tag_b64 = p_tag_b64, key_ref = p_key_ref, updated_at = now()
+   where connection_ref = p_connection_ref;
+end $$;
+
+/** Admin disconnect: revoke metadata and delete the stored credential. */
+create or replace function public.backup_disconnect()
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  -- An authenticated Super Admin uses the UI button; the operator CLI calls
+  -- this with the service-role key (trusted writer) after Google revocation.
+  if not (public.has_permission('manage_backups') or public.is_trusted_writer()) then
+    raise exception 'You do not have permission to disconnect Drive.' using errcode = '42501';
+  end if;
+  delete from backup_private.oauth_credentials c
+   using public.backup_drive_connections d
+   where c.connection_ref = d.id;
+  update public.backup_drive_connections
+     set status = 'revoked', updated_at = now()
+   where status <> 'revoked';
+  perform public.log_audit(
+    'backup.oauth_disconnected', 'backup_connection', null,
+    '{}'::jsonb, false, null, 'admin'::public.moderation_visibility
+  );
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 9. Function grants — worker-only functions must NOT be callable by students
+-- -----------------------------------------------------------------------------
+
+do $$
+declare
+  v_fn text;
+  v_worker_only text[] := array[
+    'backup_snapshot_watermark()',
+    'backup_pending_changes(bigint, bigint)',
+    'backup_claim_batch(text, integer, integer)',
+    'backup_complete_batch(text, uuid, text, text, bigint, jsonb)',
+    'backup_fail_batch(text, uuid, text, integer)',
+    'backup_prune_change_log(integer, integer)',
+    'backup_start_snapshot(bigint, bigint, jsonb)',
+    'backup_complete_snapshot(uuid, text, text, bigint, jsonb)',
+    'backup_fail_snapshot(uuid, text)',
+    'backup_claim_job(text, text)',
+    'backup_finish_job(uuid, text)',
+    'backup_private_get_credentials(uuid)',
+    'backup_private_rotate_credentials(uuid, text, text, text, text)',
+    'backup_sync_triggers()'
+  ];
+begin
+  -- 018 grants new functions to authenticated by default; revoke that for the
+  -- worker/admin RPC surface and then grant back only what each needs.
+  foreach v_fn in array v_worker_only loop
+    execute format('revoke all on function public.%s from public, anon, authenticated', v_fn);
+    execute format('grant execute on function public.%s to service_role', v_fn);
+  end loop;
+
+  -- The trigger function must never be called directly.
+  execute 'revoke all on function public.backup_capture_change() from public, anon, authenticated';
+
+  -- Two older trigger helpers were first created before migration 018 and later
+  -- replaced with CREATE OR REPLACE, which preserves their original
+  -- PUBLIC EXECUTE grant. Trigger functions are never RPCs, so close that
+  -- pre-existing anon surface here rather than leave the audit red.
+  for v_fn in
+    select distinct p.oid::regprocedure::text
+    from pg_trigger t
+    join pg_proc p on p.oid = t.tgfoid
+    join pg_namespace n on n.oid = p.pronamespace
+    where not t.tgisinternal and n.nspname = 'public'
+  loop
+    execute format('revoke all on function %s from public, anon, authenticated', v_fn);
+  end loop;
+
+  -- Admin RPCs: authenticated, and each one re-checks manage_backups itself.
+  for v_fn in
+    select unnest(array[
+      'backup_status()',
+      'backup_request_job(text, text)',
+      'backup_retry_failed(uuid)',
+      'backup_start_oauth_flow(text, text, text, text, text, text, timestamptz)',
+      'backup_take_oauth_flow(text)',
+      'backup_store_connection(text, text, text, text, text, text, text)',
+      'backup_disconnect()'
+    ])
+  loop
+    execute format('revoke all on function public.%s from public, anon', v_fn);
+    execute format('grant execute on function public.%s to authenticated, service_role', v_fn);
+  end loop;
+end $$;
+
+comment on function public.backup_status() is
+  'Admin-only backup health: connection status, last verified export, queue depth, failures, history and snapshot scope. Never returns credentials or row payloads.';
+comment on function public.backup_complete_batch(text, uuid, text, text, bigint, jsonb) is
+  'Sole writer of the durable checkpoint; requires a live lease and is called only after a verified Drive download.';
+
+-- ==========================================================================
+-- FILE 28/38  20261025000002_028_backup_admin_processing.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 028 — admin-authorized, concurrency-safe backup processing
+-- =============================================================================
+-- Problem this fixes (no schema change to the outbox itself):
+--   * The UI only ever called `backup_request_job()`, which ENQUEUES work.
+--     With cron limited to once per day on Vercel Hobby, 12 queued jobs could
+--     sit there forever. `runBackupWorker()` also claims only ONE job and ONE
+--     batch per invocation.
+--   * A Super Admin needs to be able to *drain* that queue from the browser,
+--     in bounded batches, without a terminal, without exposing the service
+--     role or the encrypted Drive credential, and without two runs (admin +
+--     cron) uploading the same range at once.
+--
+-- What lands here:
+--   1. `backup_run_leases` — one durable, expiring lease per backup kind.
+--      Cron ticks, the CLI and the admin action all acquire it. If a function
+--      is killed the lease simply expires; a later run requeues jobs that a
+--      crashed run left `running`. Nothing is ever deleted.
+--   2. `backup_run_log` — a short, secret-free record of each UI-triggered run
+--      (status, verified object ids, redacted diagnostics) so the Admin page
+--      can show queued / processing / verified / failed even after a refresh.
+--   3. `backup_admin_state()` — permission-checked aggregate of job counts,
+--      batch retry state, active leases and recent runs. No row images, no
+--      credentials, no connection strings.
+--   4. `backup_record_run()` — permission-checked, audited writer for the run
+--      log. It re-checks `manage_backups` and rejects any payload that looks
+--      like a secret.
+--
+-- Security: every table is RLS-enabled with admin read only; the lease and
+-- log-writing RPCs are worker/admin gated. `backup_private` is untouched, and
+-- no new grant is given to `anon` or to `authenticated` for writing state.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Durable, expiring run leases (worker-only state)
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.backup_run_leases (
+  kind         text primary key check (kind in ('incremental', 'snapshot')),
+  lease_owner  text not null,
+  lease_until  timestamptz not null,
+  started_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create table if not exists public.backup_run_log (
+  id          uuid primary key default gen_random_uuid(),
+  kind        text not null check (kind in ('incremental', 'snapshot')),
+  status      text not null check (status in ('verified', 'drained', 'idle', 'busy', 'failed', 'not_configured')),
+  summary     jsonb not null default '{}'::jsonb,
+  actor       uuid references public.profiles (id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists backup_run_log_recent_idx on public.backup_run_log (created_at desc);
+-- The `actor` FK is filtered when an operator asks "what did this admin run?",
+-- so it needs its own index (same convention as backup_jobs.requested_by).
+create index if not exists backup_run_log_actor_idx on public.backup_run_log (actor, created_at desc);
+
+comment on table public.backup_run_leases is
+  'One expiring lease per backup kind. Prevents a cron tick and an admin-triggered run from processing the same queue concurrently.';
+comment on table public.backup_run_log is
+  'Secret-free, audited summary of each admin-triggered backup run for the Backups page.';
+
+alter table public.backup_run_leases enable row level security;
+alter table public.backup_run_log    enable row level security;
+
+-- 018 grants new tables to `authenticated` by default. Backup machinery is
+-- worker-only: take everything away, then grant a narrow admin read policy.
+do $$
+declare
+  v_table text;
+begin
+  foreach v_table in array array['backup_run_leases', 'backup_run_log'] loop
+    execute format('revoke all on public.%I from public, anon, authenticated', v_table);
+    execute format('grant all on public.%I to service_role', v_table);
+    execute format('grant select on public.%I to authenticated', v_table);
+    execute format(
+      'create policy %I on public.%I for select to authenticated using (public.has_permission(''manage_backups''))',
+      v_table || '_select_admin', v_table
+    );
+  end loop;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 2. Worker-only lease RPCs
+-- -----------------------------------------------------------------------------
+
+/**
+ * Atomically take the lease for one kind. A live lease held by a DIFFERENT
+ * owner cannot be stolen. An expired lease (killed function) is taken over,
+ * and jobs that the interrupted run left `running` are put back to `pending`
+ * with their identity and history intact — never deleted, never marked done.
+ */
+create or replace function public.backup_acquire_run_lease(
+  p_kind       text,
+  p_worker_id  text,
+  p_seconds    integer default 180
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_acquired   boolean := false;
+  v_expired    boolean := false;
+  v_seconds    integer := greatest(30, least(coalesce(p_seconds, 180), 900));
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_acquire_run_lease is worker-only' using errcode = '42501';
+  end if;
+  if p_kind not in ('incremental', 'snapshot') then
+    raise exception 'unknown backup kind';
+  end if;
+  if coalesce(p_worker_id, '') = '' or length(p_worker_id) > 200 then
+    raise exception 'invalid worker id';
+  end if;
+
+  select l.lease_until < now() into v_expired
+    from public.backup_run_leases l where l.kind = p_kind;
+  v_expired := coalesce(v_expired, false);
+
+  insert into public.backup_run_leases (kind, lease_owner, lease_until, started_at, updated_at)
+  values (p_kind, p_worker_id, now() + make_interval(secs => v_seconds), now(), now())
+  on conflict (kind) do update
+     set lease_owner = excluded.lease_owner,
+         lease_until = excluded.lease_until,
+         started_at  = excluded.started_at,
+         updated_at  = now()
+   where public.backup_run_leases.lease_until < now()
+      or public.backup_run_leases.lease_owner = excluded.lease_owner
+  returning true into v_acquired;
+
+  v_acquired := coalesce(v_acquired, false);
+  if v_acquired then
+    -- Taking over an expired lease means no live run exists for this kind, so
+    -- every `running` job is orphaned. Otherwise only genuinely ancient ones
+    -- are recovered (a live run owns its own fresh `running` jobs).
+    update public.backup_jobs j
+       set status = 'pending', last_error = null, updated_at = now()
+     where j.kind = p_kind
+       and j.status = 'running'
+       and (v_expired or j.updated_at < now() - interval '10 minutes');
+  end if;
+  return v_acquired;
+end $$;
+
+/** Release only our own lease. An expired lease is harmless if never released. */
+create or replace function public.backup_release_run_lease(p_kind text, p_worker_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    raise exception 'backup_release_run_lease is worker-only' using errcode = '42501';
+  end if;
+  -- `now()` is the transaction-start timestamp, so setting it to exactly now()
+  -- would leave `lease_until < now()` false inside the same transaction. Use a
+  -- definitely-past value: the lease is over, and any waiting run may take it.
+  update public.backup_run_leases
+     set lease_until = now() - interval '1 second', updated_at = now()
+   where kind = p_kind and lease_owner = p_worker_id;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 3. Admin-visible job state + audited run log
+-- -----------------------------------------------------------------------------
+
+create or replace function public.backup_admin_state()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_result jsonb;
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to view backup job state.' using errcode = '42501';
+  end if;
+
+  select jsonb_build_object(
+    'jobs', (
+      select jsonb_build_object(
+        'queued',     count(*) filter (where j.status = 'pending'),
+        'processing', count(*) filter (where j.status = 'running'),
+        'verified',   count(*) filter (where j.status = 'done'),
+        'failed',     count(*) filter (where j.status = 'failed')
+      ) from public.backup_jobs j
+    ),
+    'jobs_by_kind', coalesce((
+      select jsonb_object_agg(s.kind, s.counts) from (
+        select j.kind,
+               jsonb_build_object(
+                 'queued',     count(*) filter (where j.status = 'pending'),
+                 'processing', count(*) filter (where j.status = 'running'),
+                 'verified',   count(*) filter (where j.status = 'done'),
+                 'failed',     count(*) filter (where j.status = 'failed')
+               ) as counts
+        from public.backup_jobs j group by j.kind
+      ) s
+    ), '{}'::jsonb),
+    'recent_jobs', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', j.id, 'kind', j.kind, 'status', j.status,
+        'note', j.note, 'last_error', left(j.last_error, 300),
+        'created_at', j.created_at, 'updated_at', j.updated_at, 'completed_at', j.completed_at
+      ) order by j.created_at desc)
+      from (select * from public.backup_jobs order by created_at desc limit 16) j
+    ), '[]'::jsonb),
+    'batches', jsonb_build_object(
+      'uploading',     (select count(*) from public.backup_batches where status = 'uploading'),
+      'pending',       (select count(*) from public.backup_batches where status = 'pending'),
+      'failed',        (select count(*) from public.backup_batches where status = 'failed'),
+      'verified',      (select count(*) from public.backup_batches where status = 'verified'),
+      'retry_waiting', (select count(*) from public.backup_batches where status = 'failed' and next_attempt_at > now()),
+      'next_retry_at', (select min(next_attempt_at) from public.backup_batches where status = 'failed' and next_attempt_at > now())
+    ),
+    'snapshots', jsonb_build_object(
+      'running',    (select count(*) from public.backup_snapshots where status in ('pending', 'uploading')),
+      'failed',     (select count(*) from public.backup_snapshots where status = 'failed'),
+      'last_error', (select left(last_error, 300) from public.backup_snapshots where status = 'failed' order by updated_at desc limit 1)
+    ),
+    'leases', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'kind', l.kind, 'active', l.lease_until > now(),
+        'started_at', l.started_at, 'lease_until', l.lease_until
+      ) order by l.kind) from public.backup_run_leases l
+    ), '[]'::jsonb),
+    'active', exists (select 1 from public.backup_run_leases l where l.lease_until > now()),
+    'last_runs', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', r.id, 'kind', r.kind, 'status', r.status,
+        'record', r.summary, 'created_at', r.created_at
+      ) order by r.created_at desc)
+      from (select * from public.backup_run_log order by created_at desc limit 8) r
+    ), '[]'::jsonb)
+  ) into v_result;
+  return v_result;
+end $$;
+
+/**
+ * Persist a secret-free run summary and write an audit entry. Called with the
+ * ADMIN'S OWN RLS-scoped client so `current_profile_id()` is the real actor
+ * and `manage_backups` is re-checked here, not just in the server action.
+ */
+create or replace function public.backup_record_run(
+  p_kind   text,
+  p_status text,
+  p_record jsonb default '{}'::jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id     uuid;
+  v_status text := coalesce(p_status, 'failed');
+  v_record jsonb := coalesce(p_record, '{}'::jsonb);
+begin
+  if not public.has_permission('manage_backups') then
+    raise exception 'You do not have permission to run backups.' using errcode = '42501';
+  end if;
+  if p_kind not in ('incremental', 'snapshot') then
+    raise exception 'unknown backup kind';
+  end if;
+  if v_status not in ('verified', 'drained', 'idle', 'busy', 'failed', 'not_configured') then
+    v_status := 'failed';
+  end if;
+  -- Defence in depth: a client (or a future code change) must never be able
+  -- to smuggle a credential into the admin-visible log.
+  if v_record::text ~* '(client_secret|refresh_token|credential_ciphertext|bearer |postgresql://|password|BEGIN [A-Z ]*PRIVATE KEY)' then
+    v_record := jsonb_build_object('status', v_status, 'redacted', true);
+  elsif length(v_record::text) > 3500 then
+    v_record := jsonb_build_object('status', v_status, 'truncated', true);
+  end if;
+
+  insert into public.backup_run_log (kind, status, summary, actor)
+  values (p_kind, v_status, v_record, public.current_profile_id())
+  returning id into v_id;
+
+  perform public.log_audit(
+    'backup.process', 'backup_run', v_id::text,
+    jsonb_build_object('kind', p_kind, 'status', v_status, 'verified', coalesce((v_record->>'verified')::int, 0)),
+    false, null, 'admin'::public.moderation_visibility
+  );
+  return v_id;
+end $$;
+
+-- -----------------------------------------------------------------------------
+-- 4. Grants — mirror migration 027's explicit, closed-by-default surface
+-- -----------------------------------------------------------------------------
+
+do $$
+declare
+  v_fn text;
+begin
+  foreach v_fn in array array[
+    'backup_acquire_run_lease(text, text, integer)',
+    'backup_release_run_lease(text, text)'
+  ] loop
+    execute format('revoke all on function public.%s from public, anon, authenticated', v_fn);
+    execute format('grant execute on function public.%s to service_role', v_fn);
+  end loop;
+
+  foreach v_fn in array array[
+    'backup_admin_state()',
+    'backup_record_run(text, text, jsonb)'
+  ] loop
+    execute format('revoke all on function public.%s from public, anon', v_fn);
+    execute format('grant execute on function public.%s to authenticated, service_role', v_fn);
+  end loop;
+end $$;
+
+comment on function public.backup_admin_state() is
+  'Admin-only backup job state: queued/processing/verified/failed counts, batch retry state, active leases and recent run summaries. Never returns credentials or row images.';
+comment on function public.backup_record_run(text, text, jsonb) is
+  'Audited, permission-checked, secret-free log of an admin-triggered backup run.';
+
+-- ==========================================================================
+-- FILE 29/38  20261026000001_029_feed_realtime_delivery.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 029 — live delivery of new posts to already-open feeds
+-- =============================================================================
+-- Problem this fixes (no change to any row, policy or column):
+--   A post was written and published correctly, but a feed that was already open
+--   could not find out about it. Two configurations were missing, and only two:
+--
+--     1. `public.posts` was not a member of the `supabase_realtime` publication.
+--        Realtime only ever *reads* the logical replication stream for tables in
+--        that publication, so no Postgres Changes event for a post can exist
+--        regardless of what any client subscribes to or what RLS allows. This was
+--        deliberate once (migration 014 published only the messaging tables and
+--        `notifications`) and simply never revisited when the feed grew a
+--        client-side surface.
+--     2. A private channel on a `feed:<profile id>` topic had no matching branch in
+--        the `realtime.messages` read policy from migration 014, whose `case`
+--        expression ends in `else false`. Every other branch there is for chat or
+--        for the per-user fan-out channel the shell already owns.
+--
+-- What lands here:
+--   1. `public.posts` is added to the publication — one table, the one the feed
+--      needs. `comments`, `reactions`, `poll_votes`, `mentions` and every private
+--      table stay out of the stream, so this does not widen what Realtime can read
+--      beyond "a post row changed".
+--   2. `campus_channels_read` gains a `feed` branch: the subscriber may receive
+--      events on their own `feed:<uuid>` topic and nobody else's. The
+--      `campus_channels_write` policy is left exactly as it is, so nothing can
+--      broadcast on a feed topic at all.
+--
+-- What this does NOT do (and deliberately must not):
+--   * It does not change row visibility. Delivery is authorised per subscriber by
+--     the existing `posts` SELECT policies — `posts_select_visible` (published,
+--     not deleted, active author, not blocked, not muted, community membership via
+--     `can_view_community()`), `posts_select_author` and `posts_select_staff`. A
+--     student therefore cannot receive a post they could not already fetch with the
+--     same publishable key. Private channels additionally honour column-level
+--     SELECT grants, and `public.posts` restricts no column from `authenticated`
+--     beyond what those policies already expose.
+--   * It adds no trigger, no outbox, no queue and no polling endpoint. The
+--     application side of this change only *invalidates* a rendered feed and lets
+--     the existing read path (`campus_feed()` and its hydration) decide what shows;
+--     no payload generated here is ever rendered directly.
+--   * It grants nothing new to `anon` (migration 014 revokes all of it) and no
+--     service-role key is involved anywhere: Postgres Changes over a browser
+--     channel with the publishable key is the whole mechanism.
+--
+-- Style: identical to migration 014 — guarded so it applies cleanly on plain
+-- PostgreSQL where neither the publication nor `realtime.messages` exists, and
+-- idempotent on re-apply.
+-- =============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. Publication membership: posts rows are now on the stream
+-- ----------------------------------------------------------------------------
+
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    begin
+      alter publication supabase_realtime add table public.posts;
+    exception
+      when duplicate_object then null;
+      -- The role applying migrations is not the table owner on every hosting
+      -- topology. Say so, and say what to run, rather than aborting a deployment
+      -- over a delivery optimisation the app degrades away from safely.
+      when insufficient_privilege then
+        raise notice 'Campus+: % is not the owner of public.posts. As the table owner or super user run: alter publication supabase_realtime add table public.posts;', current_user;
+    end;
+  else
+    raise notice 'Campus+: no supabase_realtime publication here — Postgres Changes for posts are unavailable until the hosting platform creates it.';
+  end if;
+end $$;
+
+-- ----------------------------------------------------------------------------
+-- 2. Private-channel authorization for the per-student feed topic
+-- ----------------------------------------------------------------------------
+-- Topics in use, all owned by the subscriber:
+--   conversation:<uuid>  random:<uuid>  user:<profile uuid>   (014)
+--   feed:<profile uuid>                                      (this migration)
+--
+-- The topic is the subscriber's own profile id, so the policy is a
+-- "you may join your own channel" check; which *rows* arrive is the table's
+-- SELECT policy's decision above.
+
+do $$
+begin
+  if to_regclass('realtime.messages') is null then
+    raise notice 'Campus+: realtime.messages not present (plain Postgres). Skipping channel policies.';
+    return;
+  end if;
+
+  execute $policy$
+    drop policy if exists campus_channels_read on realtime.messages;
+  $policy$;
+  execute $policy$
+    create policy campus_channels_read on realtime.messages
+      for select to authenticated
+      using (
+        case split_part(realtime.topic(), ':', 1)
+          when 'conversation' then
+            public.can_access_conversation(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'random' then
+            public.can_access_random_session(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'user' then
+            public.safe_uuid(split_part(realtime.topic(), ':', 2)) = public.current_profile_id()
+          when 'feed' then
+            public.safe_uuid(split_part(realtime.topic(), ':', 2)) = public.current_profile_id()
+          else false
+        end
+      );
+  $policy$;
+end $$;
+
+-- ==========================================================================
+-- FILE 30/38  20261027000001_030_random_channel_authorization.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 030 — Realtime channel authorization must not depend on a
+-- client-executable cross-user oracle (stops the `42501` flood, closes the oracle)
+-- =============================================================================
+-- The symptom, from the production Postgres log: 815 of 1 000 exported entries are
+--   `permission denied for function can_access_random_session`  (SQLSTATE 42501)
+-- arriving roughly every 15 seconds while the site is in use.
+--
+-- Why that happens, end to end:
+--
+--   1. Migration 014 gave `realtime.messages` two private-channel policies whose
+--      `case` expression includes a `random` branch:
+--          when 'random' then public.can_access_random_session(<uuid from the topic>)
+--      Realtime evaluates that expression as the subscribing role to decide whether
+--      a `random:<session uuid>` channel may be joined or broadcast on.
+--   2. `can_access_random_session(p_session, p_user)` was written in migration 010 as
+--      an *internal* helper: SECURITY DEFINER, and with an **optional second
+--      argument** so the Random RPCs could ask about somebody else. Its second
+--      parameter makes it a session-membership oracle in the wrong hands — it answers
+--      "is *this other profile* in *that private session*", and the base tables
+--      deliberately have no participant policies (migration 022), so the function is
+--      the only thing standing between a caller and that answer.
+--   3. The Random Chat UI was retired in migration 023 — there is no `/random` route,
+--      no nav entry, no `random:` subscription anywhere in the application any more
+--      (verified: the only `.channel(` call sites are `conversation:`, `user:` and,
+--      since 029, `feed:`). But a tab that was open before the retirement, a stale
+--      Router/prefetch cache, or any other long-lived client keeps trying to *rejoin*
+--      the private channel it already had. Realtime re-checks the policy on every
+--      (re)subscribe, and the client reconnects on its own backoff — which is the
+--      ~15-second cadence, and why it only appears in active periods.
+--   4. On this project, the role evaluating the policy does not have EXECUTE on that
+--      helper, so each check raises 42501 instead of returning `false`. The two are
+--      worlds apart: a denial is an answer, an error is a log line, a failed
+--      subscription, a retried socket, and — for the connection pool — churn. The
+--      `08P01 unexpected EOF on standby connection` entries line up with the same
+--      loop: a Realtime socket that never reaches SUBSCRIBED is torn down while its
+--      replication connection is still being set up.
+--
+--      Why the grant is missing in production but present in the repository's history
+--      is not something this file can settle: migration 018 explicitly grants EXECUTE
+--      on every public function to `authenticated`, so a fresh database built from
+--      these migrations does *not* reproduce the error. Migration 022 documents an
+--      earlier change made directly against the live project, outside the migration
+--      history, with exactly this signature. This migration therefore stops depending
+--      on that grant either way, rather than re-asserting it.
+--
+-- What lands here, in order of consequence:
+--
+--   A. `can_access_own_random_session(p_session)` — a new, deliberately narrow
+--      predicate for policy use: one argument, no way to ask about anybody but the
+--      caller (`public.current_profile_id()` inside), SECURITY DEFINER because the
+--      base tables have no participant policies, and `false` for a session that is no
+--      longer active. Granted to `authenticated` and `service_role` explicitly, so a
+--      channel check can never again fail on a missing grant for the retired topic.
+--   B. Both `realtime.messages` policies now call A for the `random` branch. Nothing
+--      else in them changes — the `conversation`, `user` and `feed` branches are
+--      carried over verbatim from 014 and 029, including the `else false` fallback.
+--   C. The oracle is closed: EXECUTE on `can_access_random_session(uuid, uuid)` is
+--      revoked from `public` and `anon` and `authenticated`, and kept for
+--      `service_role`. Internal callers are unaffected — every one of them is a
+--      SECURITY DEFINER Random RPC (`end_random_session`, `random_session_state`,
+--      `send_random_message`, `report_random_session`, and the retention pair
+--      `purge_random_data` / `sweep_random_state`) running as the function owner, and
+--      migration 010 wrote them that way precisely so the cross-user question could
+--      stay server-side. Every one of those six was verified to be SECURITY DEFINER
+--      before this revoke was written. The
+--      application's own `lib/actions/random.js` never calls it (it reads the two
+--      participant-safe views), which was verified before this revoke was written.
+--
+-- This migration grants nothing on any table, changes no policy on `random_*`
+-- tables, does not delete retired data, and does not touch messaging, notifications
+-- or the feed channel authorization from 029 beyond carrying its branch forward.
+-- =============================================================================
+
+-- ----------------------------------------------------------------------------
+-- A. The current-user-only predicate the policies may safely call
+-- ----------------------------------------------------------------------------
+
+create or replace function public.can_access_own_random_session(p_session uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+      from public.random_session_participants rp
+      join public.random_sessions rs on rs.id = rp.session_id
+     where rp.session_id = p_session
+       and rp.user_id = public.current_profile_id()
+       and rp.left_at is null
+       and rs.status = 'active'
+  );
+$$;
+
+comment on function public.can_access_own_random_session is
+  'Realtime channel predicate for a random session: does the *calling* student still '
+  'belong to this session. One argument by design — the two-argument '
+  'can_access_random_session(p_session, p_user) can answer that question about any '
+  'profile, so it stays an internal helper of the SECURITY DEFINER Random RPCs and is '
+  'not executable by API roles. Returns false once the session is no longer active, '
+  'which is also the point of the retired feature: no new channel access.';
+
+-- Explicit, not inherited: the whole problem was a policy that depended on a grant
+-- nobody owned. `anon` is excluded, as everywhere else in this schema.
+revoke all on function public.can_access_own_random_session(uuid) from public, anon;
+grant execute on function public.can_access_own_random_session(uuid) to authenticated, service_role;
+
+-- Where a hosting platform authorizes private channels through its own role, that
+-- role needs the *narrow* predicate and nothing else. Guarded, because it does not
+-- exist on a plain Postgres install (and must not be created here).
+do $$
+begin
+  if to_regrole('supabase_realtime') is not null then
+    execute 'grant execute on function public.can_access_own_random_session(uuid) to supabase_realtime';
+  end if;
+end $$;
+
+-- ----------------------------------------------------------------------------
+-- B + C. The policies use A; the oracle stops being client-callable
+-- ----------------------------------------------------------------------------
+
+do $$
+begin
+  if to_regclass('realtime.messages') is null then
+    raise notice 'Campus+: realtime.messages not present (plain Postgres). Skipping channel policies.';
+    return;
+  end if;
+
+  -- Read (subscribe/receive). Identical to migration 029's except for the `random`
+  -- branch, which now asks the current-user-only predicate.
+  execute $policy$
+    drop policy if exists campus_channels_read on realtime.messages;
+  $policy$;
+  execute $policy$
+    create policy campus_channels_read on realtime.messages
+      for select to authenticated
+      using (
+        case split_part(realtime.topic(), ':', 1)
+          when 'conversation' then
+            public.can_access_conversation(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'random' then
+            public.can_access_own_random_session(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'user' then
+            public.safe_uuid(split_part(realtime.topic(), ':', 2)) = public.current_profile_id()
+          when 'feed' then
+            public.safe_uuid(split_part(realtime.topic(), ':', 2)) = public.current_profile_id()
+          else false
+        end
+      );
+  $policy$;
+
+  -- Write (broadcast/send). Same substitution; the policy is still insert-only for
+  -- `authenticated`, so a feed or channel change remains a database fact rather than
+  -- something a client asserts.
+  execute $policy$
+    drop policy if exists campus_channels_write on realtime.messages;
+  $policy$;
+  execute $policy$
+    create policy campus_channels_write on realtime.messages
+      for insert to authenticated
+      with check (
+        case split_part(realtime.topic(), ':', 1)
+          when 'conversation' then
+            public.can_access_conversation(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'random' then
+            public.can_access_own_random_session(public.safe_uuid(split_part(realtime.topic(), ':', 2)))
+          when 'user' then
+            public.safe_uuid(split_part(realtime.topic(), ':', 2)) = public.current_profile_id()
+          else false
+        end
+      );
+  $policy$;
+end $$;
+
+-- The oracle, off the RPC surface. PostgREST exposes every executable public function
+-- to the roles that can execute it, so "not executable by `authenticated`" is what
+-- makes it internal again; the Random RPCs call it as the function owner and are
+-- unchanged.
+revoke all on function public.can_access_random_session(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.can_access_random_session(uuid, uuid) to service_role;
+
+comment on function public.can_access_random_session is
+  'Internal: may be asked about any profile, which is exactly why it is not executable '
+  'by API roles (migration 030). Callers are the SECURITY DEFINER Random RPCs in '
+  'migration 010 and the service role. A policy or a client predicate must use '
+  'can_access_own_random_session(uuid) instead.';
+
+-- ==========================================================================
+-- FILE 31/38  20261028000001_031_club_governance.sql
+-- ==========================================================================
+
+-- Campus+ migration 031 — club governance, requests and scoped management
+-- =============================================================================
+-- Clubs remain communities (kind = 'club'). This migration adds the directory
+-- metadata and protected workflows the club screens use; it does not create a
+-- parallel membership or permission system.
+--
+-- The important authority boundaries are:
+--   * ordinary students can REQUEST a club, never INSERT one;
+--   * platform staff with manage_clubs review requests and choose an active
+--     initial administrator by username;
+--   * approval is one transaction and one retry-safe RPC;
+--   * club owners/moderators are authoritative only for their own club;
+--   * imported clubs may have no administrator until a real account is assigned.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- Directory metadata on the existing communities table
+-- ---------------------------------------------------------------------------
+
+alter table public.communities
+  add column organization_type text,
+  add column verification_status text not null default 'pending',
+  add column source_label text,
+  add column source_url text,
+  add column directory_aliases text not null default '',
+  add column catalogue_key text,
+  add column admin_assigned boolean not null default false;
+
+alter table public.communities alter column created_by drop not null;
+
+alter table public.communities
+  add constraint communities_creator_required_for_groups
+    check (kind = 'club' or created_by is not null),
+  add constraint communities_organization_type_check
+    check (
+      organization_type is null
+      or (
+        kind = 'club'
+        and organization_type in (
+          'collegiate_team', 'technical_club', 'computing_community',
+          'department_association', 'professional_chapter', 'creative_group',
+          'service_organization', 'sports_group', 'platform_community'
+        )
+      )
+    ),
+  add constraint communities_verification_status_check
+    check (verification_status in ('pending', 'source_checked')),
+  add constraint communities_source_label_check
+    check (source_label is null or length(source_label) <= 160),
+  add constraint communities_source_url_check
+    check (source_url is null or source_url ~ '^https?://'),
+  add constraint communities_directory_aliases_check
+    check (length(directory_aliases) <= 800),
+  add constraint communities_catalogue_key_check
+    check (catalogue_key is null or catalogue_key ~ '^[a-z0-9-]{3,80}$');
+
+create unique index communities_catalogue_key_idx
+  on public.communities (catalogue_key) where catalogue_key is not null;
+create index communities_organization_type_idx
+  on public.communities (organization_type, status) where kind = 'club';
+create index communities_admin_assignment_idx
+  on public.communities (admin_assigned) where kind = 'club';
+
+comment on column public.communities.organization_type is
+  'Controlled organization taxonomy for clubs. Independent of the original six discovery categories.';
+comment on column public.communities.verification_status is
+  'Directory-source state only. source_checked means a cited source lists the organization, not institutional endorsement of this page.';
+comment on column public.communities.admin_assigned is
+  'Derived from an active owner membership. False is an explicit admin-assignment-needed state, never a fabricated owner.';
+
+-- Existing owner rows are real assignments. Imported rows are backfilled from
+-- those rows rather than from created_by, which is provenance, not a club role.
+update public.communities c
+   set admin_assigned = exists (
+     select 1 from public.community_members m
+      where m.community_id = c.id and m.role = 'owner' and m.status = 'active'
+   )
+ where c.kind = 'club';
+
+-- The creator trigger still serves ordinary communities and study groups. A
+-- null-creator imported club, or a club created inside the protected workflow,
+-- gets its owner from the explicit assignment step instead.
+create or replace function public.add_community_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if new.created_by is not null
+     and not (new.kind = 'club' and public.in_system_context()) then
+    insert into public.community_members (community_id, user_id, role, status)
+    values (new.id, new.created_by, 'owner', 'active')
+    on conflict (community_id, user_id) do update set role = 'owner', status = 'active';
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.sync_club_admin_assignment()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_community uuid := coalesce(new.community_id, old.community_id);
+begin
+  update public.communities c
+     set admin_assigned = exists (
+       select 1 from public.community_members m
+        where m.community_id = c.id and m.role = 'owner' and m.status = 'active'
+     )
+   where c.id = v_community and c.kind = 'club';
+  return coalesce(new, old);
+end;
+$$;
+
+create trigger community_members_sync_club_admin
+  after insert or update or delete on public.community_members
+  for each row execute function public.sync_club_admin_assignment();
+
+-- Extend the original counter/ownership guard to the new governance fields.
+-- Club managers may edit their public profile, but cannot self-verify a source,
+-- rewrite catalogue provenance, or toggle the derived administrator flag.
+create or replace function public.guard_community_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.is_trusted_writer() then
+    new.member_count := (
+      select count(*) from public.community_members m
+      where m.community_id = old.id and m.status = 'active'
+    );
+    new.post_count := (
+      select count(*) from public.posts p
+      where p.community_id = old.id and p.status = 'published' and p.deleted_at is null
+    );
+    new.created_by := old.created_by;
+    new.kind := old.kind;
+    new.is_official := old.is_official;
+    new.approved_by := old.approved_by;
+    new.approved_at := old.approved_at;
+    new.admin_assigned := exists (
+      select 1 from public.community_members m
+      where m.community_id = old.id and m.role = 'owner' and m.status = 'active'
+    );
+    if not (old.kind = 'club' and public.has_permission('manage_clubs')) then
+      new.verification_status := old.verification_status;
+      new.source_label := old.source_label;
+      new.source_url := old.source_url;
+      new.directory_aliases := old.directory_aliases;
+      new.catalogue_key := old.catalogue_key;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- One scoped predicate, built from the existing membership/global permissions
+-- ---------------------------------------------------------------------------
+
+create or replace function public.can_manage_club(p_club uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from public.communities c
+     where c.id = p_club
+       and c.kind = 'club'
+       and (
+         public.is_community_moderator(c.id)
+         or public.has_permission('manage_clubs')
+         or public.has_permission('moderate_communities')
+         or public.has_permission('moderate_all')
+       )
+  );
+$$;
+
+comment on function public.can_manage_club(uuid) is
+  'Current actor may manage this specific club through its owner/moderator membership or an explicit global club/community permission.';
+
+-- ---------------------------------------------------------------------------
+-- Student club-creation requests (not clubs, not memberships)
+-- ---------------------------------------------------------------------------
+
+create table public.club_creation_requests (
+  id                       uuid primary key default gen_random_uuid(),
+  requester_id             uuid not null references public.profiles (id) on delete cascade,
+  name                     text not null check (length(btrim(name)) between 3 and 80),
+  slug                     text not null check (slug ~ '^[a-z0-9-]{3,60}$'),
+  description              text not null check (length(description) between 10 and 1000),
+  subject                  text check (subject is null or length(subject) <= 120),
+  club_category            text not null check (club_category in ('Technical', 'Cultural', 'Sports', 'Arts', 'Entrepreneurship', 'Social')),
+  organization_type        text not null check (organization_type in (
+                             'collegiate_team', 'technical_club', 'computing_community',
+                             'department_association', 'professional_chapter', 'creative_group',
+                             'service_organization', 'sports_group', 'platform_community')),
+  recruitment_info         text check (recruitment_info is null or length(recruitment_info) <= 1000),
+  meeting_info             text check (meeting_info is null or length(meeting_info) <= 200),
+  contact_info             text check (contact_info is null or length(contact_info) <= 200),
+  external_url             text check (external_url is null or external_url ~ '^https?://'),
+  source_label             text check (source_label is null or length(source_label) <= 160),
+  source_url               text check (source_url is null or source_url ~ '^https?://'),
+  proposed_admin_username  text check (proposed_admin_username is null or proposed_admin_username ~ '^[a-z0-9_]{3,24}$'),
+  status                   text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'withdrawn')),
+  reviewed_by              uuid references public.profiles (id) on delete set null,
+  reviewed_at              timestamptz,
+  review_note              text check (review_note is null or length(review_note) <= 1000),
+  community_id             uuid unique references public.communities (id) on delete set null,
+  created_at               timestamptz not null default now(),
+  updated_at               timestamptz not null default now()
+);
+
+create index club_creation_requests_queue_idx
+  on public.club_creation_requests (status, created_at);
+create index club_creation_requests_requester_idx
+  on public.club_creation_requests (requester_id, created_at desc);
+create unique index club_creation_requests_one_pending_slug_idx
+  on public.club_creation_requests (slug) where status = 'pending';
+
+create trigger club_creation_requests_touch before update on public.club_creation_requests
+  for each row execute function public.touch_updated_at();
+
+alter table public.club_creation_requests enable row level security;
+
+create policy club_creation_requests_select_own on public.club_creation_requests
+  for select to authenticated using (requester_id = public.current_profile_id());
+create policy club_creation_requests_select_admin on public.club_creation_requests
+  for select to authenticated using (public.has_permission('manage_clubs'));
+create policy club_creation_requests_insert_own on public.club_creation_requests
+  for insert to authenticated with check (
+    requester_id = public.current_profile_id()
+    and public.is_active_user()
+    and status = 'pending'
+    and reviewed_by is null
+    and reviewed_at is null
+    and community_id is null
+  );
+-- No client UPDATE policy: withdrawal and review are protected RPCs below.
+
+create or replace function public.guard_club_creation_request_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  new.slug := lower(btrim(new.slug));
+  new.proposed_admin_username := nullif(lower(btrim(coalesce(new.proposed_admin_username, ''))), '');
+  if not public.is_trusted_writer() then
+    new.requester_id := public.current_profile_id();
+    new.status := 'pending';
+    new.reviewed_by := null;
+    new.reviewed_at := null;
+    new.community_id := null;
+  end if;
+  if exists (select 1 from public.communities c where c.slug = new.slug) then
+    raise exception 'A community or club already uses that link.' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger club_creation_requests_guard_insert
+  before insert on public.club_creation_requests
+  for each row execute function public.guard_club_creation_request_insert();
+
+-- Notify every distinct active manage_clubs holder. No email, push or private
+-- message is created; this is the existing notifications table.
+create or replace function public.notify_club_request_admins()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_admin uuid;
+begin
+  for v_admin in
+    select distinct ur.user_id
+      from public.user_roles ur
+      join public.role_permissions rp on rp.role_key = ur.role_key
+     where rp.permission_key = 'manage_clubs'
+       and public.is_active_profile(ur.user_id)
+  loop
+    perform public.notify_user(
+      v_admin, 'club_activity', 'Club request: ' || new.name,
+      'Review the request and choose an initial club administrator.',
+      'club_request', new.id::text, '/admin?tab=clubs'
+    );
+  end loop;
+  return new;
+end;
+$$;
+
+create trigger club_creation_requests_notify_admin
+  after insert on public.club_creation_requests
+  for each row execute function public.notify_club_request_admins();
+
+-- ---------------------------------------------------------------------------
+-- Resolve and validate an initial administrator
+-- ---------------------------------------------------------------------------
+
+create or replace function public.resolve_club_admin(p_username text)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_id uuid;
+begin
+  select p.id into v_id
+    from public.profiles p
+   where p.username = lower(btrim(coalesce(p_username, '')))
+     and public.account_status_of(p.id) = 'active'::public.account_status;
+  if v_id is null then
+    raise exception 'Choose an active Campus+ username for the initial club administrator.' using errcode = '22023';
+  end if;
+  if public.role_rank(v_id) >= 10 or exists (
+    select 1 from public.user_roles ur
+    join public.role_permissions rp on rp.role_key = ur.role_key
+    where ur.user_id = v_id
+      and (ur.expires_at is null or ur.expires_at > now())
+      and rp.permission_key in (
+        'manage_clubs', 'moderate_all', 'manage_users', 'assign_roles',
+        'manage_roles', 'manage_permissions', 'manage_role_authority', 'manage_backups'
+      )
+  ) then
+    raise exception 'Choose an active student account without platform-wide administrative privileges.' using errcode = '22023';
+  end if;
+  return v_id;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Protected club creation and request approval
+-- ---------------------------------------------------------------------------
+
+create or replace function public.create_club_with_admin(
+  p_admin_username text,
+  p_payload jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_admin uuid;
+  v_club uuid;
+  v_slug text;
+begin
+  if not public.has_permission('manage_clubs') then
+    raise exception 'Only Campus+ club administrators can create a club.' using errcode = '42501';
+  end if;
+  v_admin := public.resolve_club_admin(p_admin_username);
+  v_slug := lower(btrim(coalesce(p_payload->>'slug', '')));
+  perform set_config('campus.system_context', 'on', true);
+
+  insert into public.communities (
+    kind, name, slug, description, subject, club_category, organization_type,
+    recruitment_info, meeting_info, contact_info, external_url, visibility,
+    join_policy, status, is_official, created_by, approved_by, approved_at,
+    member_count, verification_status, source_label, source_url
+  ) values (
+    'club', p_payload->>'name', v_slug, p_payload->>'description',
+    nullif(p_payload->>'subject', ''), p_payload->>'club_category', p_payload->>'organization_type',
+    nullif(p_payload->>'recruitment_info', ''), nullif(p_payload->>'meeting_info', ''),
+    nullif(p_payload->>'contact_info', ''), nullif(p_payload->>'external_url', ''),
+    coalesce(p_payload->>'visibility', 'campus')::public.visibility_level,
+    coalesce(p_payload->>'join_policy', 'request'),
+    'published', true, v_actor, v_actor, now(), 0,
+    case when p_payload->>'verification_status' = 'source_checked' then 'source_checked' else 'pending' end,
+    nullif(p_payload->>'source_label', ''), nullif(p_payload->>'source_url', '')
+  ) returning id into v_club;
+
+  insert into public.community_members (community_id, user_id, role, status)
+  values (v_club, v_admin, 'owner', 'active');
+
+  perform public.log_audit('club.created', 'club', v_club::text,
+    jsonb_build_object('admin_username', lower(btrim(p_admin_username))), true, null, 'admin');
+  perform public.notify_user(v_admin, 'club_activity', 'You are now a club administrator',
+    'Open the club management workspace to review its details and membership.',
+    'club', v_club::text, '/clubs/' || v_club::text || '/manage');
+
+  return jsonb_build_object('ok', true, 'id', v_club, 'slug', v_slug, 'admin_id', v_admin);
+end;
+$$;
+
+create or replace function public.approve_club_request(
+  p_request uuid,
+  p_admin_username text,
+  p_review_note text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_request public.club_creation_requests;
+  v_admin uuid;
+  v_club uuid;
+begin
+  if not public.has_permission('manage_clubs') then
+    raise exception 'Only Campus+ club administrators can review club requests.' using errcode = '42501';
+  end if;
+
+  select * into v_request from public.club_creation_requests where id = p_request for update;
+  if v_request.id is null then
+    raise exception 'That club request could not be found.' using errcode = '22023';
+  end if;
+  -- A retry after a committed approval returns the same club and does not
+  -- insert another community, membership, notification or audit row.
+  if v_request.status = 'approved' and v_request.community_id is not null then
+    return jsonb_build_object('ok', true, 'id', v_request.community_id, 'slug',
+      (select slug from public.communities where id = v_request.community_id), 'idempotent', true);
+  end if;
+  if v_request.status <> 'pending' then
+    raise exception 'That club request has already been reviewed.' using errcode = '22023';
+  end if;
+
+  v_admin := public.resolve_club_admin(p_admin_username);
+  perform set_config('campus.system_context', 'on', true);
+
+  insert into public.communities (
+    kind, name, slug, description, subject, club_category, organization_type,
+    recruitment_info, meeting_info, contact_info, external_url, visibility,
+    join_policy, status, is_official, created_by, approved_by, approved_at,
+    member_count, verification_status, source_label, source_url
+  ) values (
+    'club', v_request.name, v_request.slug, v_request.description, v_request.subject,
+    v_request.club_category, v_request.organization_type, v_request.recruitment_info,
+    v_request.meeting_info, v_request.contact_info, v_request.external_url,
+    'campus', 'request', 'published', true, v_actor, v_actor, now(), 0,
+    'pending', v_request.source_label, v_request.source_url
+  ) returning id into v_club;
+
+  insert into public.community_members (community_id, user_id, role, status)
+  values (v_club, v_admin, 'owner', 'active');
+
+  update public.club_creation_requests
+     set status = 'approved', reviewed_by = v_actor, reviewed_at = now(),
+         review_note = left(nullif(btrim(coalesce(p_review_note, '')), ''), 1000),
+         community_id = v_club
+   where id = v_request.id;
+
+  perform public.log_audit('club.request_approved', 'club', v_club::text,
+    jsonb_build_object('request_id', v_request.id, 'requester_id', v_request.requester_id,
+                       'admin_username', lower(btrim(p_admin_username))), true,
+    nullif(btrim(coalesce(p_review_note, '')), ''), 'admin');
+  perform public.notify_user(v_request.requester_id, 'club_activity',
+    'Your club request was approved', v_request.name || ' now has a club page.',
+    'club', v_club::text, '/clubs/' || v_club::text);
+  perform public.notify_user(v_admin, 'club_activity', 'You are now a club administrator',
+    v_request.name || ' was assigned to you by a Campus+ club administrator.',
+    'club', v_club::text, '/clubs/' || v_club::text || '/manage');
+
+  return jsonb_build_object('ok', true, 'id', v_club, 'slug', v_request.slug, 'admin_id', v_admin);
+end;
+$$;
+
+create or replace function public.reject_club_request(
+  p_request uuid,
+  p_review_note text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_request public.club_creation_requests;
+begin
+  if not public.has_permission('manage_clubs') then
+    raise exception 'Only Campus+ club administrators can review club requests.' using errcode = '42501';
+  end if;
+  select * into v_request from public.club_creation_requests where id = p_request for update;
+  if v_request.id is null then
+    raise exception 'That club request could not be found.' using errcode = '22023';
+  end if;
+  if v_request.status = 'rejected' then
+    return jsonb_build_object('ok', true, 'status', 'rejected', 'idempotent', true);
+  end if;
+  if v_request.status <> 'pending' then
+    raise exception 'That club request has already been reviewed.' using errcode = '22023';
+  end if;
+
+  update public.club_creation_requests
+     set status = 'rejected', reviewed_by = v_actor, reviewed_at = now(),
+         review_note = left(nullif(btrim(coalesce(p_review_note, '')), ''), 1000)
+   where id = v_request.id;
+
+  perform public.log_audit('club.request_rejected', 'club_request', v_request.id::text,
+    jsonb_build_object('requester_id', v_request.requester_id), true,
+    nullif(btrim(coalesce(p_review_note, '')), ''), 'admin');
+  perform public.notify_user(v_request.requester_id, 'club_activity',
+    'Your club request was not approved',
+    coalesce(nullif(btrim(coalesce(p_review_note, '')), ''), 'You can withdraw the request and submit a revised proposal.'),
+    'club_request', v_request.id::text, '/clubs/request');
+
+  return jsonb_build_object('ok', true, 'status', 'rejected');
+end;
+$$;
+
+create or replace function public.withdraw_club_request(p_request uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_request public.club_creation_requests;
+begin
+  select * into v_request from public.club_creation_requests where id = p_request for update;
+  if v_request.id is null or v_request.requester_id <> public.current_profile_id() then
+    raise exception 'That club request could not be found.' using errcode = '42501';
+  end if;
+  if v_request.status = 'withdrawn' then
+    return jsonb_build_object('ok', true, 'status', 'withdrawn', 'idempotent', true);
+  end if;
+  if v_request.status <> 'pending' then
+    raise exception 'Only a pending club request can be withdrawn.' using errcode = '22023';
+  end if;
+  update public.club_creation_requests set status = 'withdrawn', reviewed_at = now() where id = v_request.id;
+  return jsonb_build_object('ok', true, 'status', 'withdrawn');
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Initial admin assignment for imported/unassigned clubs
+-- ---------------------------------------------------------------------------
+
+create or replace function public.assign_club_admin(p_club uuid, p_admin_username text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_admin uuid;
+  v_name text;
+begin
+  if not public.has_permission('manage_clubs') then
+    raise exception 'Only Campus+ club administrators can assign an initial club admin.' using errcode = '42501';
+  end if;
+  select name into v_name from public.communities where id = p_club and kind = 'club';
+  if v_name is null then
+    raise exception 'That club could not be found.' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from public.community_members
+     where community_id = p_club and role = 'owner' and status = 'active'
+  ) then
+    raise exception 'This club already has an administrator.' using errcode = '22023';
+  end if;
+
+  v_admin := public.resolve_club_admin(p_admin_username);
+  insert into public.community_members (community_id, user_id, role, status)
+  values (p_club, v_admin, 'owner', 'active')
+  on conflict (community_id, user_id) do update set role = 'owner', status = 'active';
+
+  perform public.log_audit('club.admin_assigned', 'club', p_club::text,
+    jsonb_build_object('admin_username', lower(btrim(p_admin_username))), true, null, 'admin');
+  perform public.notify_user(v_admin, 'club_activity', 'You are now a club administrator',
+    v_name || ' was assigned to you by a Campus+ club administrator.',
+    'club', p_club::text, '/clubs/' || p_club::text || '/manage');
+  return jsonb_build_object('ok', true, 'id', p_club, 'admin_id', v_admin);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Membership request and decision workflow (one row path, atomic decisions)
+-- ---------------------------------------------------------------------------
+
+create or replace function public.join_community(p_community uuid, p_message text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_community public.communities;
+  v_existing public.community_members;
+  v_request public.community_join_requests;
+  v_manager uuid;
+begin
+  if not public.is_active_profile(v_actor) then
+    raise exception 'Your account cannot join communities right now.' using errcode = '42501';
+  end if;
+  select * into v_community from public.communities where id = p_community and status = 'published';
+  if v_community.id is null or not public.can_view_community(p_community) then
+    raise exception 'That community could not be found.' using errcode = '22023';
+  end if;
+  if v_community.kind = 'club' and not v_community.admin_assigned then
+    raise exception 'Membership opens after a club administrator is assigned.' using errcode = '22023';
+  end if;
+
+  select * into v_existing from public.community_members
+   where community_id = p_community and user_id = v_actor;
+  if v_existing.id is not null and v_existing.status = 'active' then
+    return jsonb_build_object('ok', true, 'status', 'active', 'idempotent', true);
+  end if;
+
+  select * into v_request from public.community_join_requests
+   where community_id = p_community and user_id = v_actor;
+  if v_request.id is not null and v_request.status = 'pending' then
+    return jsonb_build_object('ok', true, 'status', 'pending', 'idempotent', true);
+  end if;
+
+  if v_community.join_policy = 'open' then
+    insert into public.community_members (community_id, user_id, role, status)
+    values (p_community, v_actor, 'member', 'active')
+    on conflict (community_id, user_id) do update set status = 'active';
+    return jsonb_build_object('ok', true, 'status', 'active');
+  end if;
+  if v_community.join_policy <> 'request' then
+    raise exception 'This community is invite only.' using errcode = '42501';
+  end if;
+
+  insert into public.community_join_requests (community_id, user_id, message, status)
+  values (p_community, v_actor, left(nullif(btrim(coalesce(p_message, '')), ''), 300), 'pending')
+  on conflict (community_id, user_id) do update
+    set message = excluded.message, status = 'pending', decided_by = null, decided_at = null, created_at = now();
+  delete from public.community_members
+   where community_id = p_community and user_id = v_actor and status = 'pending';
+
+  for v_manager in
+    select user_id from public.community_members
+     where community_id = p_community and status = 'active' and role in ('owner', 'moderator')
+  loop
+    perform public.notify_user(v_manager,
+      (case when v_community.kind = 'club' then 'club_activity' else 'community_activity' end)::public.notification_type,
+      'New join request for ' || v_community.name,
+      'Open the membership workspace to review the request.',
+      case when v_community.kind = 'club' then 'club' else 'community' end,
+      p_community::text,
+      case when v_community.kind = 'club' then '/clubs/' || p_community::text || '/manage?view=members'
+           else '/communities/' || v_community.slug end);
+  end loop;
+  return jsonb_build_object('ok', true, 'status', 'pending');
+end;
+$$;
+
+create or replace function public.decide_community_join_request(p_request uuid, p_decision text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_request public.community_join_requests;
+  v_kind public.community_kind;
+  v_slug text;
+begin
+  if p_decision not in ('approved', 'rejected') then
+    raise exception 'Choose approve or reject.' using errcode = '22023';
+  end if;
+  select * into v_request from public.community_join_requests where id = p_request for update;
+  if v_request.id is null then
+    raise exception 'That join request could not be found.' using errcode = '22023';
+  end if;
+  select kind, slug into v_kind, v_slug from public.communities where id = v_request.community_id;
+  if not (
+    public.is_community_moderator(v_request.community_id)
+    or public.has_permission('manage_clubs') and v_kind = 'club'
+    or public.has_permission('moderate_communities')
+    or public.has_permission('moderate_all')
+  ) then
+    raise exception 'Only this community''s managers can decide its requests.' using errcode = '42501';
+  end if;
+  if v_request.status = p_decision::public.join_request_status then
+    return jsonb_build_object('ok', true, 'status', v_request.status, 'idempotent', true);
+  end if;
+  if v_request.status <> 'pending' then
+    raise exception 'That join request has already been decided.' using errcode = '22023';
+  end if;
+
+  update public.community_join_requests
+     set status = p_decision::public.join_request_status, decided_by = v_actor, decided_at = now()
+   where id = v_request.id;
+  if p_decision = 'approved' then
+    insert into public.community_members (community_id, user_id, role, status)
+    values (v_request.community_id, v_request.user_id, 'member', 'active')
+    on conflict (community_id, user_id) do update set status = 'active';
+  else
+    delete from public.community_members
+     where community_id = v_request.community_id and user_id = v_request.user_id and status = 'pending';
+  end if;
+
+  perform public.notify_user(v_request.user_id,
+    (case when v_kind = 'club' then 'club_activity' else 'community_activity' end)::public.notification_type,
+    'Your join request was ' || p_decision,
+    case when p_decision = 'approved' then 'You can now open the community feed.' else 'The club or community manager reviewed your request.' end,
+    case when v_kind = 'club' then 'club' else 'community' end,
+    v_request.community_id::text,
+    case when v_kind = 'club' then '/clubs/' || v_request.community_id::text else '/communities/' || v_slug end);
+
+  if v_kind = 'club' then
+    perform public.log_audit('club.join_request_' || p_decision, 'club', v_request.community_id::text,
+      jsonb_build_object('request_id', v_request.id, 'member_id', v_request.user_id), false, null, 'private');
+  end if;
+  return jsonb_build_object('ok', true, 'status', p_decision);
+end;
+$$;
+
+-- Decisions go through the atomic RPC, not a client update followed by a second
+-- membership write. Existing SELECT and cancellation policies remain intact.
+drop policy if exists community_join_requests_decide on public.community_join_requests;
+revoke update on public.community_join_requests from authenticated, anon;
+
+create or replace function public.set_community_member_role(
+  p_community uuid, p_member uuid, p_role public.community_role
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_old public.community_role;
+  v_kind public.community_kind;
+begin
+  if p_role not in ('member', 'moderator') or p_member = v_actor then
+    raise exception 'Choose another member and a valid club role.' using errcode = '22023';
+  end if;
+  select kind into v_kind from public.communities where id = p_community;
+  if not (
+    public.has_permission('manage_clubs') and v_kind = 'club'
+    or exists (
+      select 1 from public.community_members m
+       where m.community_id = p_community and m.user_id = v_actor
+         and m.role = 'owner' and m.status = 'active'
+    )
+  ) then
+    raise exception 'Only the owner can change member roles.' using errcode = '42501';
+  end if;
+
+  update public.community_members set role = p_role
+   where community_id = p_community and user_id = p_member and status = 'active' and role <> 'owner'
+  returning role into v_old;
+  if not found then
+    raise exception 'That membership could not be found or is the owner.' using errcode = '22023';
+  end if;
+  if v_kind = 'club' then
+    perform public.log_audit('club.member_role_changed', 'club', p_community::text,
+      jsonb_build_object('member_id', p_member, 'role', p_role), false, null, 'private');
+    perform public.notify_user(p_member, 'club_activity', 'Your club role changed',
+      'A club owner changed your role to ' || p_role || '.', 'club', p_community::text,
+      '/clubs/' || p_community::text || '/manage');
+  end if;
+  return jsonb_build_object('ok', true, 'role', p_role);
+end;
+$$;
+
+create or replace function public.remove_community_member(p_community uuid, p_member uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_kind public.community_kind;
+begin
+  if p_member = public.current_profile_id() then
+    raise exception 'Use Leave to leave this community.' using errcode = '22023';
+  end if;
+  select kind into v_kind from public.communities where id = p_community;
+  if not (
+    public.is_community_moderator(p_community)
+    or public.has_permission('manage_clubs') and v_kind = 'club'
+    or public.has_permission('moderate_communities')
+    or public.has_permission('moderate_all')
+  ) then
+    raise exception 'Only this community''s managers can remove members.' using errcode = '42501';
+  end if;
+  delete from public.community_members
+   where community_id = p_community and user_id = p_member and role <> 'owner';
+  if not found then
+    raise exception 'That member could not be found, or owners cannot be removed.' using errcode = '22023';
+  end if;
+  if v_kind = 'club' then
+    perform public.log_audit('club.member_removed', 'club', p_community::text,
+      jsonb_build_object('member_id', p_member), false, null, 'private');
+  end if;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- Direct database writes get the same owner protections as the RPCs. A
+-- moderator must never demote/delete an owner or move a membership to a club.
+create or replace function public.guard_community_membership_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if public.is_trusted_writer() then
+    return coalesce(new, old);
+  end if;
+  if tg_op = 'DELETE' then
+    if old.role = 'owner' and public.community_kind_of(old.community_id) = 'club' then
+      raise exception 'A club owner membership cannot be removed directly.' using errcode = '42501';
+    end if;
+    return old;
+  end if;
+  new.community_id := old.community_id;
+  new.user_id := old.user_id;
+  new.joined_at := old.joined_at;
+  if old.role = 'owner' and new.role <> 'owner'
+     and public.community_kind_of(old.community_id) = 'club' then
+    raise exception 'A club owner cannot be demoted directly.' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger community_members_guard_write
+  before update or delete on public.community_members
+  for each row execute function public.guard_community_membership_write();
+
+-- Replace the original role guard with the same check plus owner protection;
+-- the write guard above runs first, then this validates who may grant roles.
+create or replace function public.guard_community_role_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if public.is_trusted_writer() then return new; end if;
+  if new.role is distinct from old.role then
+    if not public.is_community_moderator(new.community_id)
+       and not (public.has_permission('manage_clubs') and public.community_kind_of(new.community_id) = 'club') then
+      raise exception 'Only community owners and moderators can change member roles.' using errcode = '42501';
+    end if;
+    if new.role = 'owner' and not exists (
+      select 1 from public.community_members m
+       where m.community_id = new.community_id and m.user_id = public.current_profile_id()
+         and m.role = 'owner' and m.status = 'active'
+    ) and not (public.has_permission('manage_clubs') and public.community_kind_of(new.community_id) = 'club') then
+      raise exception 'Only an owner can transfer ownership.' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+-- Club inserts use create_club_with_admin / approve_club_request. Ordinary
+-- communities and study groups keep the existing self-creation path.
+drop policy if exists communities_insert_own on public.communities;
+create policy communities_insert_own on public.communities
+  for insert to authenticated with check (
+    public.is_active_user()
+    and created_by = public.current_profile_id()
+    and kind in ('community', 'study_group')
+    and public.has_permission('create_communities')
+  );
+
+-- ---------------------------------------------------------------------------
+-- Club profile update through one scoped, audited RPC
+-- ---------------------------------------------------------------------------
+
+create or replace function public.update_club_profile(p_club uuid, p_payload jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.can_manage_club(p_club) then
+    raise exception 'Only this club''s managers can edit it.' using errcode = '42501';
+  end if;
+  update public.communities set
+    name = p_payload->>'name', description = p_payload->>'description',
+    subject = nullif(p_payload->>'subject', ''), club_category = p_payload->>'club_category',
+    organization_type = p_payload->>'organization_type',
+    recruitment_info = nullif(p_payload->>'recruitment_info', ''),
+    meeting_info = nullif(p_payload->>'meeting_info', ''),
+    contact_info = nullif(p_payload->>'contact_info', ''),
+    external_url = nullif(p_payload->>'external_url', ''),
+    visibility = coalesce(p_payload->>'visibility', 'campus')::public.visibility_level,
+    join_policy = coalesce(p_payload->>'join_policy', 'request')
+   where id = p_club and kind = 'club';
+  if not found then raise exception 'That club could not be found.' using errcode = '22023'; end if;
+  perform public.log_audit('club.profile_updated', 'club', p_club::text, '{}'::jsonb, false, null, 'private');
+  return jsonb_build_object('ok', true, 'id', p_club);
+end;
+$$;
+
+-- Club-scoped audit entries are readable by that club's managers and global
+-- staff, never by unrelated members. No direct-message data is involved.
+create policy audit_logs_select_club_managers on public.audit_logs
+  for select to authenticated
+  using (target_type = 'club' and target_id is not null and public.can_manage_club(target_id));
+
+-- Extend the existing audit writer only for scoped club lifecycle entries.
+create or replace function public.log_audit(
+  p_action text, p_target_type text default null, p_target_id text default null,
+  p_metadata jsonb default null, p_also_moderation boolean default false,
+  p_reason text default null, p_visibility public.moderation_visibility default 'staff'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := public.current_profile_id();
+  v_id uuid;
+  v_is_staff boolean;
+  v_is_club_action boolean := false;
+begin
+  if v_actor is null and not public.is_trusted_writer() then
+    raise exception 'Not authenticated' using errcode = '42501';
+  end if;
+  v_is_staff := public.is_staff() or public.is_trusted_writer();
+  if p_target_type = 'club' and p_target_id ~ '^[0-9a-f-]{36}$'
+     and p_action in ('club.join_request_approved', 'club.join_request_rejected',
+                      'club.member_role_changed', 'club.member_removed', 'club.profile_updated') then
+    v_is_club_action := public.can_manage_club(p_target_id::uuid);
+  end if;
+
+  if not v_is_staff and not v_is_club_action
+     and p_action not like 'account.%' and p_action not like 'user.%'
+     and p_action not like 'content.self_%'
+     and p_action <> 'marketplace.completed' then
+    raise exception 'You do not have permission to write audit entries.' using errcode = '42501';
+  end if;
+
+  insert into public.audit_logs (actor_user_id, action, target_type, target_id, metadata, visibility)
+  values (
+    v_actor, left(p_action, 80), left(p_target_type, 60),
+    case when p_target_id ~ '^[0-9a-f-]{36}$' then p_target_id::uuid else null end,
+    coalesce(p_metadata, '{}'::jsonb) || jsonb_build_object(
+      'reason', p_reason, 'actor_username', (select username from public.profiles where id = v_actor)),
+    case when v_is_staff then p_visibility else 'private'::public.moderation_visibility end
+  ) returning id into v_id;
+
+  if p_also_moderation and v_is_staff then
+    insert into public.moderation_actions (moderator_id, report_id, action, target_type, target_id, note)
+    values (v_actor, nullif(p_metadata->>'report_id', '')::uuid, left(p_action, 60),
+      left(p_target_type, 60),
+      case when p_target_id ~ '^[0-9a-f-]{36}$' then p_target_id::uuid else null end,
+      left(p_reason, 1000));
+  end if;
+  return v_id;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Club-linked events and opportunities verify the SPECIFIC club
+-- ---------------------------------------------------------------------------
+
+alter table public.opportunities add column club_id uuid references public.communities (id) on delete set null;
+create index opportunities_club_idx on public.opportunities (club_id);
+
+create or replace function public.guard_club_linked_content()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if public.is_trusted_writer() or new.club_id is null then return new; end if;
+  if not exists (select 1 from public.communities c where c.id = new.club_id and c.kind = 'club') then
+    raise exception 'Content can only be linked to a club.' using errcode = '22023';
+  end if;
+  if tg_table_name = 'events'
+     and (public.has_permission('manage_events') or public.has_permission('moderate_all')) then return new; end if;
+  if tg_table_name = 'opportunities'
+     and (public.has_permission('manage_official_content') or public.has_permission('moderate_all')) then return new; end if;
+  if not public.can_manage_club(new.club_id) then
+    raise exception 'Only this club''s managers can link content to it.' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_guard_club_link before insert or update on public.events
+  for each row execute function public.guard_club_linked_content();
+create trigger opportunities_guard_club_link before insert or update on public.opportunities
+  for each row execute function public.guard_club_linked_content();
+
+-- Managers can see their club's submitted drafts even when another manager
+-- authored them. Ordinary viewers keep the existing published/author policies.
+create policy events_select_club_managers on public.events
+  for select to authenticated
+  using (club_id is not null and public.can_manage_club(club_id));
+create policy opportunities_select_club_managers on public.opportunities
+  for select to authenticated
+  using (club_id is not null and public.can_manage_club(club_id));
+
+-- ---------------------------------------------------------------------------
+-- Grants: metadata verification is staff-only; lifecycle RPCs are executable
+-- by authenticated users because every function checks its own authority.
+-- ---------------------------------------------------------------------------
+
+grant update (organization_type) on public.communities to authenticated;
+grant update (club_id) on public.opportunities to authenticated;
+revoke update on public.club_creation_requests from authenticated, anon;
+
+revoke all on function public.can_manage_club(uuid) from public, anon;
+revoke all on function public.resolve_club_admin(text) from public, anon;
+grant execute on function public.can_manage_club(uuid) to authenticated, service_role;
+grant execute on function public.resolve_club_admin(text) to service_role;
+
+-- Migration 018's default grants cover the other new functions. Make the
+-- anonymous boundary explicit for the state-changing entry points as well.
+revoke all on function public.create_club_with_admin(text, jsonb) from public, anon;
+revoke all on function public.approve_club_request(uuid, text, text) from public, anon;
+revoke all on function public.reject_club_request(uuid, text) from public, anon;
+revoke all on function public.withdraw_club_request(uuid) from public, anon;
+revoke all on function public.assign_club_admin(uuid, text) from public, anon;
+revoke all on function public.join_community(uuid, text) from public, anon;
+revoke all on function public.decide_community_join_request(uuid, text) from public, anon;
+revoke all on function public.set_community_member_role(uuid, uuid, public.community_role) from public, anon;
+revoke all on function public.remove_community_member(uuid, uuid) from public, anon;
+revoke all on function public.update_club_profile(uuid, jsonb) from public, anon;
+
+grant execute on function public.create_club_with_admin(text, jsonb) to authenticated, service_role;
+grant execute on function public.approve_club_request(uuid, text, text) to authenticated, service_role;
+grant execute on function public.reject_club_request(uuid, text) to authenticated, service_role;
+grant execute on function public.withdraw_club_request(uuid) to authenticated, service_role;
+grant execute on function public.assign_club_admin(uuid, text) to authenticated, service_role;
+grant execute on function public.join_community(uuid, text) to authenticated, service_role;
+grant execute on function public.decide_community_join_request(uuid, text) to authenticated, service_role;
+grant execute on function public.set_community_member_role(uuid, uuid, public.community_role) to authenticated, service_role;
+grant execute on function public.remove_community_member(uuid, uuid) to authenticated, service_role;
+grant execute on function public.update_club_profile(uuid, jsonb) to authenticated, service_role;
+
+-- ==========================================================================
+-- FILE 32/38  20261028000002_032_club_catalogue.sql
+-- ==========================================================================
+
+-- Campus+ migration 032 — source-backed club catalogue
+-- =============================================================================
+-- Reconciles the supplied organization roster with the existing communities
+-- table. The supplied roster contains 35 unique entries including Campus+.
+-- No administrators, members, events, logos, contact details or endorsements
+-- are fabricated. Newly imported rows remain unassigned until a real active
+-- Campus+ account is selected through assign_club_admin().
+--
+-- Re-running is safe. Existing names, descriptions, categories, images,
+-- settings and memberships are never overwritten by this seed.
+-- =============================================================================
+
+create temporary table club_catalogue_seed (
+  catalogue_key text primary key,
+  name text not null,
+  slug text not null,
+  club_category text not null,
+  organization_type text not null,
+  description text not null,
+  aliases text not null default '',
+  source_label text,
+  source_url text,
+  verification_status text not null
+) on commit drop;
+
+insert into club_catalogue_seed values
+-- PCCOE collegiate clubs and teams (official collegiate-club directory)
+('team-red-baron', 'Team Red Baron', 'team-red-baron', 'Technical', 'collegiate_team',
+ 'PCCOE collegiate team listed for ATV and SAE Baja work. Current recruitment and contact details are pending club administrator review.',
+ 'Red Baron', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-kratos-racing-electric', 'Team Kratos Racing Electric', 'team-kratos-racing-electric', 'Technical', 'collegiate_team',
+ 'PCCOE Formula Student initiative listed in the collegiate-club directory. Current recruitment and contact details are pending club administrator review.',
+ 'Kratos Racing|Team Kratos|Kratos Racing Electric', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-solarium', 'Team Solarium', 'team-solarium', 'Technical', 'collegiate_team',
+ 'PCCOE collegiate team listed for solar-car work. Current recruitment and contact details are pending club administrator review.',
+ 'Solarium', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-ambush', 'Team Ambush', 'team-ambush', 'Technical', 'collegiate_team',
+ 'PCCOE collegiate team associated in the official directory with an automated multi-vegetable transplanter. Current club details are pending administrator review.',
+ 'Ambush', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-automatons', 'Team Automatons', 'team-automatons', 'Technical', 'collegiate_team',
+ 'PCCOE collegiate team listed for robotics and automation. Current recruitment and contact details are pending club administrator review.',
+ 'Automatons', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-maverick-india', 'Team Maverick India', 'team-maverick-india', 'Technical', 'collegiate_team',
+ 'Listed in PCCOE''s collegiate-club directory. Activities, recruitment, and contact details are pending club administrator review.',
+ 'Maverick India|Team Maverick', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('team-anantam', 'Team Anantam', 'team-anantam', 'Technical', 'collegiate_team',
+ 'Listed in PCCOE''s collegiate-club directory. Activities, recruitment, and contact details are pending club administrator review.',
+ 'Anantam', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+('coding-club', 'Coding Club', 'coding-club', 'Technical', 'technical_club',
+ 'Listed in PCCOE''s collegiate-club directory. Current activities, recruitment, and contact details are pending club administrator review.',
+ 'PCCOE Coding Club', 'PCCOE collegiate clubs', 'https://www.pccoepune.com/pccoe-collegiate-clubs.php', 'source_checked'),
+
+-- Computing and developer communities requested for the directory
+('devcorps', 'DEVCORPS', 'devcorps', 'Technical', 'computing_community',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ '', null, null, 'pending'),
+('cybsec', 'CybSec', 'cybsec', 'Technical', 'computing_community',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ 'Cyber Security Club', null, null, 'pending'),
+('foss', 'FOSS', 'foss', 'Technical', 'computing_community',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ 'Free and Open Source Software|FOSS Club', null, null, 'pending'),
+('gdg-campus', 'GDG Campus', 'gdg-campus', 'Technical', 'computing_community',
+ 'PCCOE''s directory links to the Google developer student community under its earlier GDSC naming. Current branding and club details are pending administrator review.',
+ 'GDSC|GDGC|GDG on Campus|Google Developer Student Clubs|Google Developer Groups on Campus', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+
+-- Department student associations (official student-association directory)
+('cesa', 'CESA', 'cesa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'Computer Engineering Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('mesa', 'MESA', 'mesa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'Mechanical Engineering Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('etsa', 'ETSA', 'etsa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'Electronics and Telecommunication Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('ciesa', 'CiESA', 'ciesa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'Civil Engineering Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('itsa', 'ITSA', 'itsa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'Information Technology Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('aimsa', 'AiMSA', 'aimsa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'AI and ML Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('cresa', 'CRESA', 'cresa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ '', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('mcasa', 'MCASA', 'mcasa', 'Technical', 'department_association',
+ 'Department student association listed by PCCOE. Current activities, leadership, and contact details are pending club administrator review.',
+ 'MCA Students Association', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+
+-- Professional bodies and student chapters (official association directory)
+('acm-pccoe', 'PCCOE ACM Student Chapter', 'acm-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'ACM|ACM PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('acm-w-pccoe', 'PCCOE ACM-W Student Chapter', 'acm-w-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'ACM-W|ACM W|ACM-W PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('csi-pccoe', 'CSI Student Branch', 'csi-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'CSI|Computer Society of India', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('iet-pccoe', 'IET On Campus PCCOE', 'iet-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'IET|IET On Campus|Institution of Engineering and Technology', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('iste-pccoe', 'ISTE Student Chapter', 'iste-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'ISTE|Indian Society for Technical Education', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('codechef-pccoe', 'CodeChef PCCOE Chapter', 'codechef-pccoe', 'Technical', 'professional_chapter',
+ 'Student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'CodeChef|CodeChef PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('owasp-pccoe', 'OWASP PCCOE Student Chapter', 'owasp-pccoe', 'Technical', 'professional_chapter',
+ 'PCCOE''s directory lists an Open Web Application Security student chapter. Current activities and membership details are pending administrator review.',
+ 'OWASP|Open Web Application Security|OWASP PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('ieee-pccoe', 'IEEE Student Branch', 'ieee-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'IEEE|IEEE PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+('iete-pccoe', 'IETE Students'' Forum', 'iete-pccoe', 'Technical', 'professional_chapter',
+ 'Professional student chapter linked from PCCOE''s student-association directory. Current activities and membership details are pending administrator review.',
+ 'IETE|IETE PCCOE', 'PCCOE student associations', 'https://www.pccoepune.com/student-association.php', 'source_checked'),
+
+-- Additional requested organizations; no unsupported public-source claim
+('swaad', 'SWAAD', 'swaad', 'Cultural', 'creative_group',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ '', null, null, 'pending'),
+('pac', 'PAC', 'pac', 'Arts', 'creative_group',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ 'Performing Arts Club', null, null, 'pending'),
+('nss', 'NSS', 'nss', 'Social', 'service_organization',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ 'National Service Scheme', null, null, 'pending'),
+('games-and-sports', 'Games & Sports', 'games-and-sports', 'Sports', 'sports_group',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ 'Games and Sports|Sports Club', null, null, 'pending'),
+('samvaad', 'Samvaad', 'samvaad', 'Cultural', 'creative_group',
+ 'Included in the requested Campus+ organization catalogue. A public source, current activities, and contact details are pending verification.',
+ '', null, null, 'pending'),
+
+-- Campus+'s own club. Platform identity is not an external endorsement claim.
+('campus-plus', 'Campus+ Club', 'campus-plus', 'Social', 'platform_community',
+ 'The Campus+ club for directory feedback, product updates, and student community coordination. Membership and activities will be managed here once an administrator is assigned.',
+ 'Campus+|Campus Plus|Campus Plus Club', 'Campus+ platform directory', null, 'source_checked');
+
+-- Reconcile in one migration transaction. Existing rows are matched by their
+-- catalogue key, stable slug, exact name, then a known alias (GDSC/GDG, OWASP).
+-- Only provenance fields are enriched; administrator edits remain authoritative.
+do $$
+declare
+  v_seed club_catalogue_seed%rowtype;
+  v_id uuid;
+begin
+  perform set_config('campus.system_context', 'on', true);
+  for v_seed in select * from club_catalogue_seed order by catalogue_key loop
+    v_id := null;
+    select c.id into v_id from public.communities c
+     where c.catalogue_key = v_seed.catalogue_key and c.kind = 'club' limit 1;
+    if v_id is null then
+      select c.id into v_id from public.communities c
+       where c.slug = v_seed.slug and c.kind = 'club' limit 1;
+    end if;
+    if v_id is null then
+      select c.id into v_id from public.communities c
+       where lower(c.name) = lower(v_seed.name) and c.kind = 'club' limit 1;
+    end if;
+    if v_id is null and v_seed.aliases <> '' then
+      select c.id into v_id from public.communities c
+       where c.kind = 'club'
+         and lower(c.name) in (select lower(trim(a)) from unnest(string_to_array(v_seed.aliases, '|')) a)
+       order by c.created_at, c.id limit 1;
+    end if;
+
+    if v_id is null then
+      insert into public.communities (
+        kind, name, slug, description, club_category, organization_type,
+        visibility, join_policy, status, is_official, created_by, approved_by,
+        approved_at, member_count, admin_assigned, verification_status,
+        source_label, source_url, directory_aliases, catalogue_key
+      ) values (
+        'club', v_seed.name, v_seed.slug, v_seed.description, v_seed.club_category,
+        v_seed.organization_type, 'campus', 'request', 'published', false, null,
+        null, null, 0, false, v_seed.verification_status, v_seed.source_label,
+        v_seed.source_url, replace(v_seed.aliases, '|', ', '), v_seed.catalogue_key
+      );
+    else
+      update public.communities c set
+        catalogue_key = coalesce(c.catalogue_key, v_seed.catalogue_key),
+        organization_type = coalesce(c.organization_type, v_seed.organization_type),
+        verification_status = case
+          when c.verification_status = 'pending' then v_seed.verification_status
+          else c.verification_status end,
+        source_label = coalesce(c.source_label, v_seed.source_label),
+        source_url = coalesce(c.source_url, v_seed.source_url),
+        directory_aliases = case when c.directory_aliases = ''
+          then replace(v_seed.aliases, '|', ', ') else c.directory_aliases end
+       where c.id = v_id;
+    end if;
+  end loop;
+end;
+$$;
+
+-- A migration-time assertion prevents accidental extra rows being invented to
+-- match the incorrect roster count in the request.
+do $$
+begin
+  if (select count(*) from club_catalogue_seed) <> 35 then
+    raise exception 'The reconciled source roster must contain exactly 35 unique entries.';
+  end if;
+end;
+$$;
+
+-- ==========================================================================
+-- FILE 33/38  20261029000001_033_unread_count_lookup.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 033 — bounded authorization for the shell unread snapshot
+-- =============================================================================
+-- The navigation snapshot previously re-entered conversation/member/message RLS
+-- for every message in every one of the caller's conversations. The function's
+-- result is already scoped to the current profile's active memberships, so that
+-- repeated work is unnecessary. Keep the exact same boundary explicitly:
+--   * public.current_profile_id() comes from the verified JWT;
+--   * membership must belong to that profile and be active;
+--   * the conversation must be published (the membership policy's condition);
+--   * only incoming messages after that membership's read position are counted.
+--
+-- There is no conversation argument, no message body/member projection and no
+-- staff/non-member branch. A non-member therefore receives no row to filter.
+-- The existing exact-count, read-receipt and foreign-thread SQL tests remain
+-- authoritative. SECURITY DEFINER only avoids re-running equivalent RLS checks;
+-- it does not broaden the rows or fields this function can return.
+-- =============================================================================
+
+create or replace function public.messaging_unread_counts()
+returns table (
+  conversation_id uuid,
+  last_read_at    timestamptz,
+  unread_count    integer
+)
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select
+    mine.conversation_id,
+    mine.last_read_at,
+    (
+      select count(*)::integer
+      from public.messages msg
+      where msg.conversation_id = mine.conversation_id
+        and msg.sender_id <> public.current_profile_id()
+        and (mine.last_read_at is null or msg.created_at > mine.last_read_at)
+    ) as unread_count
+  from public.conversation_members mine
+  join public.conversations c on c.id = mine.conversation_id
+  where mine.user_id = public.current_profile_id()
+    and mine.status = 'active'
+    and c.status = 'published'
+  order by mine.conversation_id;
+$$;
+
+comment on function public.messaging_unread_counts() is
+  'Exact incoming unread counts for the JWT profile only, bounded to active memberships in published conversations; no message content or arbitrary conversation input.';
+
+revoke all on function public.messaging_unread_counts() from public, anon;
+grant execute on function public.messaging_unread_counts() to authenticated, service_role;
+
+-- ==========================================================================
+-- FILE 34/38  20261029000002_034_inbox_membership_lookup.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 034 — bounded authorization for conversation inbox
+-- =============================================================================
+-- The inbox has the same member-only boundary as messaging_unread_counts(), but
+-- also returns each visible conversation's latest preview. Keep every field and
+-- predicate while making the boundary explicit once per inbox query instead of
+-- re-entering member/message RLS for every message considered by the aggregates
+-- and latest-message lookups.
+--
+-- There is still no arbitrary conversation argument. Rows require the verified
+-- JWT profile, active membership and a published conversation; a non-member gets
+-- no row and therefore no preview. Only that member's own read position/mute
+-- state is returned. The exact unread and latest-message calculations, ordering
+-- and p_limit behavior are unchanged. Database suite 12's recipient, non-member,
+-- overflow-count and read-receipt tests cover this contract.
+-- =============================================================================
+
+create or replace function public.conversation_inbox(p_limit integer default 30)
+returns table (
+  id                      uuid,
+  kind                    public.conversation_kind,
+  title                   text,
+  community_id            uuid,
+  status                  public.content_status,
+  last_message_at         timestamptz,
+  created_at              timestamptz,
+  is_muted                boolean,
+  last_read_at            timestamptz,
+  unread                  integer,
+  last_message_id         uuid,
+  last_message_sender_id  uuid,
+  last_message_body       text,
+  last_message_gif        jsonb,
+  last_message_created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  with mine as (
+    select m.conversation_id, m.is_muted, m.last_read_at
+    from public.conversation_members m
+    where m.user_id = public.current_profile_id()
+      and m.status = 'active'
+  )
+  select
+    c.id,
+    c.kind,
+    c.title,
+    c.community_id,
+    c.status,
+    c.last_message_at,
+    c.created_at,
+    mine.is_muted,
+    mine.last_read_at,
+    (
+      select count(*)::integer
+      from public.messages msg
+      where msg.conversation_id = c.id
+        and msg.sender_id <> public.current_profile_id()
+        and (mine.last_read_at is null or msg.created_at > mine.last_read_at)
+    ) as unread,
+    latest.id,
+    latest.sender_id,
+    latest.body,
+    latest.gif,
+    latest.created_at
+  from public.conversations c
+  join mine on mine.conversation_id = c.id
+  left join lateral (
+    select msg.id, msg.sender_id, msg.body, msg.gif, msg.created_at
+    from public.messages msg
+    where msg.conversation_id = c.id
+    order by msg.created_at desc
+    limit 1
+  ) latest on true
+  where c.status = 'published'
+  order by c.last_message_at desc
+  limit coalesce(p_limit, 30);
+$$;
+
+comment on function public.conversation_inbox(integer) is
+  'Member-only inbox with exact unread counts and latest previews for the JWT profile; active membership in a published conversation is required for every row.';
+
+revoke all on function public.conversation_inbox(integer) from public, anon;
+grant execute on function public.conversation_inbox(integer) to authenticated, service_role;
+
+-- ==========================================================================
+-- FILE 35/38  20261029000003_035_feed_visibility_reconciliation.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 035 — bounded visibility reconciliation for loaded feed posts
+-- =============================================================================
+-- A newest-page response cannot say why an already-loaded post is absent: newer
+-- rows may have pushed it to page two, or moderation/RLS may have made it
+-- ineligible. This IDs-only lookup answers that separate question for the bounded
+-- set of rows a Home reader already holds. It returns no body, author, status or
+-- other record content, and absence is indistinguishable from an unknown id.
+--
+-- SECURITY INVOKER is intentional. The same posts RLS policies that guard
+-- campus_feed() still decide active-author, block/mute, membership and viewer
+-- visibility. The explicit campus predicates match campus_feed()'s post branch,
+-- so posts_select_author does not put an author's hidden/pending row back into the
+-- shared Home feed. The feature flag is matched as well.
+--
+-- 510 IDs covers the supported 500-entry pagination depth plus one page of
+-- accepted writes. The API applies the same bound and reports exactly which IDs
+-- were checked; an unchecked ID is never treated as removed by the client.
+-- =============================================================================
+
+create or replace function public.campus_feed_post_visibility(
+  p_post_ids uuid[] default '{}'::uuid[]
+)
+returns table (id uuid)
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  with requested as (
+    select input.id, min(input.ordinality) as position
+    from unnest(coalesce(p_post_ids, '{}'::uuid[])) with ordinality as input(id, ordinality)
+    group by input.id
+    order by position
+    limit 510
+  )
+  select requested.id
+  from requested
+  join public.posts p on p.id = requested.id
+  where p.community_id is null
+    and p.status = 'published'
+    and p.deleted_at is null
+    and public.feature_enabled('feed')
+  order by requested.position;
+$$;
+
+comment on function public.campus_feed_post_visibility(uuid[]) is
+  'IDs-only visibility reconciliation for at most 510 loaded Home post IDs; invoker RLS plus campus_feed post predicates, with no record content returned.';
+
+revoke all on function public.campus_feed_post_visibility(uuid[]) from public, anon;
+grant execute on function public.campus_feed_post_visibility(uuid[]) to authenticated, service_role;
+
+-- ==========================================================================
+-- FILE 36/38  20261029000004_036_admin_dashboard_counts.sql
+-- ==========================================================================
+
+-- Campus+ 036: one authorized, RLS-scoped Admin count snapshot
+--
+-- The count tab previously made twelve operational HEAD/count requests and four
+-- overview HEAD/count requests. This additive function keeps every predicate and
+-- every caller-visible row boundary, but evaluates them in one database call.
+-- SECURITY INVOKER is intentional: count(*) sees exactly the rows the calling
+-- admin could count through PostgREST, rather than bypassing RLS as the function
+-- owner. The explicit permission check also makes direct RPC access safe.
+
+create or replace function public.campus_admin_dashboard_counts()
+returns json
+language plpgsql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.has_permission('view_admin_overview') then
+    raise exception 'view_admin_overview permission required'
+      using errcode = '42501';
+  end if;
+
+  -- json, rather than jsonb, retains the operational counter order used by the
+  -- existing Admin UI. Every count is exact; no estimate or reltuples value is
+  -- used. All scalar subqueries share this function call's stable snapshot.
+  return json_build_object(
+    'counts', json_build_object(
+      'profiles', (select count(*) from public.profiles),
+      'posts', (select count(*) from public.posts),
+      'comments', (select count(*) from public.comments),
+      'reactions', (select count(*) from public.reactions),
+      'communities', (select count(*) from public.communities),
+      'marketplace_listings', (select count(*) from public.marketplace_listings),
+      'gigs', (select count(*) from public.gigs),
+      'events', (select count(*) from public.events),
+      'notices', (select count(*) from public.notices),
+      'reports', (select count(*) from public.reports),
+      'messages', (select count(*) from public.messages),
+      'random_sessions', (select count(*) from public.random_sessions)
+    ),
+    -- Campus+ has no presence/analytics source for this value. Preserve the
+    -- existing explicit null instead of inventing a daily-active-user metric.
+    'activeUsers24h', null,
+    'overview', json_build_object(
+      'pendingReports', (select count(*) from public.reports where status = 'pending'),
+      'pendingListings', (select count(*) from public.marketplace_listings where status = 'pending'),
+      'suspended', (select count(*) from public.profile_private where account_status = 'suspended'),
+      'disabledFlags', (select count(*) from public.feature_flags where enabled = false)
+    )
+  );
+end;
+$$;
+
+comment on function public.campus_admin_dashboard_counts() is
+  'Exact Admin operational/overview counts for view_admin_overview callers; security invoker keeps every count under caller RLS.';
+
+revoke all on function public.campus_admin_dashboard_counts() from public;
+revoke all on function public.campus_admin_dashboard_counts() from anon;
+grant execute on function public.campus_admin_dashboard_counts() to authenticated;
+
+-- ==========================================================================
+-- FILE 37/38  20261029000005_037_realtime_authorization_grants.sql
+-- ==========================================================================
+
+-- Campus+ migration 037 — reassert least-privilege Realtime function grants
+-- =============================================================================
+-- Migration 030 is the policy fix: realtime.messages uses the one-argument,
+-- current-user-only predicate and never calls the two-argument membership
+-- oracle. Production logs that still name can_access_random_session therefore
+-- need the ordered migrations applied; this file must not be used as a shortcut
+-- around 030.
+--
+-- This small, idempotent drift repair reasserts only the final grant contract.
+-- `authenticated` is the role named by the private-channel policies. Supabase's
+-- optional supabase_realtime database role receives the same narrow predicate
+-- when that role exists. Neither role needs the cross-user oracle.
+-- =============================================================================
+
+revoke all on function public.can_access_own_random_session(uuid) from public, anon;
+grant execute on function public.can_access_own_random_session(uuid) to authenticated, service_role;
+
+-- Close the internal oracle to API roles even if a previous manual workaround
+-- granted it back. Random's SECURITY DEFINER RPCs and the service role retain
+-- their intended internal path; browser roles receive no cross-user membership
+-- visibility.
+revoke all on function public.can_access_random_session(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.can_access_random_session(uuid, uuid) to service_role;
+
+do $$
+begin
+  if to_regrole('supabase_realtime') is not null then
+    execute 'revoke all on function public.can_access_random_session(uuid, uuid) from supabase_realtime';
+    execute 'grant execute on function public.can_access_own_random_session(uuid) to supabase_realtime';
+  end if;
+end $$;
+
+-- ==========================================================================
+-- FILE 38/38  20261101000001_038_post_pin_ordering.sql
+-- ==========================================================================
+
+-- =============================================================================
+-- Campus+ migration 038 — durable post pin ordering and live pin changes
+-- =============================================================================
+-- The posts.pinned column already exists and is staff-controlled. This migration
+-- does not add a pin timestamp or rewrite rows: existing pinned rows participate
+-- in the corrected order as soon as campus_feed() is replaced.
+--
+-- Three contracts change together:
+--   1. campus_feed() gives pinned entries priority, then retains the established
+--      chronological/trending order and adds deterministic pagination tie-breaks.
+--   2. moderate_content() adds audited pin/unpin actions for existing post
+--      moderators. It grants no direct column update and no student permission.
+--   3. posts uses a narrow replica-identity index (id, pinned, status), allowing
+--      the existing Realtime UPDATE binding to discard counter-only updates while
+--      still detecting a pin transition. Old post bodies are not added to WAL or
+--      Realtime payloads, and RLS/publication membership are unchanged.
+-- =============================================================================
+
+create or replace function public.campus_feed(
+  p_limit integer default 20,
+  p_offset integer default 0,
+  p_sort text default 'newest'
+)
+returns table (
+  item_type text,
+  id uuid,
+  title text,
+  body text,
+  gif jsonb,
+  author_username text,
+  author_display_name text,
+  is_official boolean,
+  community_slug text,
+  meta jsonb,
+  created_at timestamptz,
+  sort_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = public, pg_temp
+as $$
+  with items as (
+    -- student posts and discussions
+    select
+      case when p.kind = 'discussion' then 'discussion' else 'post' end as item_type,
+      p.id,
+      p.title,
+      p.body,
+      p.gif,
+      pr.username as author_username,
+      pr.display_name as author_display_name,
+      p.is_official,
+      c.slug as community_slug,
+      jsonb_build_object(
+        'kind', p.kind,
+        'reaction_count', p.reaction_count,
+        'comment_count', p.comment_count,
+        'pinned', p.pinned
+      ) as meta,
+      p.created_at,
+      p.created_at as sort_at
+    from public.posts p
+    join public.profiles pr on pr.id = p.author_id
+    left join public.communities c on c.id = p.community_id
+    where p.community_id is null
+      and p.status = 'published'
+      and p.deleted_at is null
+      and public.feature_enabled('feed')
+
+    union all
+
+    -- official notices
+    select
+      'notice',
+      n.id,
+      n.title,
+      n.body,
+      null,
+      null,
+      null,
+      true,
+      null,
+      jsonb_build_object('category', n.category, 'importance', n.importance, 'pinned', n.pinned),
+      coalesce(n.published_at, n.created_at),
+      case when n.pinned then now() + interval '1 day' else coalesce(n.published_at, n.created_at) end
+    from public.notices n
+    where n.status = 'published'
+      and (n.expires_at is null or n.expires_at > now())
+      and public.feature_enabled('noticeboard')
+
+    union all
+
+    -- upcoming events
+    select
+      'event',
+      e.id,
+      e.title,
+      e.description,
+      null,
+      null,
+      null,
+      true,
+      null,
+      jsonb_build_object('starts_on', e.starts_on, 'start_time', e.start_time, 'location', e.location, 'organizer', e.organizer),
+      e.created_at,
+      case when e.starts_on <= current_date then now() else (e.starts_on::timestamptz) end
+    from public.events e
+    where e.status = 'published'
+      and (e.ends_on is null or e.ends_on >= current_date)
+      and public.feature_enabled('events')
+
+    union all
+
+    -- published opportunities
+    select
+      'opportunity',
+      o.id,
+      o.title,
+      o.description,
+      null,
+      null,
+      null,
+      o.source = 'official',
+      null,
+      jsonb_build_object('organization', o.organization, 'deadline', o.deadline, 'source', o.source),
+      o.created_at,
+      o.created_at
+    from public.opportunities o
+    where o.status = 'published'
+      and public.feature_enabled('opportunities')
+
+    union all
+
+    -- active marketplace highlights
+    select
+      'listing',
+      l.id,
+      l.title,
+      l.description,
+      null,
+      pr.username,
+      pr.display_name,
+      false,
+      null,
+      jsonb_build_object('price', l.price, 'is_free', l.is_free, 'condition', l.condition),
+      l.created_at,
+      l.created_at
+    from public.marketplace_listings l
+    join public.profiles pr on pr.id = l.seller_id
+    where l.status = 'active'
+      and public.feature_enabled('marketplace')
+      and public.setting('feed_marketplace_highlights', 'true'::jsonb) = 'true'::jsonb
+  )
+  select *
+  from items
+  order by
+    -- A pin is a moderation decision, not a fabricated timestamp. Keep the
+    -- existing pinned-notice behaviour in the same priority group, then use
+    -- each entry's established ordering inside that group.
+    case when coalesce((meta->>'pinned')::boolean, false) then 1 else 0 end desc,
+    case when p_sort = 'trending' then null else sort_at end desc nulls last,
+    -- deterministic secondary signal for trending: engagement density
+    case when p_sort = 'trending'
+      then coalesce((meta->>'reaction_count')::int, 0) * 2 + coalesce((meta->>'comment_count')::int, 0) * 3
+      else 0 end desc,
+    -- Offset pages must not reshuffle rows with equal sort keys.
+    item_type asc,
+    id asc
+  limit least(greatest(coalesce(p_limit, 20), 1), 50)
+  offset greatest(coalesce(p_offset, 0), 0);
+$$;
+
+comment on function public.campus_feed(integer, integer, text) is
+  'Unified home feed. Pinned entries lead; otherwise newest by timestamp or trending by the documented engagement formula, with deterministic page tie-breaks.';
+
+create or replace function public.moderate_content(
+  p_target_type text,
+  p_target_id uuid,
+  p_action text,
+  p_reason text default null,
+  p_report_id uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_permission text;
+  v_new_status text;
+  v_author uuid;
+  v_pinned boolean;
+  v_label text;
+begin
+  v_permission := public.content_moderation_permission(p_target_type);
+  if v_permission is null then
+    raise exception 'That content type cannot be moderated.' using errcode = '22023';
+  end if;
+
+  if not public.is_trusted_writer() then
+    if not public.is_active_profile(public.current_profile_id()) then
+      raise exception 'Your account cannot moderate content.' using errcode = '42501';
+    end if;
+    if not (public.has_permission(v_permission) or public.has_permission('moderate_all')) then
+      raise exception 'You do not have permission to moderate this content.' using errcode = '42501';
+    end if;
+  end if;
+
+  v_new_status := case p_action
+    when 'hide' then 'hidden'
+    when 'remove' then 'removed'
+    when 'restore' then 'published'
+    when 'approve' then 'published'
+    when 'reject' then 'removed'
+    else null
+  end;
+
+  if p_action in ('pin', 'unpin') and p_target_type <> 'post' then
+    raise exception 'Only posts can be pinned or unpinned.' using errcode = '22023';
+  end if;
+  if p_target_type in ('post', 'comment', 'marketplace_listing', 'gig', 'community', 'club',
+                       'project', 'lost_found', 'housing_post', 'ride_post')
+     and v_new_status is null
+     and not (p_target_type = 'post' and p_action in ('pin', 'unpin')) then
+    raise exception 'Unsupported action for this content type.' using errcode = '22023';
+  end if;
+  if p_target_type = 'marketplace_listing' and p_action = 'approve' then
+    v_new_status := 'active';
+  end if;
+
+  if p_target_type = 'post' then
+    update public.posts
+       set status = coalesce(v_new_status::public.content_status, status),
+           pinned = case p_action when 'pin' then true when 'unpin' then false else pinned end,
+           moderated_by = public.current_profile_id(),
+           moderated_at = now(), moderation_reason = left(p_reason, 500)
+     where id = p_target_id
+       and (p_action <> 'pin' or status = 'published')
+     returning author_id, pinned into v_author, v_pinned;
+    if p_action in ('pin', 'unpin') and not found then
+      raise exception 'The post could not be found or is not published.' using errcode = '22023';
+    end if;
+  elsif p_target_type = 'comment' then
+    update public.comments
+       set status = v_new_status::public.content_status, moderated_by = public.current_profile_id(),
+           moderated_at = now(), moderation_reason = left(p_reason, 500)
+     where id = p_target_id
+     returning author_id into v_author;
+  elsif p_target_type = 'marketplace_listing' then
+    update public.marketplace_listings
+       set status = v_new_status::public.listing_status, moderated_by = public.current_profile_id(),
+           moderated_at = now(), moderation_reason = left(p_reason, 500)
+     where id = p_target_id
+     returning seller_id into v_author;
+  elsif p_target_type = 'gig' then
+    update public.gigs
+       set status = v_new_status::public.content_status, moderated_by = public.current_profile_id(),
+           moderated_at = now(), moderation_reason = left(p_reason, 500)
+     where id = p_target_id
+     returning creator_id into v_author;
+  elsif p_target_type in ('community', 'club') then
+    update public.communities
+       set status = v_new_status::public.content_status
+     where id = p_target_id
+     returning created_by into v_author;
+  elsif p_target_type = 'project' then
+    update public.projects
+       set status = v_new_status::public.content_status, moderated_by = public.current_profile_id(),
+           moderated_at = now(), moderation_reason = left(p_reason, 500)
+     where id = p_target_id
+     returning creator_id into v_author;
+  elsif p_target_type = 'lost_found' then
+    update public.lost_found set status = v_new_status::public.content_status
+     where id = p_target_id returning creator_id into v_author;
+  elsif p_target_type = 'housing_post' then
+    update public.housing_posts set status = v_new_status::public.content_status
+     where id = p_target_id returning creator_id into v_author;
+  elsif p_target_type = 'ride_post' then
+    update public.ride_posts set status = v_new_status::public.content_status
+     where id = p_target_id returning creator_id into v_author;
+  elsif p_target_type in ('notice', 'event', 'resource', 'opportunity', 'deal') then
+    -- Official content: staff already own these rows through RLS-managed updates.
+    update public.audit_logs set id = id where false;  -- no-op keeps the branch explicit
+    v_author := null;
+  end if;
+
+  perform public.log_audit('moderation.content_' || p_action, p_target_type, p_target_id::text,
+    jsonb_build_object('report_id', p_report_id, 'status', v_new_status, 'pinned', v_pinned), true, p_reason, 'staff');
+
+  if v_author is not null and p_action in ('hide', 'remove', 'reject') then
+    v_label := replace(p_target_type, '_', ' ');
+    perform public.notify_user(v_author, 'moderation_notice',
+      'Your ' || v_label || ' was ' || case when p_action = 'hide' then 'hidden' else 'removed' end,
+      coalesce(nullif(btrim(coalesce(p_reason, '')), ''), 'Review the Campus+ rules and post again.'),
+      p_target_type, p_target_id::text, null);
+  end if;
+
+  return jsonb_build_object('ok', true, 'status', v_new_status, 'pinned', v_pinned);
+end;
+$$;
+
+comment on function public.moderate_content is
+  'Single moderation action path: permission check → status or post-pin change → audit log → author notification where applicable.';
+
+-- Postgres includes replica-identity key columns in an UPDATE old tuple. Using
+-- this narrow index avoids REPLICA IDENTITY FULL and its old-content exposure.
+create unique index posts_feed_replica_identity_idx
+  on public.posts (id, pinned, status);
+alter table public.posts replica identity using index posts_feed_replica_identity_idx;
+
+comment on index public.posts_feed_replica_identity_idx is
+  'Realtime update identity: old id/pin/status only, so pin transitions are distinguishable from counter-only writes without full-row replica identity.';
 
 -- ==========================================================================
 -- VERIFICATION — reports whether the install is complete (no changes made)

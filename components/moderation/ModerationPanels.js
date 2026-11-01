@@ -8,8 +8,12 @@
  * decides which verbs are allowed.
  */
 
-import { Button, Field, Input, Notice, Select, Textarea } from '@/components/ui';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Badge, Button, Field, Input, Notice, Select, Textarea } from '@/components/ui';
 import { useFormAction } from '@/lib/forms';
+import { useLiveFeed } from '@/components/layout/LiveFeedProvider';
+import { settlePostPin } from '@/lib/social/pin-state';
 import { moderateContent, resolveReport, moderateListing, reviewRandomReport } from '@/lib/actions/moderation';
 
 const VERB_LABELS = {
@@ -18,6 +22,8 @@ const VERB_LABELS = {
   restore: 'Restore content',
   approve: 'Approve',
   reject: 'Reject',
+  pin: 'Pin post',
+  unpin: 'Unpin post',
   none: 'No action on the content',
 };
 
@@ -61,6 +67,72 @@ export function ModerationActions({
       {action.error ? <Notice tone="danger">{action.error}</Notice> : null}
       {action.success ? <Notice tone="success">Done. The action is in the audit log.</Notice> : null}
     </form>
+  );
+}
+
+/**
+ * The one post-placement control, inside the existing staff surface. The badge
+ * changes optimistically, but only the audited RPC's committed boolean settles
+ * it; an error or an unconfirmed response restores the previous state.
+ */
+export function PostPinControl({ targetRef, currentPinned = false }) {
+  const router = useRouter();
+  const feed = useLiveFeed();
+  const [pinned, setPinned] = useState(currentPinned === true);
+  const [error, setError] = useState(null);
+  const [pending, startTransition] = useTransition();
+
+  const toggle = () => {
+    if (pending) return;
+    const previous = pinned;
+    const requested = !previous;
+    setPinned(requested);
+    setError(null);
+
+    startTransition(async () => {
+      let result;
+      try {
+        const formData = new FormData();
+        formData.set('target_type', 'post');
+        formData.set('target_ref', targetRef);
+        formData.set('action', requested ? 'pin' : 'unpin');
+        result = await moderateContent(formData);
+      } catch (thrown) {
+        result = { ok: false, error: thrown?.message || 'The pin change could not be saved.' };
+      }
+
+      const settled = settlePostPin({ previous, requested, result });
+      setPinned(settled.pinned);
+      if (!settled.ok) {
+        setError(settled.error);
+        return;
+      }
+
+      // The shared revision invalidates any remembered Home page in this tab;
+      // other open feeds receive the database's pin UPDATE through Realtime.
+      feed.invalidate('local', [targetRef]);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="card flex flex-col gap-3 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="text-[0.8125rem] font-semibold">Feed placement</h3>
+        <Badge tone={pinned ? 'accent' : 'neutral'}>{pinned ? 'Pinned' : 'Not pinned'}</Badge>
+      </div>
+      <p className="text-2xs text-muted" aria-live="polite">
+        {pinned
+          ? 'This post leads its campus or community feed. Unpinning restores its chronological position.'
+          : 'Pin this published post to lead its campus or community feed.'}
+      </p>
+      <div>
+        <Button type="button" size="sm" variant="secondary" onClick={toggle} disabled={pending}>
+          {pending ? 'Saving…' : pinned ? 'Unpin post' : 'Pin post'}
+        </Button>
+      </div>
+      {error ? <Notice tone="danger">{error}</Notice> : null}
+    </div>
   );
 }
 

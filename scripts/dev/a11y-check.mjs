@@ -5,7 +5,7 @@
  * Runs axe-core against the authenticated Home page at desktop and mobile, then
  * exercises the interactions that only a browser can answer: keyboard focus
  * order, the pointer-depth response on a fine pointer, the hover light on a
- * feed entry, and whether the depth-field canvas ever takes a click or a tab
+ * feed entry, and that Home no longer mounts a sea/depth canvas
  * stop. It prints a pass/fail line per check and exits non-zero on a violation
  * that matters (serious/critical).
  *
@@ -16,6 +16,8 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { parseArgs } from 'node:util';
 import { launchBrowser } from './browser.mjs';
+import { existsSync as fileExists } from 'node:fs';
+import { readFileSync as readJson } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const { values } = parseArgs({ options: { url: { type: 'string' } }, allowPositionals: true });
@@ -28,6 +30,28 @@ const check = (label, ok, detail = '') => {
   results.push({ label, ok, detail });
   console.log(`  ${ok ? '\u001b[32mok\u001b[39m  ' : '\u001b[31mFAIL\u001b[39m'} ${label}${detail ? ` — ${detail}` : ''}`);
 };
+
+/**
+ * Optional authenticated session.
+ *
+ * The perf harness (`npm run perf:serve`) leaves its fixture accounts in
+ * `node_modules/.cache/perf/harness.json`; when that file exists this check
+ * signs in as the seeded student so it audits the real shell (rail, dock,
+ * header, composer) instead of the sign-in page. Without it the run still works
+ * against whatever `--url` renders.
+ */
+let session = null;
+const harnessFile = 'node_modules/.cache/perf/harness.json';
+if (fileExists(harnessFile)) {
+  const harness = JSON.parse(readJson(harnessFile, 'utf8'));
+  const { createSessionCookie } = await import('./perf/session.mjs');
+  try {
+    session = await createSessionCookie(harness.stubUrl, harness.student.email);
+    console.log(`  session: ${harness.student.email}`);
+  } catch (error) {
+    console.log(`  session: unavailable (${error.message})`);
+  }
+}
 
 const browser = await launchBrowser();
 
@@ -44,8 +68,20 @@ for (const viewport of [
   await context.addCookies([
     { name: 'campus_intro', value: '1', url: ORIGIN },
   ]);
+  if (session) {
+    for (const cookie of session.cookies) {
+      await context.addCookies([{ name: cookie.name, value: cookie.value, url: ORIGIN, sameSite: 'Lax' }]);
+    }
+  }
   const page = await context.newPage();
   await page.goto(TARGET, { waitUntil: 'networkidle', timeout: 90_000 });
+  // The cinematic intro is a first-visit overlay; dismiss it the way a student
+  // would so the audit sees the page underneath.
+  const skip = page.getByRole('button', { name: 'Skip intro' });
+  if (await skip.count()) {
+    await skip.first().click().catch(() => {});
+    await page.waitForTimeout(400);
+  }
   await page.waitForTimeout(1800);
 
   await page.addScriptTag({ content: AXE });
@@ -71,24 +107,12 @@ for (const viewport of [
   const minor = axe.filter((violation) => !['serious', 'critical'].includes(violation.impact));
   if (minor.length) console.log(`       noted (not blocking): ${minor.map((v) => `${v.id}:${v.impact}`).join(', ')}`);
 
-  const canvas = await page.evaluate(() => {
-    const element = document.querySelector('.depth-field canvas');
-    if (!element) return { present: false };
-    const rect = element.getBoundingClientRect();
-    const top = document.elementFromPoint(rect.left + rect.width / 2, Math.min(window.innerHeight - 4, rect.top + 200));
-    return {
-      present: true,
-      ariaHidden: element.closest('.depth-field')?.getAttribute('aria-hidden'),
-      pointerEvents: getComputedStyle(element.closest('.depth-field')).pointerEvents,
-      focusable: element.tabIndex >= 0,
-      hitTest: top ? `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}` : null,
-      tabbableInField: document.querySelectorAll('.depth-field a, .depth-field button, .depth-field [tabindex]').length,
-    };
-  });
+  const canvas = await page.evaluate(() => ({
+    present: Boolean(document.querySelector('.home-stage canvas, .depth-field, [class*="depth-field"]')),
+  }));
   check(
-    `${viewport.name}: the depth canvas is decorative and untouchable`,
-    !canvas.present ||
-      (canvas.ariaHidden === 'true' && canvas.pointerEvents === 'none' && !canvas.focusable && canvas.tabbableInField === 0),
+    `${viewport.name}: the sea/depth canvas and fallback are completely absent`,
+    !canvas.present,
     JSON.stringify(canvas),
   );
 
@@ -98,8 +122,18 @@ for (const viewport of [
 /* Interaction: pointer depth, entry light, keyboard reachability. */
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
 await context.addCookies([{ name: 'campus_intro', value: '1', url: ORIGIN }]);
+if (session) {
+  for (const cookie of session.cookies) {
+    await context.addCookies([{ name: cookie.name, value: cookie.value, url: ORIGIN, sameSite: 'Lax' }]);
+  }
+}
 const page = await context.newPage();
 await page.goto(TARGET, { waitUntil: 'networkidle', timeout: 90_000 });
+const interactionSkip = page.getByRole('button', { name: 'Skip intro' });
+if (await interactionSkip.count()) {
+  await interactionSkip.first().click().catch(() => {});
+  await page.waitForTimeout(400);
+}
 await page.waitForTimeout(1500);
 
 const depth = await page.evaluate(async () => {

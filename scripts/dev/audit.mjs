@@ -304,6 +304,130 @@ async function auditSecurityDefiner(client) {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Realtime channel authorization
+// ---------------------------------------------------------------------------
+/**
+ * `realtime.messages` policies are the gate for every private channel, and they are
+ * evaluated as the *subscribing* role. If such a policy calls a function that role
+ * cannot execute, the subscription does not get denied — it gets an error
+ * (`42501 permission denied for function …`), the client retries, and the log fills
+ * up at the reconnect cadence. That is not hypothetical here: the retired Random
+ * Chat's `random` branch called a helper whose EXECUTE grant `authenticated` does not
+ * hold on the live project, and it produced roughly one error line every 15 seconds
+ * (migration 030).
+ *
+ * So the invariant worth auditing is not "this particular grant exists" but "no policy
+ * depends on a grant nobody owns", plus the security half of the same fix: the
+ * function that answers "is *this other student* in *that session*" must not be
+ * client-callable at all.
+ */
+async function auditRealtimeChannelPolicies(client) {
+  const hasMessages = (
+    await client.query(`select to_regclass('realtime.messages') as t`)
+  ).rows[0].t;
+  if (!hasMessages) {
+    warn('Realtime', 'Realtime channel policies audited',
+      'realtime.messages is absent (plain Postgres without the Supabase extension).',
+      'Nothing to audit; on Supabase this section covers the private-channel gate.');
+    return;
+  }
+
+  // 1. Every function a channel policy calls has to be executable by the role the
+  //    policy is written for. Only `public` functions are considered: Realtime's own
+  //    helpers belong to the platform and are not this repository's grants to keep.
+  const unreachable = (
+    await client.query(`
+      select distinct pol.polname as policy, r.rolname as grantee, p.oid::regprocedure as fn
+      from pg_policy pol
+      join pg_class c on c.oid = pol.polrelid
+      join pg_namespace n on n.oid = c.relnamespace
+      cross join lateral unnest(pol.polroles) as g (roleid)
+      join pg_roles r on r.oid = g.roleid
+      join pg_depend d
+        on d.classid = 'pg_policy'::regclass and d.objid = pol.oid
+       and d.refclassid = 'pg_proc'::regclass
+      join pg_proc p on p.oid = d.refobjid
+      join pg_namespace pf on pf.oid = p.pronamespace and pf.nspname = 'public'
+      where n.nspname = 'realtime' and c.relname = 'messages'
+        and r.rolname in ('authenticated', 'anon')
+        and not has_function_privilege(r.oid, p.oid, 'execute')
+      order by 1, 2, 3
+    `)
+  ).rows;
+  if (unreachable.length) {
+    fail('Realtime', 'Channel policies call only functions the subscribing role can execute',
+      `${unreachable.length} unreachable: ${unreachable.map((u) => `${u.policy} as ${u.grantee} → ${u.fn}`).join('; ')}`,
+      'Either grant EXECUTE to the subscribing role, or replace the call with a predicate that role can execute (migration 030 does the latter).');
+  } else {
+    pass('Realtime', 'Channel policies call only functions the subscribing role can execute',
+      'every public function referenced by a realtime.messages policy is executable by authenticated');
+  }
+
+  // 2. The retired Random topic must be authorized by the current-user-only predicate.
+  const texts = (
+    await client.query(`
+      select policyname, coalesce(qual, '') || ' ' || coalesce(with_check, '') as expr
+      from pg_policies
+      where schemaname = 'realtime' and tablename = 'messages'
+    `)
+  ).rows;
+  const oracleInPolicy = texts
+    .filter((t) => t.expr.includes('can_access_random_session('))
+    .map((t) => t.policyname);
+  if (oracleInPolicy.length) {
+    fail('Realtime', 'Random channel access uses a current-user-only predicate',
+      `${oracleInPolicy.join(', ')} still calls can_access_random_session, whose optional p_user argument answers "is this other profile in that private session"`,
+      'Use public.can_access_own_random_session(uuid) in the policy (migration 030).');
+  } else {
+    const safe = texts.filter((t) => t.expr.includes('can_access_own_random_session(')).map((t) => t.policyname);
+    if (safe.length) {
+      pass('Realtime', 'Random channel access uses a current-user-only predicate',
+        `${safe.join(', ')} → can_access_own_random_session(uuid)`);
+    } else {
+      warn('Realtime', 'Random channel access uses a current-user-only predicate',
+        'no realtime.messages policy references the random predicate at all',
+        'Expected only if the random branch was removed deliberately.');
+    }
+  }
+
+  // 3. Grants, asserted rather than assumed: migration 018's blanket loop is not
+  //    enough, because PostgREST exposes every executable public function as an RPC.
+  const grants = (
+    await client.query(`
+      select proacl::text as acl,
+             has_function_privilege('authenticated', p.oid, 'execute') as auth_can,
+             has_function_privilege('anon', p.oid, 'execute') as anon_can,
+             has_function_privilege('service_role', p.oid, 'execute') as svc_can,
+             p.oid::regprocedure as fn
+      from pg_proc p
+      where p.oid in (
+        'public.can_access_random_session(uuid, uuid)'::regprocedure,
+        'public.can_access_own_random_session(uuid)'::regprocedure
+      )
+    `)
+  ).rows;
+  const byName = Object.fromEntries(grants.map((g) => [g.fn.replace(/^public\./, ''), g]));
+  const oracle = byName['can_access_random_session(uuid,uuid)'];
+  const narrow = byName['can_access_own_random_session(uuid)'];
+  if (oracle && (oracle.auth_can || oracle.anon_can)) {
+    fail('Realtime', 'The session-membership oracle is not client-callable',
+      `authenticated=${oracle.auth_can}, anon=${oracle.anon_can} (acl ${oracle.acl})`,
+      'revoke all on function public.can_access_random_session(uuid, uuid) from public, anon, authenticated;');
+  } else if (oracle) {
+    pass('Realtime', 'The session-membership oracle is not client-callable',
+      `service_role only (${oracle.svc_can ? 'granted' : 'MISSING — the retained Random RPCs need it'})`);
+  }
+  if (narrow && !narrow.auth_can) {
+    fail('Realtime', 'The channel predicate is granted explicitly',
+      'authenticated cannot execute can_access_own_random_session(uuid), so the random channel branch fails',
+      'grant execute on function public.can_access_own_random_session(uuid) to authenticated, service_role;');
+  } else if (narrow) {
+    pass('Realtime', 'The channel predicate is granted explicitly',
+      `authenticated yes, anon ${narrow.anon_can ? 'yes — unexpected' : 'no'}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 5. Data model integrity
 // ---------------------------------------------------------------------------
 async function auditDataModel(client) {
@@ -856,6 +980,130 @@ async function auditJsColumnReferences(client) {
 }
 
 // ---------------------------------------------------------------------------
+// 7c. Encrypted Drive backup invariants (migration 027)
+// ---------------------------------------------------------------------------
+async function auditBackup(client, byTable) {
+  const tracked = Number((await client.query('select count(*)::int as n from public.backup_tracked_tables')).rows[0].n);
+  const appTables = Number((await client.query(`
+    select count(*)::int as n from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'r' and c.relname not like 'backup%'
+      and c.relname not like '\\_\\_test%'
+  `)).rows[0].n);
+  if (tracked >= appTables && appTables > 0) pass('Backup', 'Every application table is in the snapshot catalogue', `${tracked} tracked / ${appTables} application tables`);
+  else fail('Backup', 'Every application table is in the snapshot catalogue', `${tracked} tracked / ${appTables} application tables`, 'Run backup_sync_triggers().');
+
+  const missingTriggers = (await client.query(`
+    select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname='public' and c.relkind='r' and c.relname not like 'backup%'
+      and c.relname not like '\\_\\_test%'
+      and not exists (select 1 from pg_trigger t where t.tgrelid=c.oid and t.tgname='backup_capture' and not t.tgisinternal)
+  `)).rows.map((row) => row.relname);
+  if (missingTriggers.length) fail('Backup', 'Transactional capture trigger on every table', missingTriggers.join(', '), 'Re-run backup_sync_triggers().');
+  else pass('Backup', 'Transactional capture trigger on every application table', `${appTables} triggers`);
+
+  const recursion = (await client.query(`
+    select c.relname from pg_trigger t join pg_class c on c.oid=t.tgrelid
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and t.tgname='backup_capture' and c.relname like 'backup%'
+  `)).rows.map((row) => row.relname);
+  if (recursion.length) fail('Backup', 'No capture trigger on backup tables', recursion.join(', '), 'Drop the trigger; it would recurse.');
+  else pass('Backup', 'Backup bookkeeping tables are excluded from capture', 'no recursion path');
+
+  const secretGrants = (await client.query(`
+    select table_name || ':' || grantee || ':' || string_agg(privilege_type, ',') as leak
+    from information_schema.role_table_grants
+    where table_schema = 'backup_private' and grantee in ('anon', 'authenticated', 'PUBLIC')
+    group by table_name, grantee
+  `)).rows.map((row) => row.leak);
+  if (secretGrants.length) fail('Backup', 'OAuth credential schema has no API-role grants', secretGrants.join('; '), 'REVOKE ALL on backup_private tables.');
+  else pass('Backup', 'OAuth credential schema has no API-role grants', 'encrypted refresh verifiers/credentials isolated');
+
+  const payloadReadable = (await client.query(
+    `select has_column_privilege('authenticated', 'public.backup_change_log', 'row_data', 'SELECT') as ok`,
+  )).rows[0].ok;
+  if (payloadReadable) fail('Backup', 'Outbox row images are not readable by students', 'backup_change_log.row_data is SELECT-able', 'Revoke the column privilege.');
+  else pass('Backup', 'Outbox row images are not readable by students', 'worker-only service role');
+
+  const publicPolicies = (byTable.get('backup_change_log') || []).filter((policy) => policy.roles.includes('anon'));
+  if (publicPolicies.length) fail('Backup', 'No anonymous policy on the outbox', publicPolicies.map((p) => p.policyname).join(', '), 'Remove the anon policy.');
+  else pass('Backup', 'No anonymous policy on the outbox', 'RLS + column privileges');
+
+  const adminOnly = (await client.query(`
+    select role_key from public.role_permissions where permission_key = 'manage_backups' order by 1
+  `)).rows.map((row) => row.role_key);
+  if (adminOnly.length === 1 && adminOnly[0] === 'super_admin') pass('Backup', 'manage_backups is Super Admin only', adminOnly.join(', '));
+  else fail('Backup', 'manage_backups is Super Admin only', adminOnly.join(', ') || '(none)', 'Keep backup tooling out of the default Admin role.');
+
+  // The outbox must be a database transaction, not a fire-and-forget webhook.
+  const migration = await readFile(path.join(migrationsDir, '20261025000001_027_backup_change_capture.sql'), 'utf8');
+  // A comment may mention pg_net/webhooks to explain why they are NOT used;
+  // only an actual HTTP call from the capture path is a failure.
+  if (/net\.http_post\s*\(|pg_net\.\w+\s*\(|http_post\s*\(|supabase_functions\.http_request\s*\(/i.test(migration)) {
+    fail('Backup', 'Capture path contains no HTTP/webhook call', 'migration 027 references an HTTP extension', 'Use the transactional outbox only.');
+  } else {
+    pass('Backup', 'Capture path contains no HTTP/webhook call', 'AFTER ROW trigger inserts into backup_change_log');
+  }
+
+  // Migration 028: admin-triggered processing must stay worker-gated and
+  // must never let a browser role write lease or run-log state directly.
+  const leaseRpcExposed = (await client.query(`
+    select p.oid::regprocedure::text as sig
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in ('backup_acquire_run_lease', 'backup_release_run_lease')
+      and (has_function_privilege('anon', p.oid, 'EXECUTE')
+           or has_function_privilege('authenticated', p.oid, 'EXECUTE'))
+  `)).rows.map((row) => row.sig);
+  if (leaseRpcExposed.length) {
+    fail('Backup', 'Run-lease RPCs are service-role only', leaseRpcExposed.join(', '), 'Revoke EXECUTE from anon/authenticated in migration 028.');
+  } else {
+    pass('Backup', 'Run-lease RPCs are service-role only', 'admin UI cannot forge or steal a processing lease');
+  }
+
+  const writableState = (await client.query(`
+    select table_name || ':' || privilege_type as leak
+    from information_schema.role_table_grants
+    where table_schema = 'public'
+      and table_name in ('backup_run_leases', 'backup_run_log')
+      and grantee = 'authenticated'
+      and privilege_type <> 'SELECT'
+  `)).rows.map((row) => row.leak);
+  if (writableState.length) {
+    fail('Backup', 'Backup run state is read-only for API roles', writableState.join(', '), 'Grant SELECT only; writes go through SECURITY DEFINER RPCs.');
+  } else {
+    pass('Backup', 'Backup run state is read-only for API roles', 'leases and run log are written only by gated RPCs');
+  }
+
+  const adminRpcSignatures = ['backup_admin_state()', 'backup_record_run(text, text, jsonb)'];
+  const adminRpcProblems = [];
+  for (const signature of adminRpcSignatures) {
+    const row = (await client.query(
+      'select to_regprocedure($1) is not null as exists,'
+      + " has_function_privilege('authenticated', to_regprocedure($1), 'EXECUTE') as callable,"
+      + " has_function_privilege('anon', to_regprocedure($1), 'EXECUTE') as anon_callable",
+      [`public.${signature}`],
+    )).rows[0];
+    if (!row?.exists) adminRpcProblems.push(`${signature} is missing`);
+    else if (!row.callable) adminRpcProblems.push(`${signature} is not callable by authenticated`);
+    else if (row.anon_callable) adminRpcProblems.push(`${signature} is callable by anon`);
+  }
+  if (adminRpcProblems.length) {
+    fail('Backup', 'Admin backup RPCs are authenticated-only and gated inside', adminRpcProblems.join('; '), 'Grant execute to authenticated only; each function re-checks manage_backups.');
+  } else {
+    pass('Backup', 'Admin backup RPCs are authenticated-only and gated inside', 'backup_admin_state + backup_record_run deny anon');
+  }
+
+  const runLogLeak = await client.query(`
+    select count(*)::int as n from public.backup_run_log
+  `).catch(() => ({ rows: [{ n: 0 }] }));
+  if (runLogLeak.rows[0].n > 0) {
+    pass('Backup', 'Admin run log stores summaries only', `${runLogLeak.rows[0].n} row(s); every field is whitelisted by backup_record_run()`);
+  } else {
+    pass('Backup', 'Admin run log stores summaries only', 'empty on a fresh database');
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 8. Privacy spot checks against the live schema
 // ---------------------------------------------------------------------------
 async function auditPrivacy(client) {
@@ -1034,15 +1282,17 @@ async function main() {
     pass('Migrations', 'Fresh database from zero', `${files.length} migrations applied to an empty PostgreSQL 15 database`);
 
     banner('Auditing schema…');
-    await auditRls(client);
+    const { byTable } = await auditRls(client);
     await auditGrants(client);
     await auditSecurityDefiner(client);
+    await auditRealtimeChannelPolicies(client);
     await auditDataModel(client);
     await auditColumnPrivileges(client);
     const constants = await loadConstants();
     await auditContract(client, constants);
     await auditJsColumnReferences(client);
     await auditPrivacy(client);
+    await auditBackup(client, byTable);
   } finally {
     await shutdown(pg, client);
   }

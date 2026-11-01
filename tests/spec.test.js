@@ -140,7 +140,7 @@ describe('no presence, no typing indicators (spec §8, §22)', () => {
 });
 
 describe('secrets never reach the browser bundle (spec §74, §93)', () => {
-  it('exposes only the two public Supabase variables', () => {
+  it('exposes only the declared public variables (two Supabase + public config)', () => {
     const publicVars = new Set();
     for (const file of allSource) {
       for (const match of read(file).matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g)) publicVars.add(match[0]);
@@ -149,6 +149,7 @@ describe('secrets never reach the browser bundle (spec §74, §93)', () => {
     // NEXT_PUBLIC_ variable would be shipped to the browser.
     expect([...publicVars].sort()).toEqual([
       'NEXT_PUBLIC_COLLEGE_NAME',
+      'NEXT_PUBLIC_LEGAL_CONTACT_EMAIL',
       'NEXT_PUBLIC_LOCAL_PREVIEW',
       'NEXT_PUBLIC_PLATFORM_NAME',
       'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
@@ -231,11 +232,12 @@ describe('route surface (spec §5, §6)', () => {
 
 describe('design system (spec §4)', () => {
   const globals = read('app/globals.css');
+  const lumenTokens = read('app/tokens.css');
   const partials = ['surfaces', 'controls', 'feedback', 'interactive', 'navigation']
     .map((name) => read(`app/styles/${name}.css`))
     .join('\n');
 
-  it('defines the semantic token set for the one permanent dark theme', () => {
+  it('defines the semantic token set for both explicit themes', () => {
     for (const token of [
       '--c-canvas',
       '--c-surface',
@@ -267,36 +269,57 @@ describe('design system (spec §4)', () => {
     ]) {
       expect(globals).toContain(token);
     }
-    // One mandatory dark theme — no light variant and no "follow the device".
-    expect(globals).toContain("[data-theme='dark']");
-    expect(globals).not.toContain("[data-theme='light']");
+    // Both themes are explicit document attributes; there is no OS variant.
+    expect(lumenTokens).toContain("[data-theme='light']");
+    expect(lumenTokens).toContain("[data-theme='dark']");
     expect(globals).not.toContain("[data-theme='system']");
     expect(globals).not.toContain('@media (prefers-color-scheme: dark)');
     // The tokens are exposed to Tailwind as utilities.
     expect(globals).toContain('@theme inline');
   });
 
-  it('keeps the blue identity and the designed night palette', () => {
-    expect(globals).toContain('#0b1120'); // midnight-blue canvas
-    expect(globals).toContain('#121824'); // elevated navy surface, not black
-    expect(globals).toContain('#f0f1f4'); // primary ink on the night canvas
-    expect(globals).toContain('#6f9bff'); // accent stays blue and luminous
-    expect(globals).toContain('#5b89f5'); // pressed blue
-    expect(globals).not.toContain('#f7f5f1'); // the retired light canvas is gone
+  it('keeps the Campus+ identity on the requested light and dark foundations', () => {
+    expect(lumenTokens).toContain('--color-paper: #E1D9D1');
+    expect(lumenTokens).toContain('--color-paper-2: #F1EBE5');
+    expect(lumenTokens).toContain('--color-ink: #292725');
+    expect(lumenTokens).toContain('--color-accent: #8DBCE3');
+    expect(lumenTokens).toContain('--color-paper: #191D21');
+    expect(lumenTokens).toContain('--color-paper-2: #252B30');
+    expect(lumenTokens).toContain('--color-ink: #F0EEE9');
+    expect(lumenTokens).toContain('--color-accent: #91BFE5');
+    expect(globals).toContain('--cp-bg-page: var(--color-paper)');
+    expect(globals).toContain('--cp-bg-accent: var(--color-accent)');
 
-    // The old orange identity is gone for good.
-    expect(globals).not.toContain('#ef6a1c');
-    expect(globals).not.toMatch(/--c-accent:\s*#(f|e)[0-9a-f]{2}/i);
+    // Retired canvas and accent systems cannot quietly reappear in the
+    // semantic bridge that every existing component consumes.
+    for (const retired of ['#07151d', '#10242d', '#14b8a6', '#2dd4bf', '#f4e3c1', '#f97316', '#f7f5f1']) {
+      expect(globals).not.toContain(retired);
+    }
   });
 
-  it('never hardcodes a colour in a page or component', () => {
-    // The only allowed literal is the one theme-color meta entry, which has
-    // to mirror the canvas token for the browser chrome.
+  it('keeps hard-coded colors limited to browser chrome and theme defaults', () => {
+    // Browser chrome needs strings at metadata/manifest time. The theme module
+    // also needs the canonical sRGB equivalents for its browser-chrome sync.
+    const CHROME_COLOUR_FILES = [path.join('app', 'layout.js'), path.join('lib', 'timetable', 'batch.js')];
+    const LOCAL_COLOR_FILES = [path.join('lib', 'theme.js')];
     const offenders = allSource.filter((file) => {
-      if (file === path.join('app', 'layout.js')) return false;
+      if (CHROME_COLOUR_FILES.includes(file) || LOCAL_COLOR_FILES.includes(file)) return false;
       return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
     });
     expect(offenders).toEqual([]);
+
+    expect(lumenTokens).toContain('--color-paper: #E1D9D1');
+    expect(globals).toContain('--cp-bg-page: var(--color-paper)');
+    // Static browser chrome and install metadata use the dark default; the
+    // root effect updates the live meta value for an explicit light choice.
+    const canvas = '#191D21';
+    const mirrored = (file, pattern) => pattern.exec(read(file))?.[1];
+    expect(
+      mirrored(path.join('app', 'layout.js'), /<meta name="theme-color" content="(#[0-9a-fA-F]{3,8})" suppressHydrationWarning/),
+    ).toBe(canvas);
+    expect(
+      mirrored(path.join('lib', 'timetable', 'batch.js'), /TIMETABLE_CANVAS_COLOR = '(#[0-9a-fA-F]{3,8})'/),
+    ).toBe(canvas);
   });
 
   it('keeps glass, motion and the interactive materials inside the design system', () => {

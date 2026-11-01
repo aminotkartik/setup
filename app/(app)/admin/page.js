@@ -11,11 +11,10 @@ import {
   listFeatureFlags,
   listAuditLogs,
   listOfficialContent,
-  getOperationalCounts,
-  getAdminOverview,
+  getAdminDashboardCounts,
 } from '@/lib/data/admin';
 import { listReports } from '@/lib/data/moderation';
-import { ROUTES, PAGE_SIZE, ROLE_ORDER } from '@/lib/constants';
+import { ROUTES, PAGE_SIZE, ROLE_ORDER, CLUB_ORGANIZATION_TYPE_LABELS } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { saveNotice, saveEvent, saveCampusContent } from '@/lib/actions/campus';
@@ -29,6 +28,12 @@ import {
 import { ModerationActions, ResolveReportForm } from '@/components/moderation/ModerationPanels';
 import { formatDateTime, relativeTime } from '@/lib/utils';
 import { LinkifiedText } from '@/components/content/LinkifiedText';
+import { getBackupStatus, getBackupConfiguration } from '@/lib/data/backup';
+import { BackupActionButtons, RetryBackupButton } from '@/components/admin/BackupPanels';
+import { listClubCreationRequests, listUnassignedClubs } from '@/lib/data/clubs';
+import { AssignClubAdminForm, ClubRequestReview } from '@/components/clubs/ClubRequestPanels';
+import { ExternalLink } from '@/components/content/ExternalLink';
+import { DISASTER_RECOVERY_NOTICE, PRODUCTION_DRIVE_REDIRECT_URI } from '@/lib/backup/constants.js';
 
 export const metadata = { title: 'Administration' };
 
@@ -49,12 +54,14 @@ const TABS = [
   { key: 'permissions', label: 'Permissions', permission: 'manage_permissions' },
   { key: 'reports', label: 'Reports', permission: 'review_reports' },
   { key: 'content', label: 'Official content', permission: 'manage_official_content' },
+  { key: 'clubs', label: 'Clubs', permission: 'manage_clubs' },
   { key: 'marketplace', label: 'Marketplace', permission: 'moderate_marketplace' },
   { key: 'events', label: 'Events', permission: 'manage_events' },
   { key: 'settings', label: 'Settings', permission: 'manage_platform_settings' },
   { key: 'flags', label: 'Feature flags', permission: 'manage_feature_flags' },
   { key: 'audit', label: 'Audit logs', permission: 'view_audit_logs' },
   { key: 'counts', label: 'Operational counts', permission: 'view_admin_overview' },
+  { key: 'backups', label: 'Backups', permission: 'manage_backups' },
 ];
 
 const CONTENT_TABLES = [
@@ -88,6 +95,10 @@ const COUNT_LABELS = {
 
 function isTabAllowed(actor, tab) {
   if (!tab) return false;
+  // Backups expose operational health and Drive connection state: only the
+  // explicit manage_backups permission (Super Admin by default) opens it.
+  // `moderate_all` must not implicitly grant access to backup tooling.
+  if (tab.permission === 'manage_backups') return can(actor, 'manage_backups');
   if (can(actor, 'moderate_all') && tab.permission !== 'view_admin_overview') return true;
   return can(actor, tab.permission);
 }
@@ -118,10 +129,11 @@ export default async function AdminPage({ searchParams }) {
   const offset = Number.isFinite(Number(params?.offset)) && Number(params.offset) > 0 ? Number(params.offset) : 0;
   const contentTable = CONTENT_TABLES.some((item) => item.key === params?.table) ? params.table : 'notices';
 
-  const overview =
+  const dashboardCounts =
     activeTab === 'counts' && isTabAllowed(actor, TABS.find((tab) => tab.key === 'counts'))
-      ? await getAdminOverview(supabase)
+      ? await getAdminDashboardCounts(supabase)
       : null;
+  const overview = dashboardCounts?.overview || null;
 
   const users =
     activeTab === 'users' ? await listUsers(supabase, { q, limit: PAGE_SIZE.admin, offset }) : null;
@@ -138,7 +150,16 @@ export default async function AdminPage({ searchParams }) {
   const settings = activeTab === 'settings' ? await listPlatformSettings(supabase) : [];
   const flags = activeTab === 'flags' ? await listFeatureFlags(supabase) : [];
   const audit = activeTab === 'audit' ? await listAuditLogs(supabase, { limit: 40, offset }) : [];
-  const counts = activeTab === 'counts' ? await getOperationalCounts(supabase) : null;
+  const counts = dashboardCounts;
+  const backups = activeTab === 'backups' ? await getBackupStatus(supabase) : null;
+  const backupConfig = activeTab === 'backups' ? getBackupConfiguration() : [];
+  const [pendingClubRequests, clubRequestHistory, unassignedClubs] = activeTab === 'clubs'
+    ? await Promise.all([
+        listClubCreationRequests(supabase, { status: 'pending', limit: 60 }),
+        listClubCreationRequests(supabase, { limit: 30 }),
+        listUnassignedClubs(supabase),
+      ])
+    : [null, null, null];
 
   const settingsByGroup = new Map();
   for (const setting of settings) {
@@ -467,6 +488,94 @@ export default async function AdminPage({ searchParams }) {
         </section>
       ) : null}
 
+      {/* ----------------------------------------------------------------- clubs */}
+      {activeTab === 'clubs' ? (
+        <section aria-label="Club requests and administrator assignments" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Club governance</h2>
+              <p className="mt-1 text-[0.8125rem] text-muted">Review requests, assign real initial administrators, and preserve club-scoped ownership.</p>
+            </div>
+            <LinkButton href={ROUTES.clubNew} size="sm" variant="secondary" icon="plus">Create with an administrator</LinkButton>
+          </div>
+          <Notice tone="neutral" icon="lock">
+            Approval is atomic and retry-safe. A club owner or moderator manages only that club; no platform role is granted here.
+          </Notice>
+
+          <section className="flex flex-col gap-3" aria-labelledby="pending-club-requests">
+            <h3 id="pending-club-requests" className="text-sm font-semibold">Pending club requests ({pendingClubRequests.items.length})</h3>
+            {pendingClubRequests.unavailable || clubRequestHistory.unavailable || unassignedClubs.unavailable ? (
+              <Notice tone="warning">Some club governance records could not be loaded. Refresh before making a decision.</Notice>
+            ) : null}
+            {!pendingClubRequests.items.length ? (
+              <EmptyState icon="checkCircle" title="No pending club requests" description="New student requests will appear here for review." />
+            ) : null}
+            {pendingClubRequests.items.map((request) => (
+              <Card key={request.id} className="flex flex-col gap-3 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h4 className="text-[0.9375rem] font-semibold">{request.name}</h4>
+                    <p className="mt-1 text-2xs text-muted">
+                      Requested by {request.requester_display_name || 'Student'}
+                      {request.requester_username ? ` (@${request.requester_username})` : ''} · {formatDateTime(request.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge>{request.club_category}</Badge>
+                    <Badge>{CLUB_ORGANIZATION_TYPE_LABELS[request.organization_type] || request.organization_type}</Badge>
+                    <Badge tone="warning">pending</Badge>
+                  </div>
+                </div>
+                <p className="user-text text-[0.8125rem] leading-relaxed text-muted"><LinkifiedText text={request.description} /></p>
+                <p className="text-2xs text-muted">Preferred link: <code>{request.slug}</code></p>
+                {request.source_url ? (
+                  <ExternalLink url={request.source_url} className="text-2xs underline">
+                    Source: {request.source_label || request.source_url}
+                  </ExternalLink>
+                ) : <p className="text-2xs text-muted">No public source supplied. Verification remains pending.</p>}
+                <ClubRequestReview request={request} />
+              </Card>
+            ))}
+          </section>
+
+          <section className="flex flex-col gap-3" aria-labelledby="unassigned-clubs">
+            <h3 id="unassigned-clubs" className="text-sm font-semibold">Administrator assignment needed ({unassignedClubs.items.length})</h3>
+            <p className="text-[0.8125rem] text-muted">These real catalogue pages cannot accept join requests until an active owner is assigned.</p>
+            {!unassignedClubs.items.length ? (
+              <EmptyState icon="users" title="Every visible club has an administrator" description="No imported club is waiting for an initial owner." />
+            ) : null}
+            {unassignedClubs.items.map((club) => (
+              <details key={club.id} className="card p-4">
+                <summary className="cursor-pointer text-[0.875rem] font-medium">
+                  {club.name} <span className="font-normal text-muted">· {club.club_category || 'Club'} · assign initial admin</span>
+                </summary>
+                <div className="mt-3 flex flex-col gap-3">
+                  <p className="text-2xs text-muted">
+                    {club.source_label ? `Source: ${club.source_label}` : 'Public source pending'} · {club.verification_status === 'source_checked' ? 'Source checked' : 'Verification pending'}
+                  </p>
+                  <AssignClubAdminForm club={club} />
+                </div>
+              </details>
+            ))}
+          </section>
+
+          <section className="flex flex-col gap-3" aria-labelledby="club-request-history">
+            <h3 id="club-request-history" className="text-sm font-semibold">Recent request history</h3>
+            {clubRequestHistory.items.filter((request) => request.status !== 'pending').slice(0, 15).map((request) => (
+              <Card key={request.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
+                <span className="text-[0.8125rem] font-medium">{request.name}</span>
+                <Badge tone={request.status === 'approved' ? 'success' : request.status === 'rejected' ? 'danger' : 'neutral'}>{request.status}</Badge>
+                <span className="w-full text-2xs text-muted">
+                  {request.reviewed_at ? formatDateTime(request.reviewed_at) : formatDateTime(request.updated_at)}
+                  {request.reviewer_username ? ` · reviewed by @${request.reviewer_username}` : ''}
+                  {request.community_id ? <> · <Link href={ROUTES.club(request.community_id)} className="underline">Open club</Link></> : null}
+                </span>
+              </Card>
+            ))}
+          </section>
+        </section>
+      ) : null}
+
       {/* ---------------------------------------------------------- marketplace */}
       {activeTab === 'marketplace' ? (
         <section aria-label="Marketplace" className="flex flex-col gap-3">
@@ -623,6 +732,211 @@ export default async function AdminPage({ searchParams }) {
               <Link className="underline" href={`${ROUTES.admin}?tab=audit&offset=${offset + 40}`}>Older</Link>
             ) : <span />}
           </nav>
+        </section>
+      ) : null}
+
+      {/* -------------------------------------------------------------- backups */}
+      {activeTab === 'backups' && backups ? (
+        <section aria-label="Encrypted Drive backups" className="flex flex-col gap-3">
+          {params?.backup_notice === 'connected' ? (
+            <Notice tone="success" icon="checkCircle">Google Drive connected. The private folder is ready for encrypted exports.</Notice>
+          ) : null}
+          {params?.backup_error ? (
+            <Notice tone="danger" icon="flag">
+              Drive connection failed ({String(params.backup_error).slice(0, 40)}). Check the registered callback URL and server logs.
+            </Notice>
+          ) : null}
+          {backups.unavailable ? (
+            <Notice tone="warning" icon="flag">Backup status could not be loaded. Apply migration 027 and check the server configuration.</Notice>
+          ) : null}
+
+          <Notice tone="neutral" icon="lock">
+            Supabase Postgres is the only primary database. Drive is written by a background worker, never during a student request, and is never read per record as a fallback.
+          </Notice>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Card className="p-3">
+              <p className="t-label">Connection</p>
+              <p className="mt-1 text-[0.875rem] font-medium">{backups.connection?.status || 'not connected'}</p>
+              <p className="text-2xs text-muted">{backups.connection?.account_label || 'No Drive account'}</p>
+            </Card>
+            <Card className="p-3">
+              <p className="t-label">Last successful export</p>
+              <p className="mt-1 text-[0.875rem] font-medium">
+                {backups.checkpoint?.last_success_at ? formatDateTime(backups.checkpoint.last_success_at) : 'Never'}
+              </p>
+              <p className="text-2xs text-muted">Verified change #{backups.checkpoint?.last_change_id ?? 0}</p>
+            </Card>
+            <Card className="p-3">
+              <p className="t-label">Queue depth</p>
+              <p className="t-section t-numeric mt-1">{backups.queue_depth ?? 0}</p>
+              <p className="text-2xs text-muted">
+                {backups.oldest_pending_at ? `oldest ${relativeTime(backups.oldest_pending_at)}` : 'nothing pending'}
+              </p>
+            </Card>
+            <Card className="p-3">
+              <p className="t-label">Errors / jobs</p>
+              <p className="t-section t-numeric mt-1">{backups.failed_batches ?? 0}</p>
+              <p className="text-2xs text-muted">{backups.pending_jobs ?? 0} queued job(s)</p>
+            </Card>
+          </div>
+
+          {backups.admin?.unavailable ? (
+            <Notice tone="warning" icon="flag">
+              Live job state is unavailable. Apply migration 028 to enable admin-triggered processing, job states and run history.
+            </Notice>
+          ) : null}
+
+          <Card className="flex flex-col gap-3 p-4">
+            <h2 className="t-card">Queue states</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ['Queued', backups.admin?.jobs?.queued ?? 0, 'neutral', 'waiting for a run'],
+                ['Processing', backups.admin?.jobs?.processing ?? 0, 'accent', 'lease held by a run'],
+                ['Verified', backups.admin?.jobs?.verified ?? 0, 'success', 'jobs closed by a run'],
+                ['Failed', backups.admin?.jobs?.failed ?? 0, 'danger', 'see errors below'],
+              ].map(([label, count, tone, caption]) => (
+                <div key={label} className="rounded-[var(--radius-md)] border border-line p-2">
+                  <p className="t-label">{label}</p>
+                  <p className="t-section t-numeric mt-1">{count}</p>
+                  <Badge tone={tone}>{label.toLowerCase()}</Badge>
+                  <p className="mt-1 text-2xs text-muted">{caption}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-2xs text-muted">
+              A closed job either uploaded a verified object or found nothing
+              left to export; the run results below show what actually reached
+              Drive. {backups.admin?.batches?.uploading ?? 0} batch(es) uploading ·{' '}
+              {backups.admin?.batches?.retry_waiting ?? 0} waiting for automatic retry ·{' '}
+              {backups.admin?.jobs_by_kind?.incremental?.queued ?? 0} incremental job(s) and{' '}
+              {backups.admin?.jobs_by_kind?.snapshot?.queued ?? 0} snapshot job(s) queued.
+            </p>
+            {backups.admin?.active ? (
+              <Notice tone="warning" icon="clock">A backup run is currently processing. Buttons are disabled until it finishes or its lease expires.</Notice>
+            ) : null}
+            {backups.admin?.batches?.next_retry_at ? (
+              <p className="text-2xs text-muted">Next automatic retry: {formatDateTime(backups.admin.batches.next_retry_at)}.</p>
+            ) : null}
+          </Card>
+
+          <Card className="flex flex-col gap-3 p-4">
+            <h2 className="t-card">Authorized actions</h2>
+            <p className="text-2xs text-muted">
+              These buttons PROCESS eligible queued work now, in bounded batches, on the server. They do not enqueue another job. Each object is encrypted, uploaded to the restricted Drive folder and re-downloaded for SHA-256 verification before anything is marked successful. A failed batch keeps its backoff and leaves untouched jobs queued.
+            </p>
+            <BackupActionButtons connected={backups.connection?.status === 'active'} admin={backups.admin} />
+            <p className="font-mono text-2xs text-muted">Callback: {PRODUCTION_DRIVE_REDIRECT_URI}</p>
+          </Card>
+
+          <Card className="flex flex-col gap-2 p-4">
+            <h2 className="t-card">Recent runs and jobs</h2>
+            {(backups.admin?.last_runs?.length || 0) === 0 && (backups.admin?.recent_jobs?.length || 0) === 0 ? (
+              <p className="text-2xs text-muted">No runs recorded yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5">
+                {(backups.admin?.last_runs || []).slice(0, 5).map((run) => (
+                  <li key={run.id || `${run.kind}-${run.created_at}`} className="flex flex-wrap items-center gap-2 border-t border-line pt-1.5 text-2xs">
+                    <Badge tone={run.status === 'verified' || run.status === 'drained' ? 'success' : run.status === 'failed' ? 'danger' : 'warning'}>{run.status}</Badge>
+                    <span className="font-mono">{run.kind}</span>
+                    <span className="text-muted">
+                      {formatDateTime(run.created_at)}
+                      {run.record?.verified ? ` · ${run.record.verified} verified` : ''}
+                      {run.record?.failed ? ` · ${run.record.failed} failed` : ''}
+                    </span>
+                    {run.record?.diagnostics?.length ? (
+                      <span className="w-full text-muted">[{run.record.diagnostics.map((entry) => entry.code).join(', ')}]</span>
+                    ) : null}
+                  </li>
+                ))}
+                {(backups.admin?.recent_jobs || []).slice(0, 8).map((job) => (
+                  <li key={job.id} className="flex flex-wrap items-center gap-2 border-t border-line pt-1.5 text-2xs">
+                    <Badge tone={job.status === 'done' ? 'success' : job.status === 'failed' ? 'danger' : job.status === 'running' ? 'accent' : 'warning'}>
+                      {job.status === 'done' ? 'verified' : job.status === 'running' ? 'processing' : job.status}
+                    </Badge>
+                    <span className="font-mono">{job.kind}</span>
+                    <span className="text-muted">{formatDateTime(job.created_at)}{job.last_error ? ` · ${String(job.last_error).slice(0, 120)}` : ''}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="flex flex-col gap-2 p-4">
+            <h2 className="t-card">Errors and authorized retries</h2>
+            {backups.errors.length === 0 ? (
+              <p className="text-2xs text-muted">No failed batches.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {backups.errors.map((entry) => (
+                  <li key={entry.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+                    <span className="min-w-0 text-2xs text-muted">
+                      <span className="font-mono">{entry.range_key}</span> · attempt {entry.attempt_count} · {formatDateTime(entry.updated_at)}
+                      <br />{entry.last_error || 'unknown error'}
+                    </span>
+                    <RetryBackupButton batchId={entry.id} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="flex flex-col gap-2 p-4">
+            <h2 className="t-card">Backup history</h2>
+            {backups.history.length === 0 ? (
+              <p className="text-2xs text-muted">No verified exports yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5">
+                {backups.history.map((entry) => (
+                  <li key={entry.id} className="flex flex-wrap items-center gap-2 border-t border-line pt-1.5 text-2xs">
+                    <Badge tone={entry.verified_at ? 'success' : 'warning'}>{entry.verified_at ? 'verified' : 'failed'}</Badge>
+                    <span className="font-mono">{entry.range_key}</span>
+                    <span className="text-muted">
+                      {entry.verified_at ? formatDateTime(entry.verified_at) : formatDateTime(entry.updated_at || entry.created_at)}
+                      {entry.byte_size ? ` · ${Math.round(entry.byte_size / 1024)} KB encrypted` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="flex flex-col gap-2 p-4">
+            <h2 className="t-card">Full snapshots</h2>
+            {backups.snapshots.length === 0 ? (
+              <p className="text-2xs text-muted">No full snapshot has been verified yet. Incremental exports alone are not a complete restore base.</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5">
+                {backups.snapshots.map((entry) => (
+                  <li key={entry.id} className="flex flex-wrap items-center gap-2 border-t border-line pt-1.5 text-2xs">
+                    <Badge tone={entry.status === 'verified' ? 'success' : 'warning'}>{entry.status}</Badge>
+                    <span className="font-mono">watermark #{entry.watermark}</span>
+                    <span className="text-muted">
+                      {entry.verified_at ? formatDateTime(entry.verified_at) : formatDateTime(entry.created_at)}
+                      {entry.byte_size ? ` · ${Math.round(entry.byte_size / 1024)} KB encrypted` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="flex flex-col gap-2 p-4">
+            <h2 className="t-card">Server configuration (presence only)</h2>
+            <ul className="flex flex-col gap-1">
+              {backupConfig.map((item) => (
+                <li key={item.key} className="flex flex-wrap items-center gap-2 text-2xs">
+                  <Badge tone={item.configured ? 'success' : 'warning'}>{item.configured ? 'set' : 'missing'}</Badge>
+                  <span className="font-mono">{item.key}</span>
+                  <span className="text-muted">{item.note}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+
+          <Notice tone="warning" icon="flag">
+            {DISASTER_RECOVERY_NOTICE}
+          </Notice>
         </section>
       ) : null}
 

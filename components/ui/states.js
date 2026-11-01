@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/icons';
+import { EmptyStateArt } from '@/components/ui/EmptyStateArt';
 
 /* -------------------------------------------------------------------------- */
 /* Loading                                                                     */
@@ -142,12 +143,10 @@ export function SkeletonList({ rows = 3, className = '', variant = 'card' }) {
 /* Empty and error                                                             */
 /* -------------------------------------------------------------------------- */
 
-export function EmptyState({ title, description = null, action = null, icon = 'sparkle', className = '' }) {
+export function EmptyState({ title, description = null, action = null, icon = 'sparkle', art = null, className = '' }) {
   return (
     <div className={cn('state-block', className)}>
-      <span className="state-icon">
-        <Icon name={icon} size={20} />
-      </span>
+      <EmptyStateArt icon={icon} variant={art} />
       <p className="state-title">{title}</p>
       {description ? <p className="state-copy">{description}</p> : null}
       {action ? <div className="mt-2.5">{action}</div> : null}

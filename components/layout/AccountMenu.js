@@ -7,9 +7,11 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
-import { Dropdown, IdentityMark, MenuLink, StaffDot } from '@/components/ui';
+import { Dropdown, IdentityMark, MenuItem, MenuLink, StaffDot } from '@/components/ui';
+import { requestNavigationTour } from '@/lib/guide/navigation-tour';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { Icon } from '@/components/ui/icons';
+import { handleOf } from '@/lib/identity/shell-user';
 
 export function AccountMenu({ user = null, isStaff = false }) {
   if (!user) {
@@ -20,7 +22,9 @@ export function AccountMenu({ user = null, isStaff = false }) {
     );
   }
 
-  const name = user.displayName || `@${user.username}`;
+  // The adapter guarantees a display name; the handle is the fallback line.
+  const name = user.displayName;
+  const handle = handleOf(user);
 
   return (
     <Dropdown
@@ -47,7 +51,7 @@ export function AccountMenu({ user = null, isStaff = false }) {
             <span className="truncate">{name}</span>
             {isStaff ? <StaffDot label={user.staffLabel || 'Staff member'} /> : null}
           </p>
-          <p className="truncate text-2xs text-muted">@{user.username}</p>
+          {handle ? <p className="truncate text-2xs text-muted">{handle}</p> : null}
         </div>
       </div>
 
@@ -60,6 +64,14 @@ export function AccountMenu({ user = null, isStaff = false }) {
       <MenuLink href={ROUTES.notifications} icon="bell">
         Notifications
       </MenuLink>
+      {/* The guide is where a student sends a classmate, so it is reachable from
+          the one control that exists at every screen size. */}
+      <MenuLink href={ROUTES.guide} icon="mapPin">
+        First-visit guide
+      </MenuLink>
+      <MenuItem icon="mapPin" onClick={requestNavigationTour}>
+        Quick navigation tour
+      </MenuItem>
       <div className="border-t border-line p-1.5" onClick={(e) => e.stopPropagation()}>
         <SignOutButton variant="ghost" />
       </div>

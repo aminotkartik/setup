@@ -1,3 +1,6 @@
+/* Original Home choreography and geometry are preserved. Only the scene
+   palette changed: Dark keeps the shared Lumen values and Light has a warm
+   scoped colour treatment. */
 /* Both files are variable fonts. Their real axes are Syne wght 400–800 and
    Space Grotesk wght 300–700; the descriptors below must describe those
    ranges, not a guessed static weight. The wordmark uses Syne 800. `block` for
@@ -25,27 +28,32 @@
   inset: 0;
   z-index: 99999;
   overflow: hidden;
-  color: #fff;
+  color: var(--color-ink);
   color-scheme: dark;
+  /* Dark retains the original scene colours. Light overrides only these
+     colour inputs below; geometry and choreography stay shared. */
+  --intro-secondary: var(--color-accent-2);
+  --intro-edge: var(--color-accent-ink);
+  --intro-glow: var(--color-accent-ink);
   background:
     radial-gradient(
       ellipse 78% 60% at 22% 20%,
-      rgba(40, 70, 150, 0.22),
+      color-mix(in oklab, var(--color-accent) 20%, transparent),
       transparent 62%
     ),
     radial-gradient(
       ellipse 68% 52% at 84% 76%,
-      rgba(16, 40, 110, 0.2),
+      color-mix(in oklab, var(--intro-secondary) 14%, transparent),
       transparent 64%
     ),
     linear-gradient(
       180deg,
-      #020613 0%,
-      #060d26 28%,
-      #070e2b 50%,
-      #050a1e 72%,
-      #02040b 88%,
-      #000 100%
+      var(--intro-edge) 0%,
+      var(--color-paper) 28%,
+      var(--color-paper-2) 50%,
+      var(--color-paper) 72%,
+      var(--intro-edge) 88%,
+      var(--intro-edge) 100%
     );
   transition: opacity 0.4s ease;
   /* The delay is supplied by GalacticIntro.js (SAFETY_CSS_DELAY_MS) so this
@@ -78,7 +86,7 @@
   top: 10%;
   background: radial-gradient(
     ellipse,
-    rgba(42, 78, 160, 0.18),
+    color-mix(in oklab, var(--color-accent) 18%, transparent),
     transparent 70%
   );
   border-radius: 50%;
@@ -92,7 +100,7 @@
   bottom: 12%;
   background: radial-gradient(
     ellipse,
-    rgba(18, 46, 115, 0.16),
+    color-mix(in oklab, var(--intro-secondary) 10%, transparent),
     transparent 72%
   );
 }
@@ -103,27 +111,27 @@
   background-image:
     radial-gradient(
       1px 1px at 14% 20%,
-      rgba(255, 255, 255, 0.9) 50%,
+      color-mix(in oklab, var(--color-ink) 90%, transparent) 50%,
       transparent 51%
     ),
     radial-gradient(
       1px 1px at 28% 44%,
-      rgba(255, 255, 255, 0.65) 50%,
+      color-mix(in oklab, var(--color-ink) 65%, transparent) 50%,
       transparent 51%
     ),
     radial-gradient(
       1px 1px at 40% 16%,
-      rgba(255, 255, 255, 0.8) 50%,
+      color-mix(in oklab, var(--color-ink) 80%, transparent) 50%,
       transparent 51%
     ),
     radial-gradient(
       1px 1px at 66% 64%,
-      rgba(255, 255, 255, 0.72) 50%,
+      color-mix(in oklab, var(--color-ink) 72%, transparent) 50%,
       transparent 51%
     ),
     radial-gradient(
       1px 1px at 80% 20%,
-      rgba(255, 255, 255, 0.85) 50%,
+      color-mix(in oklab, var(--color-ink) 85%, transparent) 50%,
       transparent 51%
     );
 }
@@ -134,7 +142,7 @@
   transform: translate(-50%, -50%);
   width: min(860px, 92vw);
   height: 220px;
-  background: radial-gradient(ellipse, rgba(12, 24, 64, 0.32), transparent 72%);
+  background: radial-gradient(ellipse, color-mix(in oklab, var(--intro-glow) 34%, transparent), transparent 72%);
   filter: blur(16px);
   z-index: 1;
 }
@@ -144,10 +152,18 @@
   background: radial-gradient(
     ellipse,
     transparent 60%,
-    rgba(0, 0, 0, 0.55) 88%,
-    rgba(0, 0, 0, 0.92) 100%
+    color-mix(in oklab, var(--intro-edge) 55%, transparent) 88%,
+    color-mix(in oklab, var(--intro-edge) 92%, transparent) 100%
   );
   z-index: 1;
+}
+/* Light changes the scene's colour inputs only. The warm edge replaces the
+   dark ink vignette, while the ivory centre glow preserves the same shape. */
+:global(:root[data-theme='light']) .stage {
+  color-scheme: light;
+  --intro-secondary: #D8CEC4;
+  --intro-edge: #D8CEC4;
+  --intro-glow: #F1EBE5;
 }
 .flare {
   position: absolute;
@@ -166,15 +182,16 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0) 14%,
-    #fff 50%,
-    rgba(180, 200, 255, 0.9) 52%,
-    rgba(255, 255, 255, 0) 86%,
+    color-mix(in oklab, var(--color-ink) 0%, transparent) 14%,
+    var(--color-ink) 50%,
+    color-mix(in oklab, var(--color-ink) 90%, transparent) 52%,
+    color-mix(in oklab, var(--color-ink) 0%, transparent) 86%,
     transparent
   );
   box-shadow:
-    0 0 16px #fff,
-    0 0 42px rgba(120, 150, 255, 0.42);
+    0 0 16px var(--color-ink),
+    0 0 42px color-mix(in oklab, var(--color-accent) 46%, transparent),
+    0 0 90px color-mix(in oklab, var(--intro-secondary) 16%, transparent);
 }
 .flare::after {
   content: '';
@@ -183,12 +200,12 @@
   left: 50%;
   width: 11px;
   height: 11px;
-  background: #fff;
+  background: var(--color-ink);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   box-shadow:
-    0 0 8px 1px #fff,
-    0 0 26px 6px rgba(255, 255, 255, 0.75);
+    0 0 8px 1px var(--color-ink),
+    0 0 26px 6px color-mix(in oklab, var(--color-ink) 75%, transparent);
 }
 .center {
   position: relative;
@@ -217,7 +234,7 @@
   font-weight: 800;
   font-size: 84px;
   fill: transparent;
-  stroke: #fff;
+  stroke: var(--color-ink);
   stroke-width: 1.32;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -284,9 +301,9 @@
   transform: translateX(-50%);
   min-height: 48px;
   padding: 12px 24px;
-  background: rgba(10, 18, 48, 0.85);
-  border: 1px solid #8198c9;
-  color: #e2eaff;
+  background: color-mix(in oklab, var(--color-paper-2) 88%, transparent);
+  border: 1px solid var(--color-rule-2);
+  color: var(--color-ink);
   border-radius: 999px;
   font-family: 'Campus Galactic Space', sans-serif;
   font-weight: 400;
@@ -296,7 +313,7 @@
   z-index: 10;
 }
 .skip:focus-visible {
-  outline: 3px solid #fff;
+  outline: 3px solid var(--color-ink);
   outline-offset: 5px;
 }
 @keyframes flare {
@@ -326,18 +343,18 @@
     fill: transparent;
   }
   45% {
-    fill: rgba(255, 255, 255, 0.12);
+    fill: color-mix(in oklab, var(--color-ink) 12%, transparent);
   }
   100% {
-    fill: #fff;
+    fill: var(--color-ink);
     stroke-width: 0;
-    filter: drop-shadow(0 0 10px rgba(150, 175, 255, 0.52))
-      drop-shadow(0 0 28px rgba(120, 150, 255, 0.18));
+    filter: drop-shadow(0 0 10px color-mix(in oklab, var(--color-accent) 50%, transparent))
+      drop-shadow(0 0 28px color-mix(in oklab, var(--intro-secondary) 16%, transparent));
   }
 }
 @keyframes tagIn {
   to {
-    color: rgba(215, 225, 255, 0.62);
+    color: color-mix(in oklab, var(--color-ink-2) 66%, transparent);
   }
 }
 @keyframes breathe {
@@ -345,7 +362,7 @@
     filter: brightness(1);
   }
   to {
-    filter: brightness(1.07) drop-shadow(0 0 14px rgba(120, 150, 255, 0.28));
+    filter: brightness(1.07) drop-shadow(0 0 14px color-mix(in oklab, var(--color-accent) 30%, transparent));
   }
 }
 @keyframes safety {
@@ -354,6 +371,35 @@
     pointer-events: none;
   }
 }
+
+/* The mobile sequence mirrors MOBILE_FADE_AT_MS / MOBILE_FINISH_AT_MS in
+   GalacticIntro.js. It keeps the wordmark, flare and tagline but gets out of
+   the student's way in 1.7 seconds instead of preserving desktop dwell time. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .stage {
+    transition-duration: 0.3s;
+  }
+  .stage:not([data-phase='waiting']) .flare {
+    animation: flare 1s ease 0.05s forwards;
+  }
+  .stage:not([data-phase='waiting']) .campus {
+    animation:
+      draw 0.55s cubic-bezier(0.77, 0, 0.175, 1) 0.1s forwards,
+      fill 0.4s ease 0.65s forwards;
+  }
+  .stage:not([data-phase='waiting']) .plus {
+    animation:
+      draw 0.4s cubic-bezier(0.77, 0, 0.175, 1) 0.45s forwards,
+      fill 0.35s ease 0.85s forwards;
+  }
+  .stage:not([data-phase='waiting']) .logo {
+    animation: none;
+  }
+  .stage:not([data-phase='waiting']) .tagline {
+    animation: tagIn 0.35s ease 1s forwards;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stage {
     transition: none;
@@ -366,11 +412,11 @@
   }
   .stage .campus,
   .stage .plus {
-    fill: #fff;
+    fill: var(--color-ink);
     stroke: none;
   }
   .stage .tagline {
-    color: #d7e1ff;
+    color: var(--color-ink-2);
   }
   .stage .flare {
     display: none;

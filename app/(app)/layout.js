@@ -2,7 +2,10 @@ import { requireUser } from '@/lib/auth/session';
 import { getServerClient } from '@/lib/supabase/server';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { ROUTES } from '@/lib/constants';
+import { getTimetableHref } from '@/lib/timetable/meta';
+import { toShellUser } from '@/lib/identity/shell-user';
 import { AppShell } from '@/components/layout/AppShell';
+import { getUnreadMessageState } from '@/lib/data/messaging';
 
 // Every page in this group depends on the signed-in student, so nothing here is
 // cached: a page rendered for one student must never be served to another.
@@ -26,13 +29,18 @@ export default async function AppLayout({ children }) {
   // Unread badge: the count is the recipient's own rows, so RLS does the
   // filtering for us.
   let unread = 0;
+  let initialUnreadMessages = [];
   const supabase = await getServerClient();
   if (supabase) {
-    const { count } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .is('read_at', null);
-    unread = count || 0;
+    const [notificationResult, messageState] = await Promise.all([
+      supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .is('read_at', null),
+      getUnreadMessageState(supabase),
+    ]);
+    unread = notificationResult.count || 0;
+    initialUnreadMessages = messageState.rows;
   }
 
   const createItems = [
@@ -78,16 +86,19 @@ export default async function AppLayout({ children }) {
     { section: 'Navigation', label: 'Gigs', href: ROUTES.gigs, icon: 'briefcase' },
     { section: 'Navigation', label: 'Clubs', href: ROUTES.clubs, icon: 'star' },
     { section: 'Navigation', label: 'Noticeboard', href: '/campus/noticeboard', icon: 'megaphone' },
+    // Timetable is public; the saved profile division only personalises
+    // where this shortcut lands (division page vs. selector).
+    { section: 'Navigation', label: 'Timetable', href: getTimetableHref(user.profile?.division), icon: 'calendar', keywords: 'schedule classes lectures division' },
     { section: 'Navigation', label: 'Resources', href: '/explore/resources', icon: 'book' },
     { section: 'Navigation', label: 'Projects', href: '/explore/projects', icon: 'sparkle' },
     { section: 'Navigation', label: 'Opportunities', href: '/explore/opportunities', icon: 'briefcase' },
-    { section: 'Navigation', label: 'Marketplace', href: '/market', icon: 'tag' },
+    { section: 'Navigation', label: 'Market', href: '/market', icon: 'tag' },
     { section: 'Navigation', label: 'Profile', href: '/profile', icon: 'user' },
     { section: 'Navigation', label: 'Settings', href: '/settings', icon: 'settings' },
+    { section: 'Navigation', label: 'First-visit guide', href: ROUTES.guide, icon: 'mapPin', keywords: 'new here orientation what is campus plus where is everything' },
     ...(canModerate ? [{ section: 'Navigation', label: 'Moderation', href: '/moderator', icon: 'shield' }] : []),
     ...(canAdmin ? [{ section: 'Navigation', label: 'Admin', href: '/admin', icon: 'eye' }] : []),
     ...createItems.map((item) => ({ ...item, section: 'Create' })),
-    { section: 'Actions', label: 'Search Campus+', href: '/explore', icon: 'search', keywords: 'find query' },
     { section: 'Actions', label: 'Search discussions', href: '/explore?scope=discussions', icon: 'comment', keywords: 'questions answers' },
     { section: 'Actions', label: 'Calendar view', href: '/campus/events?view=calendar', icon: 'calendar', keywords: 'month agenda' },
     { section: 'Actions', label: 'Lost & found', href: '/campus/lost-found', icon: 'search', keywords: 'lost found items' },
@@ -95,15 +106,17 @@ export default async function AppLayout({ children }) {
     { section: 'Actions', label: 'Community rules', href: '/rules', icon: 'shield', keywords: 'guidelines policy' },
   ];
 
+  // The shell gets the adapter's five fields — never the session, the auth id,
+  // the email or the resolved permission set.
+  const shellUser = toShellUser(user);
+
   return (
     <AppShell
-      user={{
-        username: user.profile?.username,
-        displayName: user.profile?.display_name,
-        roles: user.roles,
-        staffLabel: user.roles?.includes('admin') ? 'Administrator' : undefined,
-      }}
+      user={shellUser}
       unreadNotifications={unread}
+      messagingUserId={user.profile.id}
+      feedUserId={user.profile.id}
+      initialUnreadMessages={initialUnreadMessages}
       canModerate={canModerate}
       canAdmin={canAdmin}
       createItems={createItems}

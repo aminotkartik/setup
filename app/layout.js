@@ -1,54 +1,59 @@
 import './globals.css';
 import { LandingIntro } from '@/components/layout/GalacticIntro';
+import { ThemeChrome } from '@/components/layout/ThemeChrome';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
+import { shouldUseVercelTelemetry } from '@/lib/vercel-telemetry';
+import { THEME_PREHYDRATION_SCRIPT } from '@/lib/theme';
 
-/* The Campus+ After Dark typefaces, self-hosted from the reference
-   repository's assets (aminotkartik/loginpage). They are loaded once, here,
-   and exposed as CSS variables on <body> so every screen can reach for them:
+/* Hallmark Lumen's exact faces, self-hosted for reproducible production and
+   offline rendering. The variables override the generated token fallbacks on
+   <body>, so every route and component receives the same real font binaries. */
+const bodyFont = localFont({
+  src: [
+    { path: './fonts/Geist-Regular.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/Geist-Medium.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/Geist-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/Geist-Bold.woff2', weight: '700', style: 'normal' },
+  ],
+  variable: '--font-body',
+  display: 'swap',
+});
 
-     --font-display → Boldonse, used only for cinematic entry headings
-     --font-micro   → DM Mono, used only for short technical micro-labels
-
-   Body copy stays on the Inter/UI stack: a display face at reading size would
-   hurt the everyday feed, and a monospace face at paragraph size would hurt
-   legibility more than it would add atmosphere. Both faces are `swap`, so a
-   slow font never blocks first paint. */
 const displayFont = localFont({
-  src: './fonts/Boldonse-Regular.ttf',
+  src: './fonts/InstrumentSerif-Regular.woff2',
+  weight: '400',
+  style: 'normal',
   variable: '--font-display',
   display: 'swap',
 });
 
 const microFont = localFont({
-  src: [
-    { path: './fonts/DMMono-Regular.ttf', weight: '400', style: 'normal' },
-    { path: './fonts/DMMono-Medium.ttf', weight: '500', style: 'normal' },
-  ],
-  variable: '--font-micro',
+  src: './fonts/GeistMono-Regular.woff2',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-outlier',
   display: 'swap',
 });
 
 /**
  * Campus+ — root layout.
  *
- * One reading family (Inter → platform UI) plus two deliberately rationed
- * atmospheric faces: a display face for cinematic entry points and a monospace
- * face for micro-labels. No icon webfont. The application frame (sidebar /
- * bottom navigation) is applied per-route group so the sign-in and setup
- * screens can stay deliberately plain.
+ * Geist is the reading and interface family, Instrument Serif the restrained
+ * display face, and Geist Mono the readout face. No icon webfont. The
+ * application frame (sidebar / bottom navigation) is applied per-route group
+ * so the sign-in and setup screens can stay deliberately plain.
  *
- * Campus+ is permanently dark: the root always renders `data-theme="dark"`
- * with a dark `color-scheme`, so the very first paint is the night palette —
- * no cookie, saved preference or operating-system setting can select anything
- * else, and there is never a flash of light.
+ * The root starts from the dark palette. A small static script restores an
+ * explicit browser-local theme choice before the first paint; ThemeChrome then
+ * synchronizes browser chrome after hydration. Neither an account nor a
+ * site-wide setting is involved.
  *
- * The reading stack prefers Inter (then Geist) and falls back to the platform
- * UI font. Inter is not fetched at build time on purpose: a build that depends
- * on a third-party CDN cannot be reproduced offline. To self-host it, drop the
- * woff2 files into app/fonts/ and switch to next/font/local — see
- * docs/DEPLOYMENT.md.
+ * All three faces are local next/font assets, so production and offline builds
+ * do not depend on a third-party font CDN.
  */
 
 export const metadata = {
@@ -67,23 +72,26 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  // The one Campus+ theme color (--cp-bg-page); it never follows the device.
-  themeColor: '#0b1120',
 };
 
 export default function RootLayout({ children }) {
-  /* The landing animation is route-gated, not document-global: <LandingIntro>
-     renders it only on the home page (`/home`, plus the `/` redirect that leads
-     there) and only for a document that was opened there. Every other route —
-     `/login`, `/setup`, `/profile`, `/market`, `/communities`, `/chat`,
-     `/settings`, `/campus`, … — renders its children directly, with no
-     overlay and no inert wrapper. The intro's font preloads therefore live in
-     `app/(app)/home/layout.js`, so no route that cannot show the intro pays for
-     them (and browsers do not warn about unused preloads). */
+  /* The original landing sequence is route-gated to a fresh Home document.
+     It does no work on other routes or on client navigation back to Home. */
   return (
-    <html lang="en" data-theme="dark">
-      <body className={`${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#191D21" suppressHydrationWarning />
+        <script id="campusplus-theme">{THEME_PREHYDRATION_SCRIPT}</script>
+      </head>
+      <body className={`${bodyFont.variable} ${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
+        <ThemeChrome />
         <LandingIntro>{children}</LandingIntro>
+        {shouldUseVercelTelemetry() ? (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        ) : null}
       </body>
     </html>
   );

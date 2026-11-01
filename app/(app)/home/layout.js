@@ -1,20 +1,17 @@
 import { preload } from 'react-dom';
 
 /**
- * Home — the one route that shows the landing animation.
- *
- * The intro itself is mounted by the root layout's `<LandingIntro>` gate (it
- * has to sit above the app shell to cover it, and above `/` so the `/` → `/home`
- * redirect does not tear it down). This layout adds the two self-hosted faces
- * that only the intro paints, so the critical font hints ship with the only
- * route that can use them: `/login`, `/setup` and every app page no longer
- * preload fonts they never render.
- *
- * Each file is a single variable face covering every weight the intro uses, so
- * these hints do not preload unused weights. `crossOrigin: 'anonymous'` matches
- * the CORS mode browsers use for fonts; without it the preload would be
- * fetched twice.
+ * Home owns its route stylesheet, the shared Lumen material overrides, and the
+ * two original faces used only by the restored landing sequence. Preloading
+ * them here keeps that cost off Login, Setup, and every other application
+ * route; the root's route gate decides whether the intro actually plays.
  */
+import '@/app/styles/home.css';
+// Home owns the first-visit guide offer too; neither its stylesheet nor its
+// tiny pre-paint storage check belongs in the shared shell or on public routes.
+import '@/app/styles/guide-strip.css';
+import '@/app/styles/lumen.css';
+
 export default function HomeLayout({ children }) {
   preload('/fonts/Syne.ttf', {
     as: 'font',

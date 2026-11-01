@@ -66,7 +66,7 @@ function NoticeMeta({ item }) {
   );
 }
 
-export function StreamItem({ item, post, currentUserId, canModerate, reactions = { count: 0, mine: false } }) {
+export function StreamItem({ item, post, currentUserId, canModerate, onPollVote = null, reactions = { count: 0, mine: false } }) {
   const kind = kindOf(item.type);
 
   if (kind === 'event') {
@@ -170,15 +170,20 @@ export function StreamItem({ item, post, currentUserId, canModerate, reactions =
       canModerate={canModerate}
       reactions={reactions}
       poll={post.poll}
+      onPollVote={onPollVote}
     />
   );
 }
 
 /** The wrapper that gives each entry its kind — the marker colour and the type
  * scale are derived from it in CSS, so the components stay presentation-free. */
-export function StreamSlot({ kind, children }) {
+export function StreamSlot({ kind, children, order = 0 }) {
   return (
-    <div className="stream-slot" data-kind={kindOf(kind)}>
+    <div
+      className="stream-slot"
+      data-kind={kindOf(kind)}
+      style={{ '--stream-order': String(Math.min(order, 8)) }}
+    >
       {children}
     </div>
   );
