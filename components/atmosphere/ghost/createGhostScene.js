@@ -81,9 +81,9 @@ function haloTexture() {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  gradient.addColorStop(0, 'rgba(40, 150, 255, 0.34)');
-  gradient.addColorStop(0.35, 'rgba(12, 90, 210, 0.13)');
-  gradient.addColorStop(1, 'rgba(2, 10, 30, 0)');
+  gradient.addColorStop(0, 'rgba(145, 191, 229, 0.24)');
+  gradient.addColorStop(0.35, 'rgba(145, 191, 229, 0.08)');
+  gradient.addColorStop(1, 'rgba(25, 29, 33, 0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
   const texture = new THREE.CanvasTexture(canvas);
