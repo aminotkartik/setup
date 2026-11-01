@@ -12,22 +12,76 @@
      the fallback eye pulse are all removed.
    ========================================================================== */
 
-/* The entry sky: the same midnight/deep-ocean room as the rest of the product,
-   lit by a broad teal field behind the ghost and a sunset reach at the lower
-   right. The sign-in screen is the front door to the Glass Universe, not a
-   separate visual world. */
+/* The entry sky keeps its existing radial atmosphere, now restrained to the
+   Campus+ charcoal and ivory surfaces. All values are route-scoped so the
+   global theme and every other screen remain untouched. */
 .login-stage {
-  /* The original sign-in atmosphere is retained only on this route. The
-     foreground controls and type still come from the Lumen material layer. */
-  --cp-sky-bg: #061218;
-  --cp-sky-wash: rgba(4, 16, 22, 0.38);
-  --cp-bg-page-deep: #04101a;
+  /* Light is the fallback, matching the global token layer. Dark below uses
+     the exact Campus+ login foundations requested for this scene. */
+  --login-background: #E1D9D1;
+  --login-secondary-background: #F1EBE5;
+  --login-surface: #F1EBE5;
+  --login-text: #292725;
+  --login-tagline: #292725;
+  --login-secondary-text: #514C48;
+  --login-muted: #625C56;
+  --login-accent: #8DBCE3;
+  --login-link: #385D75;
+  --login-on-accent: #292725;
+  --login-border: #B9B0A8;
+  --login-button-hover: color-mix(in oklab, var(--login-accent) 90%, var(--login-surface));
 
-  background-color: var(--cp-sky-bg);
+  /* Feed the existing login/material selectors without changing their rules. */
+  --color-paper: var(--login-background);
+  --color-paper-2: var(--login-surface);
+  --color-paper-3: var(--login-secondary-background);
+  --color-ink: var(--login-text);
+  --color-ink-2: var(--login-secondary-text);
+  --color-muted: var(--login-muted);
+  --color-rule: var(--login-border);
+  --color-rule-2: var(--login-border);
+  --color-accent: var(--login-accent);
+  --color-accent-text: var(--login-link);
+  --color-accent-ink: var(--login-on-accent);
+  --color-focus: var(--login-accent);
+  --cp-sky-bg: var(--login-background);
+  --cp-sky-wash: color-mix(in oklab, var(--login-background) 38%, transparent);
+  --cp-bg-page-deep: var(--login-background);
+  --cp-sky-text: var(--login-text);
+  --cp-sky-secondary: var(--login-secondary-text);
+  --cp-sky-muted: var(--login-muted);
+  --cp-sky-icon-bg: var(--login-secondary-background);
+  --cp-sky-border: var(--login-border);
+  --cp-bg-cinematic-glass: var(--login-surface);
+  --cp-cinematic-border: var(--login-border);
+  --cp-accent-highlight: var(--login-accent);
+  --cp-scrim: color-mix(in oklab, var(--login-background) 72%, transparent);
+  --cp-edge-light: var(--login-border);
+  --cp-glass-reflection: transparent;
+  --cp-glass-tint: transparent;
+  --cp-glow-accent: transparent;
+  --c-accent-tint: var(--login-secondary-background);
+
+  background-color: var(--login-background);
   background-image:
-    radial-gradient(circle at 50% 46%, rgba(20, 184, 166, 0.18) 0%, rgba(9, 58, 60, 0.1) 38%, transparent 70%),
-    radial-gradient(circle at 50% 10%, rgba(45, 212, 191, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 88% 92%, rgba(249, 115, 22, 0.1) 0%, transparent 52%);
+    radial-gradient(circle at 50% 46%, color-mix(in oklab, var(--login-secondary-background) 20%, transparent) 0%, color-mix(in oklab, var(--login-secondary-background) 8%, transparent) 38%, transparent 70%),
+    radial-gradient(circle at 50% 10%, color-mix(in oklab, var(--login-secondary-background) 10%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, color-mix(in oklab, var(--login-secondary-background) 14%, transparent) 0%, transparent 52%);
+}
+
+:root[data-theme='dark'] .login-stage {
+  --login-background: #191D21;
+  --login-secondary-background: #1F252A;
+  --login-surface: #252B30;
+  --login-text: #F0EEE9;
+  --login-tagline: #E1D9D1;
+  --login-secondary-text: #B5B8BA;
+  --login-muted: #92999E;
+  --login-accent: #91BFE5;
+  --login-link: #91BFE5;
+  --login-on-accent: #191D21;
+  --login-border: #384149;
+  --login-button-hover: color-mix(in oklab, var(--login-accent) 90%, var(--login-tagline));
 }
 
 /* Third-party brand asset colors, scoped to the inline Google mark. Keeping
@@ -47,24 +101,37 @@
      stays at reading luminance. */
   opacity: 0.78;
 
-  /* The reference's ghost palette. The WebGL scene reads these tokens, so the
-     colours live here and nowhere in the component code. */
-  --ghost-body: #08302e;
-  --ghost-bright: #14b8a6;
-  --ghost-light: #5eead4;
-  --ghost-eye: #9df3e8;
-  --ghost-socket: #02100f;
-  --ghost-ambient: #0d3c3d;
-  --ghost-rim-a: #2dd4bf;
-  --ghost-rim-b: #f4e3c1;
-  --ghost-firefly: #99f6e4;
-  --ghost-trail: #14b8a6;
+  /* The same ghost geometry and motion, with a softer blue Light fallback.
+     The WebGL scene reads these tokens, so its palette stays in CSS. */
+  --ghost-body: #6C8B9F;
+  --ghost-bright: #8DBCE3;
+  --ghost-light: #B4CFDF;
+  --ghost-eye: #E1D9D1;
+  --ghost-socket: #292725;
+  --ghost-ambient: #D8CEC4;
+  --ghost-rim-a: #8DBCE3;
+  --ghost-rim-b: #C7AE92;
+  --ghost-firefly: #8DBCE3;
+  --ghost-trail: #8DBCE3;
 
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+:root[data-theme='dark'] .login-stage .login-ghost-layer {
+  --ghost-body: #263B49;
+  --ghost-bright: #91BFE5;
+  --ghost-light: #A9C6D9;
+  --ghost-eye: #C2D9E7;
+  --ghost-socket: #191D21;
+  --ghost-ambient: #1F252A;
+  --ghost-rim-a: #91BFE5;
+  --ghost-rim-b: #B5B8BA;
+  --ghost-firefly: #91BFE5;
+  --ghost-trail: #91BFE5;
 }
 
 .login-ghost-layer .ghost-canvas {
@@ -81,11 +148,11 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at center, transparent 36%, rgba(2, 12, 14, 0.6) 100%),
+    radial-gradient(ellipse at center, transparent 36%, color-mix(in oklab, var(--login-background) 60%, transparent) 100%),
     repeating-linear-gradient(
       to bottom,
-      rgba(190, 240, 232, 0.025) 0,
-      rgba(190, 240, 232, 0.025) 1px,
+      color-mix(in oklab, var(--login-secondary-text) 2.5%, transparent) 0,
+      color-mix(in oklab, var(--login-secondary-text) 2.5%, transparent) 1px,
       transparent 1px,
       transparent 4px
     );
@@ -112,24 +179,24 @@
 }
 
 .login-ghost-stop-a {
-  stop-color: #2dd4bf;
+  stop-color: var(--ghost-light);
 }
 
 .login-ghost-stop-b {
-  stop-color: #0b6e66;
+  stop-color: var(--ghost-bright);
 }
 
 .login-ghost-stop-c {
-  stop-color: #04211f;
+  stop-color: var(--ghost-body);
 }
 
 .login-ghost-socket {
-  fill: #01100e;
+  fill: var(--ghost-socket);
 }
 
 .login-ghost-eye {
-  fill: #a8f7ec;
-  filter: drop-shadow(0 0 7px #2dd4bf);
+  fill: var(--ghost-eye);
+  filter: drop-shadow(0 0 7px var(--ghost-bright));
   transform-box: fill-box;
   transform-origin: center;
   animation: login-ghost-eye 2s ease-in-out infinite;
@@ -166,30 +233,33 @@
   line-height: 1.14;
   letter-spacing: -0.035em;
   text-transform: uppercase;
-  color: var(--cp-sky-text);
+  color: var(--login-tagline);
   text-shadow:
-    0 0 4px rgba(94, 234, 212, 0.4),
-    0 0 20px rgba(20, 184, 166, 0.46),
-    0 0 44px rgba(249, 115, 22, 0.16);
+    0 0 4px color-mix(in oklab, var(--login-accent) 40%, transparent),
+    0 0 20px color-mix(in oklab, var(--login-accent) 46%, transparent),
+    0 0 44px color-mix(in oklab, var(--login-tagline) 16%, transparent);
 }
 
-/* The last phrase, lit. A solid mint-teal rather than gradient-clipped text:
-   painted-over glyphs cannot be measured for contrast (the paint is the text
-   itself), and at display size the sweep from sand to teal was invisible while
-   the solid tone measures 8:1 on the stage. The warmth stays in the glow. */
+/* The last phrase keeps the same solid, measurable text treatment as the rest
+   of the tagline; only the shared scene palette changes. */
 .login-title-accent {
-  color: var(--cp-accent-highlight);
-  text-shadow: 0 0 22px color-mix(in oklab, var(--cp-accent-highlight) 55%, transparent);
+  color: var(--login-tagline);
+  text-shadow: 0 0 22px color-mix(in oklab, var(--login-accent) 55%, transparent);
 }
 
-/* The title rule: teal light with a sand core, fading at both ends. */
+:root .login-stage .login-title,
+:root .login-stage .login-title-accent {
+  color: var(--login-tagline);
+}
+
+/* The title rule keeps its existing fade, now with ice-blue and warm ink. */
 .login-rule {
   display: block;
   width: min(196px, 45vw);
   height: 1px;
   margin-top: 1.1rem;
-  background: linear-gradient(90deg, transparent, #14b8a6 23%, #f4e3c1 50%, #14b8a6 77%, transparent);
-  box-shadow: 0 0 22px rgba(20, 184, 166, 0.55);
+  background: linear-gradient(90deg, transparent, var(--login-accent) 23%, var(--login-tagline) 50%, var(--login-accent) 77%, transparent);
+  box-shadow: 0 0 22px color-mix(in oklab, var(--login-accent) 55%, transparent);
 }
 
 /* Supporting labels take the reference's DM Mono. */
@@ -257,8 +327,46 @@
     );
 }
 
-/* The sign-in heading carries the identity: sand at the leading edge, teal
-   through the body, and a warm shadow that keeps it legible on the field. */
+/* The sign-in heading carries the identity with warm, readable type. */
 .login-title {
   text-wrap: balance;
+}
+
+/* Colour-only reconciliation with the shared Lumen foreground rules. */
+:root .login-stage .brand-word {
+  color: var(--login-text);
+}
+
+:root .login-stage ul.login-intro {
+  color: var(--login-secondary-text);
+}
+
+:root .login-stage .login-sky .login-fact {
+  border-color: var(--login-border);
+  background-color: var(--login-secondary-background);
+  color: var(--login-link);
+}
+
+:root .login-stage .login-intro a:not(.brand) {
+  color: var(--login-link);
+}
+
+:root .login-stage form > p,
+:root .login-stage p.login-intro {
+  color: var(--login-muted);
+}
+
+:root .login-stage .glass-cinematic {
+  border-color: var(--login-border);
+  background-color: var(--login-surface);
+  color: var(--login-secondary-text);
+}
+
+:root .login-stage .glass-cinematic p {
+  color: var(--login-text);
+}
+
+:root .login-stage .login-google-button:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--login-button-hover);
+  color: var(--login-on-accent);
 }
