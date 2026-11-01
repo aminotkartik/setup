@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
  * Campus+ has one permanent dark default palette.
  *
  * There is no light mode, "follow the device" theme, account preference or
- * site-wide theme switch. The only exception is the explicit three-color,
+ * site-wide theme switch. The only exception is the explicit four-color,
  * browser-local customization in Settings; it cannot alter another device or
  * the canonical tokens. These guards pin that boundary by reading the sources.
  */

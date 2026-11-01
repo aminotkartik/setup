@@ -46,7 +46,7 @@ const microFont = localFont({
  *
  * Campus+ always starts from its permanent dark palette: the root renders
  * `data-theme="dark"` with a dark `color-scheme`, never a light or system
- * variant. A signed-in user may opt into three device-local color overrides in
+ * variant. A signed-in user may opt into four device-local color overrides in
  * Settings; the tiny static script below restores only those colors before the
  * first paint. No account or site-wide setting is read or changed.
  *

@@ -1,6 +1,6 @@
 .fields {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md);
 }
 
@@ -75,6 +75,7 @@
   align-items: flex-start;
   gap: var(--space-sm);
   padding: var(--space-md);
+  background: var(--preview-section);
 }
 
 .previewMuted {

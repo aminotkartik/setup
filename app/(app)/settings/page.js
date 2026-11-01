@@ -29,7 +29,7 @@ const TABS = [
  *
  * Profile, username, privacy, blocked users and account state — the preferences
  * that actually exist in the database. Appearance is deliberately different:
- * its three colors are kept in this browser only and never become a platform
+ * its four colors are kept in this browser only and never become a platform
  * setting. Notification controls are limited to what the platform really does
  * (in-app notifications, mark all read, per-thread mute in chat); nothing here
  * pretends to send email or push, and no preference is stored that the system
