@@ -1,5 +1,6 @@
 /* Original Home choreography and geometry are preserved. Only the scene
-   palette changed: every color now resolves through the shared Lumen tokens. */
+   palette changed: Dark keeps the shared Lumen values and Light has a warm
+   scoped colour treatment. */
 /* Both files are variable fonts. Their real axes are Syne wght 400–800 and
    Space Grotesk wght 300–700; the descriptors below must describe those
    ranges, not a guessed static weight. The wordmark uses Syne 800. `block` for
@@ -29,6 +30,11 @@
   overflow: hidden;
   color: var(--color-ink);
   color-scheme: dark;
+  /* Dark retains the original scene colours. Light overrides only these
+     colour inputs below; geometry and choreography stay shared. */
+  --intro-secondary: var(--color-accent-2);
+  --intro-edge: var(--color-accent-ink);
+  --intro-glow: var(--color-accent-ink);
   background:
     radial-gradient(
       ellipse 78% 60% at 22% 20%,
@@ -37,17 +43,17 @@
     ),
     radial-gradient(
       ellipse 68% 52% at 84% 76%,
-      color-mix(in oklab, var(--color-accent-2) 14%, transparent),
+      color-mix(in oklab, var(--intro-secondary) 14%, transparent),
       transparent 64%
     ),
     linear-gradient(
       180deg,
-      var(--color-accent-ink) 0%,
+      var(--intro-edge) 0%,
       var(--color-paper) 28%,
       var(--color-paper-2) 50%,
       var(--color-paper) 72%,
-      var(--color-accent-ink) 88%,
-      var(--color-accent-ink) 100%
+      var(--intro-edge) 88%,
+      var(--intro-edge) 100%
     );
   transition: opacity 0.4s ease;
   /* The delay is supplied by GalacticIntro.js (SAFETY_CSS_DELAY_MS) so this
@@ -94,7 +100,7 @@
   bottom: 12%;
   background: radial-gradient(
     ellipse,
-    color-mix(in oklab, var(--color-accent-2) 10%, transparent),
+    color-mix(in oklab, var(--intro-secondary) 10%, transparent),
     transparent 72%
   );
 }
@@ -136,7 +142,7 @@
   transform: translate(-50%, -50%);
   width: min(860px, 92vw);
   height: 220px;
-  background: radial-gradient(ellipse, color-mix(in oklab, var(--color-accent-ink) 34%, transparent), transparent 72%);
+  background: radial-gradient(ellipse, color-mix(in oklab, var(--intro-glow) 34%, transparent), transparent 72%);
   filter: blur(16px);
   z-index: 1;
 }
@@ -146,10 +152,18 @@
   background: radial-gradient(
     ellipse,
     transparent 60%,
-    color-mix(in oklab, var(--color-accent-ink) 55%, transparent) 88%,
-    color-mix(in oklab, var(--color-accent-ink) 92%, transparent) 100%
+    color-mix(in oklab, var(--intro-edge) 55%, transparent) 88%,
+    color-mix(in oklab, var(--intro-edge) 92%, transparent) 100%
   );
   z-index: 1;
+}
+/* Light changes the scene's colour inputs only. The warm edge replaces the
+   dark ink vignette, while the ivory centre glow preserves the same shape. */
+:global(:root[data-theme='light']) .stage {
+  color-scheme: light;
+  --intro-secondary: #D8CEC4;
+  --intro-edge: #D8CEC4;
+  --intro-glow: #F1EBE5;
 }
 .flare {
   position: absolute;
@@ -177,7 +191,7 @@
   box-shadow:
     0 0 16px var(--color-ink),
     0 0 42px color-mix(in oklab, var(--color-accent) 46%, transparent),
-    0 0 90px color-mix(in oklab, var(--color-accent-2) 16%, transparent);
+    0 0 90px color-mix(in oklab, var(--intro-secondary) 16%, transparent);
 }
 .flare::after {
   content: '';
@@ -335,7 +349,7 @@
     fill: var(--color-ink);
     stroke-width: 0;
     filter: drop-shadow(0 0 10px color-mix(in oklab, var(--color-accent) 50%, transparent))
-      drop-shadow(0 0 28px color-mix(in oklab, var(--color-accent-2) 16%, transparent));
+      drop-shadow(0 0 28px color-mix(in oklab, var(--intro-secondary) 16%, transparent));
   }
 }
 @keyframes tagIn {

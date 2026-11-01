@@ -81,9 +81,8 @@ export async function GET(_request, { params }) {
     lang: 'en-IN',
     dir: 'ltr',
     categories: ['education', 'productivity'],
-    // One constant, shared with the viewport export and the Apple metadata: the
-    // splash behind a launched icon and the browser toolbar have to be the colour
-    // the page actually opens with, and no route may drift from it.
+    // One constant defines the install canvas and launch splash. Root document
+    // metadata owns live browser chrome, keeping it separate from install data.
     theme_color: TIMETABLE_CANVAS_COLOR,
     background_color: TIMETABLE_CANVAS_COLOR,
     prefer_related_applications: false,

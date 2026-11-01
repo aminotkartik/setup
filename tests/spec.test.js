@@ -297,12 +297,11 @@ describe('design system (spec §4)', () => {
     }
   });
 
-  it('keeps hard-coded colors limited to browser chrome and local-color defaults', () => {
-    // Browser chrome needs strings at metadata/manifest time. The device-color
-    // module also needs the four canonical sRGB equivalents for its picker
-    // and reset control; it never changes those defaults in the stylesheet.
+  it('keeps hard-coded colors limited to browser chrome and theme defaults', () => {
+    // Browser chrome needs strings at metadata/manifest time. The theme module
+    // also needs the canonical sRGB equivalents for its browser-chrome sync.
     const CHROME_COLOUR_FILES = [path.join('app', 'layout.js'), path.join('lib', 'timetable', 'batch.js')];
-    const LOCAL_COLOR_FILES = [path.join('lib', 'device-colors.js'), path.join('lib', 'theme.js')];
+    const LOCAL_COLOR_FILES = [path.join('lib', 'theme.js')];
     const offenders = allSource.filter((file) => {
       if (CHROME_COLOUR_FILES.includes(file) || LOCAL_COLOR_FILES.includes(file)) return false;
       return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
@@ -311,11 +310,13 @@ describe('design system (spec §4)', () => {
 
     expect(lumenTokens).toContain('--color-paper: #E1D9D1');
     expect(globals).toContain('--cp-bg-page: var(--color-paper)');
-    // Static browser chrome and install metadata use the light default; the
-    // pre-paint script updates the live meta value for an explicit dark choice.
-    const canvas = '#E1D9D1';
+    // Static browser chrome and install metadata use the dark default; the
+    // root effect updates the live meta value for an explicit light choice.
+    const canvas = '#191D21';
     const mirrored = (file, pattern) => pattern.exec(read(file))?.[1];
-    expect(mirrored(path.join('app', 'layout.js'), /themeColor: '(#[0-9a-fA-F]{3,8})'/)).toBe(canvas);
+    expect(
+      mirrored(path.join('app', 'layout.js'), /<meta name="theme-color" content="(#[0-9a-fA-F]{3,8})" suppressHydrationWarning/),
+    ).toBe(canvas);
     expect(
       mirrored(path.join('lib', 'timetable', 'batch.js'), /TIMETABLE_CANVAS_COLOR = '(#[0-9a-fA-F]{3,8})'/),
     ).toBe(canvas);
