@@ -230,6 +230,23 @@
     outline-offset: 2px;
   }
 
+  /* The theme control stays compact without dropping below a comfortable
+     touch target. It is a sibling of the account menu in both header layouts. */
+  :root .icon-btn.theme-toggle {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--color-accent-text);
+  }
+
+  @media (min-width: 1024px) {
+    :root .icon-btn.theme-toggle {
+      width: 40px;
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
+
   /* The unread count: real data only, in sunset orange because it is the one
      thing on the header that asks for attention. */
   .notification-badge {

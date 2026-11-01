@@ -17,7 +17,7 @@
   /* Stable subject keys now resolve to the Hallmark Lumen roles. The featured
      LAUC edge is the single brass signal; other subjects stay in quiet ink so
      the timetable does not reintroduce a competing rainbow accent system. */
-  --tt-hue-teal: var(--color-accent);
+  --tt-hue-teal: var(--color-accent-text);
   --tt-hue-sky: var(--color-ink-2);
   --tt-hue-violet: var(--color-ink-2);
   --tt-hue-rose: var(--color-ink-2);

@@ -1,3 +1,8 @@
+/* Campus+ appearance foundations.
+   The @theme block exposes the light defaults to Tailwind. The runtime blocks
+   below are the canonical token source for the document; every semantic role
+   in globals.css resolves through these variables, so a theme change is one
+   attribute update rather than a page-specific class rewrite. */
 @theme static {
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -14,31 +19,82 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --color-error: oklch(72% 0.15 27);
-  --color-success: oklch(76% 0.13 150);
-  --color-paper: oklch(12.5% 0.027 290);
-  --color-paper-2: oklch(16% 0.03 290);
-  --color-paper-3: oklch(20% 0.032 290);
-  --color-ink: oklch(96% 0.01 300);
-  --color-ink-2: oklch(85% 0.017 298);
-  --color-muted: oklch(69% 0.026 295);
-  --color-rule: oklch(27% 0.034 290);
-  --color-rule-2: oklch(36% 0.04 292);
-  --color-accent: oklch(80% 0.15 62);
-  --color-accent-2: oklch(72% 0.15 12);
-  --color-accent-ink: oklch(14% 0.028 290);
-  --color-live: oklch(80% 0.13 155);
-  --color-focus: oklch(80% 0.15 62);
+
+  /* Light fallback values used while generating utilities. */
+  --color-error: #963C35;
+  --color-success: #2B624C;
+  --color-paper: #E1D9D1;
+  --color-paper-2: #F1EBE5;
+  --color-paper-3: #DCD4CD;
+  --color-ink: #292725;
+  --color-ink-2: #514C48;
+  --color-muted: #625C56;
+  --color-rule: #B9B0A8;
+  --color-rule-2: #7C736B;
+  --color-accent: #8DBCE3;
+  --color-accent-text: #385D75;
+  --color-accent-warm: #C7AE92;
+  --color-accent-2: #6B5039;
+  --color-accent-ink: #292725;
+  --color-live: #2B624C;
+  --color-focus: #4D708B;
   --font-display: "Instrument Serif", ui-serif, Georgia, serif;
   --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-outlier: "Geist Mono", ui-monospace, monospace;
   --radius-card: 10px;
   --radius-pill: 999px;
-  --shadow-card: 0 28px 64px -30px oklch(4% 0.02 290 / 0.8);
+  --shadow-card: 0 18px 42px -30px rgb(41 39 37 / 0.42);
   --tracking-display: -0.015em;
 }
-:root {
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-error: #963C35;
+  --color-success: #2B624C;
+  --color-paper: #E1D9D1;
+  --color-paper-2: #F1EBE5;
+  --color-paper-3: #DCD4CD;
+  --color-ink: #292725;
+  --color-ink-2: #514C48;
+  --color-muted: #625C56;
+  --color-rule: #B9B0A8;
+  --color-rule-2: #7C736B;
+  --color-accent: #8DBCE3;
+  --color-accent-text: #385D75;
+  --color-accent-warm: #C7AE92;
+  --color-accent-2: #6B5039;
+  --color-accent-ink: #292725;
+  --color-live: #2B624C;
+  --color-focus: #4D708B;
+  --shadow-card: 0 18px 42px -30px rgb(41 39 37 / 0.42);
+  --rule-blueprint: rgb(41 39 37 / 0.07);
+}
+
+:root[data-theme='dark'] {
   color-scheme: dark;
+  --color-error: #E89A91;
+  --color-success: #8DC9AE;
+  --color-paper: #191D21;
+  --color-paper-2: #252B30;
+  --color-paper-3: #353B40;
+  --color-ink: #F0EEE9;
+  --color-ink-2: #D1D0CC;
+  --color-muted: #A6A6A2;
+  --color-rule: #3B4044;
+  --color-rule-2: #7B858C;
+  --color-accent: #91BFE5;
+  --color-accent-text: #91BFE5;
+  --color-accent-warm: #C5A983;
+  --color-accent-2: #C5A983;
+  --color-accent-ink: #191D21;
+  --color-live: #8DC9AE;
+  --color-focus: #91BFE5;
+  --shadow-card: 0 22px 48px -30px rgb(0 0 0 / 0.72);
+  --rule-blueprint: rgb(240 238 233 / 0.06);
+}
+
+:root {
   --space-3xs: 2px;
   --space-2xs: 4px;
   --space-xs: 8px;
@@ -69,9 +125,9 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-tooltip: 600;
-  --rule-blueprint: oklch(96% 0.01 300 / 0.05);
   --rule-hair: 1px;
   --display-weight: 400;
 }
+
 @media (max-width: 60rem) { :root { --gutter: 24px; --section-gap-s: 80px; --section-gap: 96px; --section-gap-l: 120px; } }
 @media (max-width: 40rem) { :root { --gutter: 16px; --section-gap-s: 56px; --section-gap: 72px; --section-gap-l: 96px; --gap-columns: 16px; } }

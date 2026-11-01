@@ -8,8 +8,9 @@
  * otherwise become the containing block for `position: fixed`).
  *
  * Accessibility: Escape closes, the backdrop closes, focus moves into the
- * surface on open and returns to the trigger on close, and the page behind is
- * scroll-locked. On phones the same dialog becomes a bottom sheet.
+ * surface on open, stays inside while Tab / Shift+Tab navigate, and returns to
+ * the trigger on close. The page behind is scroll-locked. On phones the same
+ * dialog becomes a bottom sheet.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
@@ -63,6 +64,21 @@ function usePresence(open, exitDuration = 220) {
   return { rendered: rendered || open, visible: visible && open };
 }
 
+const DIALOG_FOCUSABLE = [
+  'button:not(:disabled)',
+  'input:not(:disabled)',
+  'textarea:not(:disabled)',
+  'select:not(:disabled)',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+  '[contenteditable="true"]',
+].join(',');
+
+function dialogFocusables(container) {
+  return [...(container?.querySelectorAll(DIALOG_FOCUSABLE) || [])]
+    .filter((element) => element.getClientRects().length && element.getAttribute('aria-hidden') !== 'true');
+}
+
 export function Modal({
   open,
   onClose,
@@ -89,12 +105,31 @@ export function Modal({
       if (event.key === 'Escape') {
         event.stopPropagation();
         onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const dialog = ref.current;
+      const focusable = dialogFocusables(dialog);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        dialog?.focus();
+        return;
+      }
+      const active = document.activeElement;
+      const outside = !dialog?.contains(active);
+      if (event.shiftKey && (active === first || active === dialog || outside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || outside)) {
+        event.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener('keydown', onKey);
     const timer = window.setTimeout(() => {
-      const focusable = ref.current?.querySelector('input, textarea, select, button, [href], [tabindex]:not([tabindex="-1"])');
-      (focusable || ref.current)?.focus?.();
+      (dialogFocusables(ref.current)[0] || ref.current)?.focus?.();
     }, 20);
     return () => {
       window.clearTimeout(timer);

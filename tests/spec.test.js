@@ -237,7 +237,7 @@ describe('design system (spec §4)', () => {
     .map((name) => read(`app/styles/${name}.css`))
     .join('\n');
 
-  it('defines the semantic token set for the one permanent dark theme', () => {
+  it('defines the semantic token set for both explicit themes', () => {
     for (const token of [
       '--c-canvas',
       '--c-surface',
@@ -269,22 +269,24 @@ describe('design system (spec §4)', () => {
     ]) {
       expect(globals).toContain(token);
     }
-    // One mandatory dark theme — no light variant and no "follow the device".
-    expect(globals).toContain("[data-theme='dark']");
-    expect(globals).not.toContain("[data-theme='light']");
+    // Both themes are explicit document attributes; there is no OS variant.
+    expect(lumenTokens).toContain("[data-theme='light']");
+    expect(lumenTokens).toContain("[data-theme='dark']");
     expect(globals).not.toContain("[data-theme='system']");
     expect(globals).not.toContain('@media (prefers-color-scheme: dark)');
     // The tokens are exposed to Tailwind as utilities.
     expect(globals).toContain('@theme inline');
   });
 
-  it('keeps the Hallmark Lumen identity and the designed night palette', () => {
-    expect(lumenTokens).toContain('--color-paper: oklch(12.5% 0.027 290)');
-    expect(lumenTokens).toContain('--color-paper-2: oklch(16% 0.03 290)');
-    expect(lumenTokens).toContain('--color-ink: oklch(96% 0.01 300)');
-    expect(lumenTokens).toContain('--color-accent: oklch(80% 0.15 62)');
-    expect(lumenTokens).toContain('--color-accent-2: oklch(72% 0.15 12)');
-    expect(lumenTokens).toContain('--color-muted: oklch(69% 0.026 295)');
+  it('keeps the Campus+ identity on the requested light and dark foundations', () => {
+    expect(lumenTokens).toContain('--color-paper: #E1D9D1');
+    expect(lumenTokens).toContain('--color-paper-2: #F1EBE5');
+    expect(lumenTokens).toContain('--color-ink: #292725');
+    expect(lumenTokens).toContain('--color-accent: #8DBCE3');
+    expect(lumenTokens).toContain('--color-paper: #191D21');
+    expect(lumenTokens).toContain('--color-paper-2: #252B30');
+    expect(lumenTokens).toContain('--color-ink: #F0EEE9');
+    expect(lumenTokens).toContain('--color-accent: #91BFE5');
     expect(globals).toContain('--cp-bg-page: var(--color-paper)');
     expect(globals).toContain('--cp-bg-accent: var(--color-accent)');
 
@@ -300,18 +302,18 @@ describe('design system (spec §4)', () => {
     // module also needs the four canonical sRGB equivalents for its picker
     // and reset control; it never changes those defaults in the stylesheet.
     const CHROME_COLOUR_FILES = [path.join('app', 'layout.js'), path.join('lib', 'timetable', 'batch.js')];
-    const LOCAL_COLOR_FILES = [path.join('lib', 'device-colors.js')];
+    const LOCAL_COLOR_FILES = [path.join('lib', 'device-colors.js'), path.join('lib', 'theme.js')];
     const offenders = allSource.filter((file) => {
       if (CHROME_COLOUR_FILES.includes(file) || LOCAL_COLOR_FILES.includes(file)) return false;
       return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
     });
     expect(offenders).toEqual([]);
 
-    expect(lumenTokens).toContain('--color-paper: oklch(12.5% 0.027 290)');
+    expect(lumenTokens).toContain('--color-paper: #E1D9D1');
     expect(globals).toContain('--cp-bg-page: var(--color-paper)');
-    // #060510 is the in-gamut sRGB equivalent used where metadata requires a
-    // static browser-chrome value instead of a CSS custom property.
-    const canvas = '#060510';
+    // Static browser chrome and install metadata use the light default; the
+    // pre-paint script updates the live meta value for an explicit dark choice.
+    const canvas = '#E1D9D1';
     const mirrored = (file, pattern) => pattern.exec(read(file))?.[1];
     expect(mirrored(path.join('app', 'layout.js'), /themeColor: '(#[0-9a-fA-F]{3,8})'/)).toBe(canvas);
     expect(

@@ -6,12 +6,20 @@ import { describe, expect, it } from 'vitest';
  * these: tokens alone cannot prove contrast under a blend, gradient or canvas. */
 const css = fs.readFileSync('app/globals.css', 'utf8');
 const canonicalTokens = fs.readFileSync('app/tokens.css', 'utf8');
-const tokens = new Map(
-  [...`${canonicalTokens}\n${css}`.matchAll(/(--(?:cp|c|color|brand)-[\w-]+):\s*([^;]+);/g)].map((match) => [
-    match[1],
-    match[2].trim(),
-  ]),
-);
+function makeTokenMap(source) {
+  return new Map(
+    [...source.matchAll(/(--(?:cp|c|color|brand)-[\w-]+):\s*([^;]+);/g)].map((match) => [
+      match[1],
+      match[2].trim(),
+    ]),
+  );
+}
+
+const lightCanonical = canonicalTokens.replace(/:root\[data-theme='dark'\]\s*\{[^}]*\}/, '');
+const tokenMaps = {
+  light: makeTokenMap(`${lightCanonical}\n${css}`),
+  dark: makeTokenMap(`${canonicalTokens}\n${css}`),
+};
 
 function splitPair(value) {
   let depth = 0;
@@ -84,6 +92,7 @@ function color(value, theme, seen = new Set()) {
   const text = value.trim();
   if (text.startsWith('var(')) {
     const name = text.slice(4, -1);
+    const tokens = tokenMaps[theme];
     if (seen.has(name) || !tokens.has(name)) throw new Error(`Invalid token dependency: ${name}`);
     return color(tokens.get(name), theme, new Set([...seen, name]));
   }
@@ -123,6 +132,7 @@ function color(value, theme, seen = new Set()) {
 }
 
 function read(name, theme) {
+  const tokens = tokenMaps[theme];
   expect(tokens.has(`--cp-${name}`), `Missing semantic token: ${name}`).toBe(true);
   return color(tokens.get(`--cp-${name}`), theme);
 }
@@ -154,7 +164,7 @@ function verifyPair(foreground, background, theme, threshold = 4.5) {
 const readingSurfaces = ['bg-page', 'bg-page-deep', 'bg-elevated', 'bg-subtle', 'bg-strong', 'bg-accent-soft', 'bg-accent-tint', 'hover-bg', 'success-bg', 'warning-bg', 'danger-bg', 'info-bg'];
 const textRoles = ['text-primary', 'text-secondary', 'text-muted', 'text-subtle'];
 
-for (const theme of ['dark']) {
+for (const theme of ['light', 'dark']) {
   describe(`${theme} semantic contrast`, () => {
     it('keeps every text tier readable on reading and status surfaces', () => {
       for (const foreground of textRoles) {
@@ -281,15 +291,18 @@ function walk(dir) {
 }
 
 describe('readability architecture guards', () => {
-  it('is permanently dark: one palette, with no light or system variant', () => {
-    expect(css).toMatch(/:root,\s*\[data-theme='dark'\]\s*\{\s*color-scheme: dark/);
-    expect(css).not.toContain("[data-theme='light']");
+  it('resolves explicit light and dark palettes without a system variant', () => {
+    expect(canonicalTokens).toContain(":root[data-theme='light']");
+    expect(canonicalTokens).toContain(":root[data-theme='dark']");
+    expect(canonicalTokens).toContain('color-scheme: light');
+    expect(canonicalTokens).toContain('color-scheme: dark');
     expect(css).not.toContain("[data-theme='system']");
     expect(css).not.toContain('light-dark(');
     expect(css).not.toMatch(/@media \(prefers-color-scheme/);
-    expect(css).not.toMatch(/color-scheme: light/);
-    for (const value of tokens.values()) {
-      expect(() => color(value, 'dark')).not.toThrow();
+    for (const theme of ['light', 'dark']) {
+      for (const value of tokenMaps[theme].values()) {
+        expect(() => color(value, theme)).not.toThrow();
+      }
     }
   });
 

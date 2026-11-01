@@ -20,6 +20,7 @@ import { BrandLockup } from '@/components/brand/Brand';
 import { Icon } from '@/components/ui/icons';
 import { GlassSurface } from '@/components/ui';
 import { AccountMenu } from '@/components/layout/AccountMenu';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { ShellSearch } from '@/components/layout/ShellSearch';
 import { CommandPaletteTrigger } from '@/components/search/CommandPalette';
@@ -65,6 +66,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
               <Icon name="search" size={19} />
             </Link>
             <NotificationBell unreadNotifications={unreadNotifications} />
+            <ThemeToggle />
             <AccountMenu user={user} isStaff={isStaff} />
           </div>
         </div>
@@ -76,6 +78,7 @@ export function ShellHeader({ user = null, unreadNotifications = 0, isStaff = fa
           <div className="ml-auto flex items-center gap-2">
             <NotificationBell unreadNotifications={unreadNotifications} />
             <span className="shell-header__divider" aria-hidden="true" />
+            <ThemeToggle />
             <AccountMenu user={user} isStaff={isStaff} />
           </div>
         </div>

@@ -27,10 +27,10 @@
    the former glass, gradient and illumination treatments.
    ========================================================================== */
 
-:root,
-[data-theme='dark'] {
-  color-scheme: dark;
-
+:root {
+  /* color-scheme and the canonical palette live in tokens.css. These aliases
+     intentionally resolve through variables so the same component CSS serves
+     both themes. */
   --brand-teal: var(--color-accent);
   --brand-teal-bright: var(--color-accent);
   --brand-sand: var(--color-ink-2);
@@ -55,7 +55,7 @@
   --cp-focus: var(--color-focus);
   --cp-focus-gap: var(--color-paper);
 
-  --cp-text-accent: var(--color-accent);
+  --cp-text-accent: var(--color-accent-text);
   --cp-text-on-accent-soft: var(--color-ink);
   --cp-bg-accent: var(--color-accent);
   --cp-text-on-accent: var(--color-accent-ink);
@@ -65,18 +65,18 @@
   --cp-bg-accent-soft: var(--color-paper-3);
   --cp-bg-accent-tint: var(--color-paper-2);
   --cp-accent-pale: var(--color-paper-3);
-  --cp-accent-highlight: var(--color-accent);
-  --cp-accent-cyan: var(--color-accent);
-  --cp-accent-warm: var(--color-accent);
+  --cp-accent-highlight: var(--color-accent-text);
+  --cp-accent-cyan: var(--color-accent-text);
+  --cp-accent-warm: var(--color-accent-warm);
   --cp-text-warm: var(--color-accent-2);
 
   /* Semantic feedback stays distinguishable without becoming decoration. */
   --cp-success-text: var(--color-success);
   --cp-success-bg: var(--color-paper-2);
   --cp-success-border: var(--color-success);
-  --cp-warning-text: var(--color-accent);
+  --cp-warning-text: var(--color-accent-2);
   --cp-warning-bg: var(--color-paper-2);
-  --cp-warning-border: var(--color-accent);
+  --cp-warning-border: var(--color-accent-2);
   --cp-danger-text: var(--color-error);
   --cp-danger-bg: var(--color-paper-2);
   --cp-danger-border: var(--color-error);
@@ -88,7 +88,7 @@
   --cp-hover-text: var(--color-ink);
   --cp-selected-bg: var(--color-paper-3);
   --cp-selected-text: var(--color-ink);
-  --cp-selected-border: var(--color-accent);
+  --cp-selected-border: var(--color-accent-text);
   --cp-disabled-bg: var(--color-paper-2);
   --cp-disabled-text: var(--color-muted);
   --cp-disabled-border: var(--color-rule-2);
@@ -123,7 +123,7 @@
   --cp-input-icon: var(--color-muted);
   --cp-check-bg: var(--color-accent);
   --cp-check-mark: var(--color-accent-ink);
-  --cp-switch-thumb: var(--color-ink-2);
+  --cp-switch-thumb: var(--color-ink);
   --cp-switch-thumb-checked: var(--color-accent-ink);
   --cp-switch-track: var(--color-rule-2);
 
@@ -156,9 +156,9 @@
   --cp-brand-mark: var(--color-accent-ink);
 
   --cp-loader-track: var(--color-rule);
-  --cp-loader-active: var(--color-accent);
+  --cp-loader-active: var(--color-accent-text);
   --cp-poll-track: var(--color-paper-3);
-  --cp-poll-fill: var(--color-accent);
+  --cp-poll-fill: var(--color-accent-text);
   --cp-highlight: var(--color-ink);
   --cp-highlight-soft: transparent;
   --cp-shade: color-mix(in oklab, var(--color-accent-ink) 30%, transparent);
@@ -175,7 +175,7 @@
   --cp-glow-warm: transparent;
   --cp-glow-soft: transparent;
   --cp-edge-light: var(--color-rule);
-  --cp-edge-accent: var(--color-accent);
+  --cp-edge-accent: var(--color-accent-text);
   --cp-grain: transparent;
   --cp-scanline: transparent;
 
@@ -335,8 +335,7 @@
 }
 
 /* Direct CSS-variable consumers (inline styles, legacy component styles). */
-:root,
-[data-theme='dark'] {
+:root {
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
   --color-line: var(--c-line);
