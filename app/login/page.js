@@ -21,11 +21,10 @@ export const metadata = { title: 'Sign in' };
  * `/auth/callback` sends failures back here as `?error=<code>`; old one-time
  * code links arrive as `?notice=google` (see /login/verify).
  *
- * The composition follows the reference login: a deep navy stage with the
- * existing Campus+ particle sky, the blue ghost floating over it, and a
- * glowing display heading. The Google button sits directly beneath the
- * introductory text, outside any opaque panel, so its glass can show the
- * ghost and the particles behind it.
+ * The composition keeps the existing sign-in, disclosure and guide content in
+ * the same order. Lumen owns the foreground while the original mouse-reactive
+ * ghost atmosphere remains at the user's explicit request. OAuth behavior and
+ * callback error handling are unchanged.
  */
 export default async function LoginPage({ searchParams }) {
   if (!isSupabaseConfigured()) redirect('/setup');
@@ -43,16 +42,15 @@ export default async function LoginPage({ searchParams }) {
       : null;
 
   return (
-    <div className={'login-stage cinematic-stage min-h-dvh'}>
-      {/* The reference's blue ghost, drawn over the static atmospheric background. */}
+    <div className="login-stage cinematic-stage min-h-dvh">
+      {/* Retained original sign-in atmosphere: pointer/touch-reactive WebGL,
+          static fallback without WebGL, and one still frame for reduced motion. */}
       <GhostScene />
-      {/* The reference's scanlines and vignette, reproduced in CSS. */}
       <div className="login-vignette" aria-hidden="true" />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-10 sm:py-14">
-        {/* The dark wash behind the call to action. It is a background layer,
-            not a backdrop filter: the glass button has to keep sampling the
-            sky and the ghost directly (see app/styles/login.css). */}
+        {/* The original background scrim preserves foreground contrast over the
+            ghost; the form itself uses the new solid Lumen controls. */}
         <span className="login-cta-scrim" aria-hidden="true" />
         {/* Brand area: the logo carries the identity before a single word is read. */}
         <div className="login-intro login-sky flex flex-col items-start">

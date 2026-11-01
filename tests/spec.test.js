@@ -232,6 +232,7 @@ describe('route surface (spec §5, §6)', () => {
 
 describe('design system (spec §4)', () => {
   const globals = read('app/globals.css');
+  const lumenTokens = read('app/tokens.css');
   const partials = ['surfaces', 'controls', 'feedback', 'interactive', 'navigation']
     .map((name) => read(`app/styles/${name}.css`))
     .join('\n');
@@ -277,22 +278,21 @@ describe('design system (spec §4)', () => {
     expect(globals).toContain('@theme inline');
   });
 
-  it('keeps the Teal Sand identity and the designed night palette', () => {
-    expect(globals).toContain('#07151d'); // midnight-navy canvas
-    expect(globals).toContain('#10242d'); // deep-ocean elevated surface, not black
-    expect(globals).toContain('#f8faf7'); // soft-ivory ink on the night canvas
-    expect(globals).toContain('#14b8a6'); // the teal identity
-    expect(globals).toContain('#2dd4bf'); // lit teal accent text
-    expect(globals).toContain('#f4e3c1'); // warm sand, the only warmth in type
-    expect(globals).toContain('#f97316'); // sunset orange, energy only
-    expect(globals).not.toContain('#f7f5f1'); // the retired light canvas is gone
+  it('keeps the Hallmark Lumen identity and the designed night palette', () => {
+    expect(lumenTokens).toContain('--color-paper: oklch(12.5% 0.027 290)');
+    expect(lumenTokens).toContain('--color-paper-2: oklch(16% 0.03 290)');
+    expect(lumenTokens).toContain('--color-ink: oklch(96% 0.01 300)');
+    expect(lumenTokens).toContain('--color-accent: oklch(80% 0.15 62)');
+    expect(lumenTokens).toContain('--color-accent-2: oklch(72% 0.15 12)');
+    expect(lumenTokens).toContain('--color-muted: oklch(69% 0.026 295)');
+    expect(globals).toContain('--cp-bg-page: var(--color-paper)');
+    expect(globals).toContain('--cp-bg-accent: var(--color-accent)');
 
-    // No leftover identity from the previous blue/purple direction: the one
-    // brand is Teal Sand, and an old accent cannot quietly reappear.
-    for (const retired of ['#6f9bff', '#5b89f5', '#9abbff', '#5cd8f7', '#0b1120', '#121824', '#ef6a1c']) {
+    // Retired canvas and accent systems cannot quietly reappear in the
+    // semantic bridge that every existing component consumes.
+    for (const retired of ['#07151d', '#10242d', '#14b8a6', '#2dd4bf', '#f4e3c1', '#f97316', '#f7f5f1']) {
       expect(globals).not.toContain(retired);
     }
-    expect(globals).not.toMatch(/--c-accent:\s*#(f|e)[0-9a-f]{2}/i);
   });
 
   it('never hardcodes a colour in a page or component', () => {
@@ -308,8 +308,11 @@ describe('design system (spec §4)', () => {
     });
     expect(offenders).toEqual([]);
 
-    const canvas = /--cp-bg-page:\s*(#[0-9a-fA-F]{3,8})/.exec(globals)?.[1];
-    expect(canvas).toBeTruthy();
+    expect(lumenTokens).toContain('--color-paper: oklch(12.5% 0.027 290)');
+    expect(globals).toContain('--cp-bg-page: var(--color-paper)');
+    // #060510 is the in-gamut sRGB equivalent used where metadata requires a
+    // static browser-chrome value instead of a CSS custom property.
+    const canvas = '#060510';
     const mirrored = (file, pattern) => pattern.exec(read(file))?.[1];
     expect(mirrored(path.join('app', 'layout.js'), /themeColor: '(#[0-9a-fA-F]{3,8})'/)).toBe(canvas);
     expect(

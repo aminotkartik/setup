@@ -3,6 +3,7 @@
  * layout for the shared rationale: the card vocabulary lives in this tree.
  */
 import '@/app/styles/sections.css';
+import '@/app/styles/lumen.css';
 
 export default function GigsLayout({ children }) {
   return children;

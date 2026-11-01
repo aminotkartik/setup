@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import '@/app/styles/timetable.css';
+import '@/app/styles/lumen.css';
 import { BrandLockup } from '@/components/brand/Brand';
 import { TIMETABLE_CANVAS_COLOR } from '@/lib/timetable/batch';
 import { TIMETABLE_SOURCE } from '@/lib/timetable/meta';

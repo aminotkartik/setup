@@ -5,7 +5,13 @@ import { describe, expect, it } from 'vitest';
 /** Fast guards for the semantic pairings. The rendered/pixel audit complements
  * these: tokens alone cannot prove contrast under a blend, gradient or canvas. */
 const css = fs.readFileSync('app/globals.css', 'utf8');
-const tokens = new Map([...css.matchAll(/(--cp-[\w-]+):\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
+const canonicalTokens = fs.readFileSync('app/tokens.css', 'utf8');
+const tokens = new Map(
+  [...`${canonicalTokens}\n${css}`.matchAll(/(--(?:cp|c|color|brand)-[\w-]+):\s*([^;]+);/g)].map((match) => [
+    match[1],
+    match[2].trim(),
+  ]),
+);
 
 function splitPair(value) {
   let depth = 0;
@@ -15,6 +21,63 @@ function splitPair(value) {
     if (value[i] === ',' && depth === 0) return [value.slice(0, i), value.slice(i + 1)];
   }
   throw new Error(`Not a light-dark pair: ${value}`);
+}
+
+function oklabToSrgb(L, a, b, alpha = 1) {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linear = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+  return linear
+    .map((channel) => {
+      const encoded = channel <= 0.0031308 ? 12.92 * channel : 1.055 * Math.max(channel, 0) ** (1 / 2.4) - 0.055;
+      return Math.min(1, Math.max(0, encoded)) * 255;
+    })
+    .concat(alpha);
+}
+
+function srgbToOklab(value) {
+  const [r, g, b] = value.slice(0, 3).map((channel) => {
+    const encoded = channel / 255;
+    return encoded <= 0.04045 ? encoded / 12.92 : ((encoded + 0.055) / 1.055) ** 2.4;
+  });
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+    value[3],
+  ];
+}
+
+function splitArguments(value) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    if (value[i] === '(') depth += 1;
+    if (value[i] === ')') depth -= 1;
+    if (value[i] === ',' && depth === 0) {
+      parts.push(value.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(value.slice(start).trim());
+  return parts;
+}
+
+function mixStop(value, theme, seen) {
+  const match = /^(.*\S)\s+(\d+(?:\.\d+)?)%$/.exec(value.trim());
+  return {
+    color: srgbToOklab(color(match ? match[1] : value, theme, seen)),
+    weight: match ? Number(match[2]) / 100 : null,
+  };
 }
 
 function color(value, theme, seen = new Set()) {
@@ -27,6 +90,29 @@ function color(value, theme, seen = new Set()) {
   if (text.startsWith('light-dark(')) {
     return color(splitPair(text.slice(11, -1))[theme === 'light' ? 0 : 1], theme, seen);
   }
+  if (text.startsWith('color-mix(')) {
+    const [space, firstValue, secondValue] = splitArguments(text.slice(10, -1));
+    expect(space).toBe('in oklab');
+    const first = mixStop(firstValue, theme, seen);
+    const second = mixStop(secondValue, theme, seen);
+    if (first.weight === null && second.weight === null) first.weight = second.weight = 0.5;
+    else if (first.weight === null) first.weight = 1 - second.weight;
+    else if (second.weight === null) second.weight = 1 - first.weight;
+    const mixed = [0, 1, 2, 3].map((i) => first.color[i] * first.weight + second.color[i] * second.weight);
+    return oklabToSrgb(...mixed);
+  }
+  if (text.startsWith('oklch(')) {
+    const [components, alpha] = text.slice(6, -1).split('/');
+    const [lightness, chroma, hue] = components.trim().split(/\s+/).map(parseFloat);
+    const radians = (hue * Math.PI) / 180;
+    return oklabToSrgb(
+      lightness / 100,
+      chroma * Math.cos(radians),
+      chroma * Math.sin(radians),
+      alpha === undefined ? 1 : Number(alpha),
+    );
+  }
+  if (text === 'transparent') return [0, 0, 0, 0];
   if (text.startsWith('#')) {
     let hex = text.slice(1);
     if (hex.length === 3) hex = hex.split('').map((letter) => letter + letter).join('');

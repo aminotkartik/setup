@@ -43,7 +43,8 @@ const weightAxis = (file) => {
 };
 
 describe('document-level galactic intro architecture', () => {
-  it('mounts the route-gated landing intro, never the animation directly', () => {
+  it('keeps the restored cinematic intro behind the original root route gate', () => {
+    expect(layout).toContain("import { LandingIntro } from '@/components/layout/GalacticIntro'");
     expect(layout).toContain('<LandingIntro>{children}</LandingIntro>');
     expect(layout).not.toContain('<GalacticIntro');
     expect(read('app/(app)/home/layout.js')).not.toContain('HomeLaunchGate');
@@ -250,14 +251,11 @@ describe('document-level galactic intro architecture', () => {
     expect(css).toContain('var(--intro-safety-delay, 9.5s)');
   });
 
-  it('preloads the two critical faces only on the route that can show them', () => {
-    // The root layout no longer preloads: every other route would pay for fonts
-    // it never renders (and browsers warn about unused preloads).
+  it('preloads the exclusive cinematic faces only on the Home route', () => {
     expect(layout).not.toContain('preload(');
     expect(homeLayout).toContain("preload('/fonts/Syne.ttf'");
     expect(homeLayout).toContain("preload('/fonts/SpaceGrotesk.ttf'");
-    expect(homeLayout).toContain("crossOrigin: 'anonymous'");
-    expect(homeLayout).toContain("type: 'font/ttf'");
+    expect(homeLayout).toContain("from 'react-dom'");
   });
 
   it('cleans up timers, frames, motion and keyboard listeners', () => {

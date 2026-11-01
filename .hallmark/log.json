@@ -1,0 +1,45 @@
+[
+ {
+  "ref": "https://www.usehallmark.com/themes/lumen/#warm",
+  "theme": "Lumen",
+  "chosen": {
+   "name": "lumen",
+   "variant": "night"
+  },
+  "second": {
+   "name": null,
+   "variant": null
+  },
+  "prompt": "Full presentational redesign of the complete Campus+ application using the exact Hallmark Lumen reference; preserve all product behavior.",
+  "promptShort": "Campus+ Hallmark Lumen full app redesign",
+  "photos": [],
+  "customDeck": false,
+  "genres": 1,
+  "axes": {
+   "paper": "dark",
+   "display": "roman-serif",
+   "accent": "warm"
+  },
+  "displayClass": "roman-serif",
+  "displayName": "Instrument Serif",
+  "hue": 62,
+  "shape": "app-screen",
+  "scope": "app",
+  "macrostructure": null,
+  "screen": "existing authenticated app shell and public document flows",
+  "micro": "brass",
+  "signature": "the existing Campus+ feed and working timetable, retained as product surfaces",
+  "verbs": [],
+  "redesign": "full",
+  "keeps": "all routes, brand assets, forms, handlers, test hooks, data behavior, permissions, business rules, and the original reduced-motion-aware mouse-interactive Login ghost",
+  "deck": [],
+  "export": {
+   "tokens": "app/tokens.css",
+   "framework": "tailwind-v4",
+   "font": "self-hosted woff2: Instrument Serif, Geist, Geist Mono"
+  },
+  "date": "2026-10-31",
+  "mode": "redesign",
+  "depth": "full"
+ }
+]

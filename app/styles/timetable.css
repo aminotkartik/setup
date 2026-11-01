@@ -6,27 +6,25 @@
    not admired. Exactly one surface on the page is glass — the live clock —
    and it is backed at 90% opacity with a short blur, never stacked.
 
-   Colour does one job: a slim leading edge and a dot name the subject family,
-   so a week can be scanned without reading every code. Seven muted hues (plus
-   a neutral for the long tail) come from the brand triad; lunch and the
+   Colour does one job: a slim leading edge and a dot name the featured subject,
+   while the remaining families use the same quiet Lumen ink. Lunch and the
    Empowerment Hour have their own quiet treatments, and the NOW / NEXT states
    override the subject edge because status matters more than subject. Every
    state also carries a word, so nothing depends on colour alone.
    ========================================================================== */
 
 .tt-shell {
-  /* Timetable-local accent ramp. Teal is the brand identity; sand and orange
-     are its warm partners; the rest sit at the same lightness so a 3px edge
-     reads equally everywhere and never competes with the teal focus ring.
-     Declared here, scoped to the timetable, not as global theme tokens. */
-  --tt-hue-teal: #2dd4bf;
-  --tt-hue-sky: #8cc9e8;
-  --tt-hue-violet: #c3b0f7;
-  --tt-hue-rose: #ffb4a8;
-  --tt-hue-orange: #fdba74;
-  --tt-hue-sand: #f4e3c1;
-  --tt-hue-mint: #8fe3bf;
-  --tt-hue-neutral: #8fa8a6;
+  /* Stable subject keys now resolve to the Hallmark Lumen roles. The featured
+     LAUC edge is the single brass signal; other subjects stay in quiet ink so
+     the timetable does not reintroduce a competing rainbow accent system. */
+  --tt-hue-teal: var(--color-accent);
+  --tt-hue-sky: var(--color-ink-2);
+  --tt-hue-violet: var(--color-ink-2);
+  --tt-hue-rose: var(--color-ink-2);
+  --tt-hue-orange: var(--color-ink-2);
+  --tt-hue-sand: var(--color-ink-2);
+  --tt-hue-mint: var(--color-ink-2);
+  --tt-hue-neutral: var(--color-muted);
 }
 
 /* ------------------------------------------------------------ selector */
