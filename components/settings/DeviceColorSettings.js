@@ -119,8 +119,10 @@ export function DeviceColorSettings() {
   }
 
   const textContrast = contrastRatio(colors.text, colors.background);
+  const sectionContrast = contrastRatio(colors.text, colors.section);
   const previewStyle = {
     '--preview-bg': colors.background,
+    '--preview-section': colors.section,
     '--preview-accent': colors.theme,
     '--preview-text': colors.text,
     '--preview-on-accent': deviceAccentInk(colors),
@@ -132,8 +134,8 @@ export function DeviceColorSettings() {
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">Colors on this device</h2>
           <p className="mt-1 max-w-2xl text-[0.8125rem] leading-relaxed text-muted">
-            Choose a background, theme and text color for this browser. This is not an account or
-            site-wide setting: other devices and everyone else keep the original Campus+ palette.
+            Choose background, section, theme and text colors for this browser. This is not an
+            account or site-wide setting: other devices and everyone else keep the original Campus+ palette.
           </p>
         </div>
         <Button type="button" size="sm" variant="secondary" icon="refresh" onClick={reset} disabled={!ready}>
@@ -173,7 +175,7 @@ export function DeviceColorSettings() {
                   maxLength={7}
                   spellCheck={false}
                   autoComplete="off"
-                  placeholder={DEFAULT_DEVICE_COLORS.theme}
+                  placeholder={DEFAULT_DEVICE_COLORS[key]}
                 />
               </div>
               {errors[key] ? (
@@ -204,6 +206,13 @@ export function DeviceColorSettings() {
       {textContrast < 4.5 ? (
         <Notice tone="warning" icon="alert">
           Text and background contrast is {textContrast.toFixed(1)}:1. Choose a lighter or darker
+          combination for comfortable reading (4.5:1 or higher is recommended).
+        </Notice>
+      ) : null}
+
+      {sectionContrast < 4.5 ? (
+        <Notice tone="warning" icon="alert">
+          Text and section contrast is {sectionContrast.toFixed(1)}:1. Choose a lighter or darker
           combination for comfortable reading (4.5:1 or higher is recommended).
         </Notice>
       ) : null}

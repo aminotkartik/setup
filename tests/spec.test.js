@@ -297,7 +297,7 @@ describe('design system (spec §4)', () => {
 
   it('keeps hard-coded colors limited to browser chrome and local-color defaults', () => {
     // Browser chrome needs strings at metadata/manifest time. The device-color
-    // module also needs the three canonical sRGB equivalents for its picker
+    // module also needs the four canonical sRGB equivalents for its picker
     // and reset control; it never changes those defaults in the stylesheet.
     const CHROME_COLOUR_FILES = [path.join('app', 'layout.js'), path.join('lib', 'timetable', 'batch.js')];
     const LOCAL_COLOR_FILES = [path.join('lib', 'device-colors.js')];
