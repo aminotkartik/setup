@@ -7,6 +7,7 @@ import { Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/comp
 import { ActionForm } from '@/components/forms/ActionForm';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { ProfileActions } from '@/components/profile/ProfileActions';
+import { DeviceColorSettings } from '@/components/settings/DeviceColorSettings';
 import { updateProfile, changeUsername, deactivateAccount, reactivateAccount } from '@/lib/actions/profile';
 import { markAllNotificationsRead } from '@/lib/actions/notifications';
 import { formatDate, daysBetween } from '@/lib/utils';
@@ -15,6 +16,7 @@ export const metadata = { title: 'Settings' };
 
 const TABS = [
   { key: 'profile', label: 'Profile' },
+  { key: 'appearance', label: 'Appearance' },
   { key: 'username', label: 'Username' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'privacy', label: 'Privacy' },
@@ -26,10 +28,12 @@ const TABS = [
  * Settings (spec §49).
  *
  * Profile, username, privacy, blocked users and account state — the preferences
- * that actually exist in the database. Notification controls are limited to what
- * the platform really does (in-app notifications, mark all read, per-thread mute
- * in chat); nothing here pretends to send email or push, and no preference is
- * stored that the system would not honour.
+ * that actually exist in the database. Appearance is deliberately different:
+ * its three colors are kept in this browser only and never become a platform
+ * setting. Notification controls are limited to what the platform really does
+ * (in-app notifications, mark all read, per-thread mute in chat); nothing here
+ * pretends to send email or push, and no preference is stored that the system
+ * would not honour.
  */
 export default async function SettingsPage({ searchParams }) {
   const user = await requireUser();
@@ -97,6 +101,8 @@ export default async function SettingsPage({ searchParams }) {
           ]}
         />
       ) : null}
+
+      {tab === 'appearance' ? <DeviceColorSettings /> : null}
 
       {tab === 'username' ? (
         <div className="flex flex-col gap-3">

@@ -295,15 +295,14 @@ describe('design system (spec §4)', () => {
     }
   });
 
-  it('never hardcodes a colour in a page or component', () => {
-    // Exactly two files may name a colour, and only because a browser-chrome
-    // value has to be a string at metadata/manifest time, where a CSS custom
-    // property cannot be read: the root `themeColor` meta entry, and the PWA
-    // constants the timetable manifest and viewport share. Both must *mirror*
-    // the canvas token, which is asserted below rather than trusted.
+  it('keeps hard-coded colors limited to browser chrome and local-color defaults', () => {
+    // Browser chrome needs strings at metadata/manifest time. The device-color
+    // module also needs the three canonical sRGB equivalents for its picker
+    // and reset control; it never changes those defaults in the stylesheet.
     const CHROME_COLOUR_FILES = [path.join('app', 'layout.js'), path.join('lib', 'timetable', 'batch.js')];
+    const LOCAL_COLOR_FILES = [path.join('lib', 'device-colors.js')];
     const offenders = allSource.filter((file) => {
-      if (CHROME_COLOUR_FILES.includes(file)) return false;
+      if (CHROME_COLOUR_FILES.includes(file) || LOCAL_COLOR_FILES.includes(file)) return false;
       return /#[0-9a-fA-F]{3,8}\b/.test(read(file));
     });
     expect(offenders).toEqual([]);

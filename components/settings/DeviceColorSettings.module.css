@@ -1,0 +1,107 @@
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.field {
+  min-width: 0;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.colorInput {
+  flex: 0 0 3.25rem;
+  width: 3.25rem;
+  height: 2.75rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  cursor: pointer;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-card) - 3px);
+}
+
+.colorInput::-moz-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-card) - 3px);
+}
+
+.hexInput {
+  min-width: 0;
+  width: 100%;
+  font-family: var(--font-outlier);
+  text-transform: lowercase;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--text-2xs);
+}
+
+.preview {
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--preview-text) 24%, var(--preview-bg));
+  border-radius: var(--radius-card);
+  background: var(--preview-bg);
+  color: var(--preview-text);
+}
+
+.previewHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-bottom: 1px solid color-mix(in oklab, var(--preview-text) 18%, var(--preview-bg));
+}
+
+.previewBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.previewMuted {
+  color: color-mix(in oklab, var(--preview-text) 70%, var(--preview-bg));
+  font-size: var(--text-sm);
+}
+
+.previewButton {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-md);
+  background: var(--preview-accent);
+  color: var(--preview-on-accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.status {
+  min-height: 1.5rem;
+  color: var(--color-muted);
+  font-size: var(--text-2xs);
+}
+
+@media (max-width: 60rem) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}

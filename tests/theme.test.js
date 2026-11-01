@@ -3,14 +3,12 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Campus+ is permanently dark.
+ * Campus+ has one permanent dark default palette.
  *
- * There is one designed night palette and no way to leave it: no light mode,
- * no "follow the device", no appearance setting, and no cookie/saved
- * preference that can resurrect one. These guards pin that decision the same
- * way tests/intro.test.js pins the intro's architecture — by reading the
- * sources, so a reintroduced toggle, theme cookie or light palette fails
- * here instead of shipping.
+ * There is no light mode, "follow the device" theme, account preference or
+ * site-wide theme switch. The only exception is the explicit three-color,
+ * browser-local customization in Settings; it cannot alter another device or
+ * the canonical tokens. These guards pin that boundary by reading the sources.
  */
 
 const read = (file) => fs.readFileSync(file, 'utf8');
@@ -29,7 +27,7 @@ const appSources = [...walk('app'), ...walk('components'), ...walk('lib')].filte
 describe('permanent dark theme', () => {
   it('always renders the root as dark, with the dark browser chrome color', () => {
     const layout = read('app/layout.js');
-    expect(layout).toContain('<html lang="en" data-theme="dark">');
+    expect(layout).toContain('<html lang="en" data-theme="dark" suppressHydrationWarning>');
     expect(layout).toContain("themeColor: '#060510'");
     // Nothing about the root is chosen at runtime any more.
     expect(layout).not.toContain('readTheme');
@@ -72,7 +70,7 @@ describe('permanent dark theme', () => {
     }
   });
 
-  it('offers no theme switch or appearance setting anywhere in the UI', () => {
+  it('offers only device-local colors, never a global theme switch', () => {
     for (const file of appSources) {
       const source = read(file);
       expect(source, file).not.toContain('ThemeSwitch');
@@ -81,11 +79,16 @@ describe('permanent dark theme', () => {
       expect(source, file).not.toContain('applyTheme');
     }
     const settings = read('app/(app)/settings/page.js');
-    expect(settings).not.toContain("'appearance'");
-    expect(settings).not.toContain('Appearance');
-    // An old ?tab=appearance link resolves through the same allow-list as any
-    // unknown tab, landing on Profile rather than a dead section.
+    expect(settings).toContain("{ key: 'appearance', label: 'Appearance' }");
+    expect(settings).toContain('<DeviceColorSettings />');
     expect(settings).toContain("TABS.some((item) => item.key === params?.tab) ? params.tab : 'profile'");
+
+    const colors = read('lib/device-colors.js');
+    expect(colors).toContain('localStorage');
+    expect(colors).not.toContain('document.cookie');
+    expect(colors).not.toContain('supabase');
+    expect(colors).not.toContain('fetch(');
+    expect(read('app/styles/device-colors.css')).toContain(":root[data-device-colors='custom']");
   });
 
   it('cannot be reactivated by a legacy preference cookie', () => {

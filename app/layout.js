@@ -6,6 +6,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import localFont from 'next/font/local';
 import { PLATFORM } from '@/lib/constants';
 import { shouldUseVercelTelemetry } from '@/lib/vercel-telemetry';
+import { DEVICE_COLOR_PREHYDRATION_SCRIPT } from '@/lib/device-colors';
 
 /* Hallmark Lumen's exact faces, self-hosted for reproducible production and
    offline rendering. The variables override the generated token fallbacks on
@@ -43,10 +44,11 @@ const microFont = localFont({
  * application frame (sidebar / bottom navigation) is applied per-route group
  * so the sign-in and setup screens can stay deliberately plain.
  *
- * Campus+ is permanently dark: the root always renders `data-theme="dark"`
- * with a dark `color-scheme`, so the very first paint is the night palette —
- * no cookie, saved preference or operating-system setting can select anything
- * else, and there is never a flash of light.
+ * Campus+ always starts from its permanent dark palette: the root renders
+ * `data-theme="dark"` with a dark `color-scheme`, never a light or system
+ * variant. A signed-in user may opt into three device-local color overrides in
+ * Settings; the tiny static script below restores only those colors before the
+ * first paint. No account or site-wide setting is read or changed.
  *
  * All three faces are local next/font assets, so production and offline builds
  * do not depend on a third-party font CDN.
@@ -76,8 +78,9 @@ export default function RootLayout({ children }) {
   /* The original landing sequence is route-gated to a fresh Home document.
      It does no work on other routes or on client navigation back to Home. */
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable} ${microFont.variable} min-h-dvh bg-canvas text-ink antialiased`}>
+        <script id="campusplus-device-colors">{DEVICE_COLOR_PREHYDRATION_SCRIPT}</script>
         <LandingIntro>{children}</LandingIntro>
         {shouldUseVercelTelemetry() ? (
           <>
