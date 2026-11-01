@@ -26,12 +26,10 @@ const TABS = [
  * Settings (spec §49).
  *
  * Profile, username, privacy, blocked users and account state — the preferences
- * that actually exist in the database. Browser-local color customization lives
- * beside the account menu instead of pretending to be an account preference.
- * Notification controls are limited to what the platform really does
- * (in-app notifications, mark all read, per-thread mute in chat); nothing here
- * pretends to send email or push, and no preference is stored that the system
- * would not honour.
+ * that actually exist in the database. Notification controls are limited to
+ * what the platform really does (in-app notifications, mark all read,
+ * per-thread mute in chat); nothing here pretends to send email or push, and
+ * no preference is stored that the system would not honour.
  */
 export default async function SettingsPage({ searchParams }) {
   const user = await requireUser();

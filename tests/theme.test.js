@@ -9,6 +9,7 @@ import {
   applyTheme,
   normalizeTheme,
   readTheme,
+  syncThemeChrome,
   writeTheme,
 } from '@/lib/theme';
 
@@ -51,7 +52,7 @@ function fakeRoot() {
 
 describe('two-theme appearance architecture', () => {
   it('defines the exact requested light and dark foundations', () => {
-    expect(DEFAULT_THEME).toBe('light');
+    expect(DEFAULT_THEME).toBe('dark');
     expect(THEME_PALETTES).toEqual({
       light: { background: '#E1D9D1', section: '#F1EBE5', accent: '#8DBCE3', text: '#292725' },
       dark: { background: '#191D21', section: '#252B30', accent: '#91BFE5', text: '#F0EEE9' },
@@ -67,39 +68,64 @@ describe('two-theme appearance architecture', () => {
     expect(read('app/globals.css')).toContain('--cp-text-primary: var(--color-ink)');
   });
 
-  it('renders light first and restores an explicit choice before device colors', () => {
+  it('renders dark first and restores an explicit choice before paint', () => {
     const layout = read('app/layout.js');
-    expect(layout).toContain('<html lang="en" data-theme="light" suppressHydrationWarning>');
-    expect(layout).toContain("themeColor: '#E1D9D1'");
-    expect(layout.indexOf('campusplus-theme')).toBeLessThan(layout.indexOf('campusplus-device-colors'));
+    expect(layout).toContain('<html lang="en" data-theme="dark" suppressHydrationWarning>');
+    expect(layout).toContain('<meta name="theme-color" content="#191D21" suppressHydrationWarning />');
     expect(layout).toContain('THEME_PREHYDRATION_SCRIPT');
+    expect(layout).toContain('<ThemeChrome />');
+    expect(read('components/layout/ThemeChrome.js')).toContain('syncThemeChrome');
+    expect(layout).not.toContain('campusplus-device-colors');
+    expect(layout).not.toContain('DEVICE_COLOR_PREHYDRATION_SCRIPT');
     expect(layout).not.toContain('prefers-color-scheme');
   });
 
   it('validates and persists only light or dark in browser storage', () => {
     const storage = memoryStorage();
-    expect(readTheme(storage)).toBe('light');
+    expect(readTheme(storage)).toBe('dark');
     expect(normalizeTheme('system')).toBeNull();
     expect(normalizeTheme('dark')).toBe('dark');
     expect(writeTheme(storage, 'dark')).toBe(true);
     expect(readTheme(storage)).toBe('dark');
     expect(writeTheme(storage, 'blue')).toBe(false);
-    expect(readTheme(memoryStorage({ [THEME_STORAGE_KEY]: 'blue' }))).toBe('light');
-    expect(readTheme({ getItem() { throw new Error('blocked'); } })).toBe('light');
+    expect(readTheme(memoryStorage({ [THEME_STORAGE_KEY]: 'blue' }))).toBe('dark');
+    expect(readTheme({ getItem() { throw new Error('blocked'); } })).toBe('dark');
   });
 
   it('restores the saved theme in the pre-paint script without an OS lookup', () => {
     const root = fakeRoot();
-    globalThis.window = { localStorage: memoryStorage({ [THEME_STORAGE_KEY]: 'dark' }) };
-    globalThis.document = { documentElement: root, querySelector: () => null };
+    globalThis.window = { localStorage: memoryStorage({ [THEME_STORAGE_KEY]: 'light' }) };
+    globalThis.document = { documentElement: root };
     new Function(THEME_PREHYDRATION_SCRIPT)();
-    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(root.getAttribute('data-theme')).toBe('light');
 
     const invalidRoot = fakeRoot();
     globalThis.window = { localStorage: memoryStorage({ [THEME_STORAGE_KEY]: 'system' }) };
-    globalThis.document = { documentElement: invalidRoot, querySelector: () => null };
+    globalThis.document = { documentElement: invalidRoot };
     new Function(THEME_PREHYDRATION_SCRIPT)();
-    expect(invalidRoot.getAttribute('data-theme')).toBe('light');
+    expect(invalidRoot.getAttribute('data-theme')).toBe('dark');
+
+    const emptyRoot = fakeRoot();
+    globalThis.window = { localStorage: memoryStorage() };
+    globalThis.document = { documentElement: emptyRoot };
+    new Function(THEME_PREHYDRATION_SCRIPT)();
+    expect(emptyRoot.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('leaves React-owned browser chrome for post-hydration synchronization', () => {
+    const root = fakeRoot();
+    const meta = { content: '#191D21', setAttribute(name, value) { this[name] = value; } };
+    globalThis.window = { localStorage: memoryStorage({ [THEME_STORAGE_KEY]: 'light' }) };
+    globalThis.document = {
+      documentElement: root,
+      querySelector: () => meta,
+      querySelectorAll: () => [meta],
+    };
+    new Function(THEME_PREHYDRATION_SCRIPT)();
+    expect(root.getAttribute('data-theme')).toBe('light');
+    expect(meta.content).toBe('#191D21');
+    syncThemeChrome(root, 'light');
+    expect(meta.content).toBe('#E1D9D1');
   });
 
   it('updates the root and browser chrome without a reload', () => {
@@ -109,9 +135,32 @@ describe('two-theme appearance architecture', () => {
     expect(applyTheme(root, 'dark')).toBe('dark');
     expect(root.getAttribute('data-theme')).toBe('dark');
     expect(meta.content).toBe('#191D21');
-    expect(applyTheme(root, 'invalid')).toBe('light');
-    expect(root.getAttribute('data-theme')).toBe('light');
-    expect(meta.content).toBe('#E1D9D1');
+    expect(applyTheme(root, 'invalid')).toBe('dark');
+    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(meta.content).toBe('#191D21');
+  });
+
+  it('synchronizes every nested browser-chrome meta tag', () => {
+    const first = { setAttribute(name, value) { this[name] = value; } };
+    const second = { setAttribute(name, value) { this[name] = value; } };
+    globalThis.document = {
+      querySelectorAll: () => [first, second],
+      querySelector: () => first,
+    };
+    applyTheme(fakeRoot(), 'light');
+    expect(first.content).toBe('#E1D9D1');
+    expect(second.content).toBe('#E1D9D1');
+
+    syncThemeChrome(fakeRoot(), 'dark');
+    expect(first.content).toBe('#191D21');
+    expect(second.content).toBe('#191D21');
+  });
+
+  it('keeps timetable install metadata without a second live browser-chrome value', () => {
+    expect(read('app/timetable/layout.js')).not.toContain('themeColor:');
+    const manifest = read('app/timetable/manifest/[division]/route.js');
+    expect(manifest).toContain('theme_color: TIMETABLE_CANVAS_COLOR');
+    expect(manifest).toContain('background_color: TIMETABLE_CANVAS_COLOR');
   });
 
   it('places the accessible switch immediately before the account menu on both layouts', () => {
@@ -126,29 +175,49 @@ describe('two-theme appearance architecture', () => {
     expect(toggle).not.toContain('supabase');
   });
 
-  it('moves the existing customizer to the account dialog and removes Settings Appearance', () => {
+  it('removes device-specific customization and leaves only the two-theme control', () => {
     const settings = read('app/(app)/settings/page.js');
     expect(settings).not.toContain("key: 'appearance'");
     expect(settings).not.toContain('DeviceColorSettings');
     const account = read('components/layout/AccountMenu.js');
-    expect(account).toContain('Customize colors');
-    expect(account).toContain('<Modal');
-    expect(account).toContain('<DeviceColorSettings />');
-    expect(read('components/settings/DeviceColorSettings.js')).toContain('type="color"');
-    expect(read('components/settings/DeviceColorSettings.js')).toContain('type="text"');
+    expect(account).not.toContain('Customize colors');
+    expect(account).not.toContain('Customise colors');
+    expect(account).not.toContain('<Modal');
+    expect(account).not.toContain('DeviceColorSettings');
+    for (const file of [
+      'components/settings/DeviceColorSettings.js',
+      'components/settings/DeviceColorSettings.module.css',
+      'lib/device-colors.js',
+      'app/styles/device-colors.css',
+      'tests/device-colors.test.js',
+    ]) {
+      expect(fs.existsSync(file), file).toBe(false);
+    }
+    const source = appSources.map((file) => read(file)).join('\n');
+    for (const retired of [
+      'device-colors',
+      'DeviceColor',
+      'data-device-colors',
+      'campusplus:device-colors-v1',
+      'Customize colors',
+      'Customise colors',
+    ]) {
+      expect(source, retired).not.toContain(retired);
+    }
   });
 
-  it('keeps custom colors light-only and preserves the local-only boundary', () => {
-    expect(read('app/styles/device-colors.css')).toContain(":root[data-theme='light'][data-device-colors='custom']");
-    const colors = read('lib/device-colors.js');
-    expect(colors).toContain("root.getAttribute?.('data-theme') === 'dark'");
-    expect(colors).toContain('localStorage');
-    expect(colors).not.toContain('document.cookie');
-    expect(colors).not.toContain('supabase');
-    expect(colors).not.toContain('fetch(');
+  it('keeps theme persistence local-only and removes custom-color synchronization', () => {
+    const theme = read('lib/theme.js');
+    expect(theme).toContain('localStorage');
+    expect(theme).not.toContain('document.cookie');
+    expect(theme).not.toContain('supabase');
+    expect(theme).not.toContain('fetch(');
     const toggle = read('components/layout/ThemeToggle.js');
-    expect(toggle).toContain('clearDeviceColorOverrides');
-    expect(toggle).toContain('readDeviceColors');
+    expect(toggle).not.toContain('clearDeviceColorOverrides');
+    expect(toggle).not.toContain('readDeviceColors');
+    expect(toggle).not.toContain('DEVICE_COLOR_STORAGE_KEY');
+    expect(toggle).toContain('writeTheme');
+    expect(toggle).toContain('applyTheme');
   });
 
   it('has no system theme variant or legacy cookie reactivation', () => {

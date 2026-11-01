@@ -251,6 +251,25 @@ describe('document-level galactic intro architecture', () => {
     expect(css).toContain('var(--intro-safety-delay, 9.5s)');
   });
 
+  it('scopes warm Light scene colours while retaining Dark colour defaults', () => {
+    expect(css).toContain('--intro-secondary: var(--color-accent-2)');
+    expect(css).toContain('--intro-edge: var(--color-accent-ink)');
+    expect(css).toContain('--intro-glow: var(--color-accent-ink)');
+    const lightScene = css.match(/:global\(:root\[data-theme='light'\]\) \.stage\s*\{([^}]*)\}/)?.[1];
+    expect(lightScene).toContain('color-scheme: light');
+    expect(lightScene).toContain('--intro-secondary: #D8CEC4');
+    expect(lightScene).toContain('--intro-edge: #D8CEC4');
+    expect(lightScene).toContain('--intro-glow: #F1EBE5');
+    // Only colour inputs are themed; the original gradient geometry and
+    // opacity stops remain shared by both scenes.
+    expect(css).toContain('ellipse 78% 60% at 22% 20%');
+    expect(css).toContain('transparent 60%');
+    expect(css).toContain('var(--intro-edge) 88%');
+    expect(css).toContain('var(--intro-edge) 100%');
+    expect(css).toContain('color-mix(in oklab, var(--intro-glow) 34%, transparent)');
+    expect(css).not.toContain(":global(:root[data-theme='dark']) .stage");
+  });
+
   it('preloads the exclusive cinematic faces only on the Home route', () => {
     expect(layout).not.toContain('preload(');
     expect(homeLayout).toContain("preload('/fonts/Syne.ttf'");

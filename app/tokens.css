@@ -1,8 +1,8 @@
 /* Campus+ appearance foundations.
-   The @theme block exposes the light defaults to Tailwind. The runtime blocks
-   below are the canonical token source for the document; every semantic role
-   in globals.css resolves through these variables, so a theme change is one
-   attribute update rather than a page-specific class rewrite. */
+   The @theme block exposes utility fallback values to Tailwind. The runtime
+   blocks below are the canonical token source for the document; every semantic
+   role in globals.css resolves through these variables, so a theme change is
+   one attribute update rather than a page-specific class rewrite. */
 @theme static {
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
