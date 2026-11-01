@@ -1,7 +1,6 @@
 import { requireUser } from '@/lib/auth/session';
 import { can, toActor } from '@/lib/permissions/authorization';
 import { ROUTES } from '@/lib/constants';
-import { DepthField } from '@/components/atmosphere/DepthField';
 import { HomeFeedClient } from '@/components/home/HomeFeedClient';
 import { HomeAreas, HomeCoda } from '@/components/home/HomePulse';
 import { HomeFeatureTiles } from '@/components/home/HomeFeatureTiles';
@@ -47,10 +46,6 @@ export default async function HomePage() {
           SSR node until hydration removes it. No account data is involved. */}
       <script id={`${GUIDE_SEEN_STYLE_ID}-script`}>{GUIDE_SEEN_PREHYDRATION_SCRIPT}</script>
       <GuideWelcomeStrip />
-      {/* Original Home animation, restored with its existing device policy and
-          reduced-motion fallback. Its palette already resolves through Lumen
-          tokens; the feed and rail still render without waiting for it. */}
-      <DepthField />
       <HomeFeedClient
         key={userId}
         user={homeUser}

@@ -146,9 +146,6 @@
   --cp-sky-icon-bg: var(--color-paper-3);
   --cp-sky-border: var(--color-rule-2);
   --cp-sky-wash: color-mix(in oklab, var(--color-paper) 72%, transparent);
-  --cp-depth-base: var(--color-paper);
-  --cp-depth-line-a: var(--color-accent);
-  --cp-depth-line-b: var(--color-ink-2);
   --cp-bg-cinematic-glass: var(--color-paper-2);
   --cp-cinematic-border: var(--color-rule-2);
   /* Original institutional crest asset: retain its white contrast plate. */
@@ -165,8 +162,8 @@
   --cp-highlight-soft: transparent;
   --cp-shade: color-mix(in oklab, var(--color-accent-ink) 30%, transparent);
 
-  /* Shared surfaces stay free of ambient illumination. The restored Home
-     depth field and Login ghost opt into their own scoped scene tokens. */
+  /* Shared surfaces stay free of ambient illumination. The Login ghost opts
+     into its own scoped scene tokens. */
   --cp-illum-core: transparent;
   --cp-illum-cyan: transparent;
   --cp-illum-warm: transparent;

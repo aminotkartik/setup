@@ -2,9 +2,7 @@
    its brightest light away from foreground content, and the inverse typography
    pair for copy that sits directly on it.
 
-   Home no longer uses this layer — its environment is the depth field in
-   components/atmosphere/DepthField.js, with its own tokens and its own
-   app/styles/islands.css. */
+   Home uses the shell's static paper surface rather than this layer. */
 
 .cinematic-stage {
   position: relative;

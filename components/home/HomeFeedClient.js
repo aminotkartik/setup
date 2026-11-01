@@ -507,7 +507,7 @@ export function HomeFeedClient({
                 id="home-stream-title"
                 eyebrow="Campus feed"
                 title="What's moving right now"
-                note="Ordered by the database, newest first — no ranking, no AI, no engagement theatre."
+                note="Pinned posts first, then the database’s newest-first order — no ranking, no AI, no engagement theatre."
                 aside={feed.length ? (
                   <span className="home-zone__count text-2xs text-muted">
                     {feed.length} {feed.length === 1 ? 'entry' : 'entries'}

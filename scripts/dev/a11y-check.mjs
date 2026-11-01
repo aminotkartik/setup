@@ -5,7 +5,7 @@
  * Runs axe-core against the authenticated Home page at desktop and mobile, then
  * exercises the interactions that only a browser can answer: keyboard focus
  * order, the pointer-depth response on a fine pointer, the hover light on a
- * feed entry, and whether the depth-field canvas ever takes a click or a tab
+ * feed entry, and that Home no longer mounts a sea/depth canvas
  * stop. It prints a pass/fail line per check and exits non-zero on a violation
  * that matters (serious/critical).
  *
@@ -107,24 +107,12 @@ for (const viewport of [
   const minor = axe.filter((violation) => !['serious', 'critical'].includes(violation.impact));
   if (minor.length) console.log(`       noted (not blocking): ${minor.map((v) => `${v.id}:${v.impact}`).join(', ')}`);
 
-  const canvas = await page.evaluate(() => {
-    const element = document.querySelector('.depth-field canvas');
-    if (!element) return { present: false };
-    const rect = element.getBoundingClientRect();
-    const top = document.elementFromPoint(rect.left + rect.width / 2, Math.min(window.innerHeight - 4, rect.top + 200));
-    return {
-      present: true,
-      ariaHidden: element.closest('.depth-field')?.getAttribute('aria-hidden'),
-      pointerEvents: getComputedStyle(element.closest('.depth-field')).pointerEvents,
-      focusable: element.tabIndex >= 0,
-      hitTest: top ? `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}` : null,
-      tabbableInField: document.querySelectorAll('.depth-field a, .depth-field button, .depth-field [tabindex]').length,
-    };
-  });
+  const canvas = await page.evaluate(() => ({
+    present: Boolean(document.querySelector('.home-stage canvas, .depth-field, [class*="depth-field"]')),
+  }));
   check(
-    `${viewport.name}: the depth canvas is decorative and untouchable`,
-    !canvas.present ||
-      (canvas.ariaHidden === 'true' && canvas.pointerEvents === 'none' && !canvas.focusable && canvas.tabbableInField === 0),
+    `${viewport.name}: the sea/depth canvas and fallback are completely absent`,
+    !canvas.present,
     JSON.stringify(canvas),
   );
 

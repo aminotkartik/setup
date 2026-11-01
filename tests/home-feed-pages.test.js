@@ -70,6 +70,19 @@ describe('mergeFeedPages', () => {
     expect(times).toEqual([...times].sort((a, b) => b - a));
   });
 
+  it('keeps pinned page boundaries stable, complete, and duplicate-free', () => {
+    const pinned = (id, day) => entry(id, day, { meta: { pinned: true }, post: { id, pinned: true } });
+    const first = [pinned('pin-new', 4), pinned('pin-old', 2), entry('regular-new', 20)];
+    const second = [entry('regular-mid', 10), entry('regular-old', 1)];
+
+    const merged = mergeFeedPages(first, second);
+    expect(merged.map((item) => item.id)).toEqual([
+      'pin-new', 'pin-old', 'regular-new', 'regular-mid', 'regular-old',
+    ]);
+    expect(new Set(merged.map((item) => item.id)).size).toBe(merged.length);
+    expect(mergeFeedPages(first, second).map((item) => item.id)).toEqual(merged.map((item) => item.id));
+  });
+
   it('survives the shapes a failure can hand it', () => {
     expect(mergeFeedPages(undefined, undefined)).toEqual([]);
     expect(mergeFeedPages([entry('a', 3)], null).map((item) => item.id)).toEqual(['a']);

@@ -52,6 +52,9 @@
   --dur-micro: 120ms;
   --dur-short: 220ms;
   --dur-long: 420ms;
+  /* Panel presence and one-shot gestures share the same restrained grammar. */
+  --dur-panel: 320ms;
+  --dur-gesture: 720ms;
   --container: 1440px;
   --gutter: 64px;
   --gap-columns: 32px;

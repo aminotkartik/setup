@@ -69,7 +69,7 @@ describe('the feed channel', () => {
     expect(client.channel.mock.calls[0][1]).toEqual({ config: { private: true } });
   });
 
-  it('binds the three post events once, and filters updates to publication state', () => {
+  it('binds the three post events once on the existing private channel', () => {
     const client = fakeClient();
 
     subscribeToFeedPosts(client, PROFILE_ID, {});
@@ -78,11 +78,11 @@ describe('the feed channel', () => {
     expect(bindings.every((binding) => binding.type === 'postgres_changes')).toBe(true);
     expect(bindings.map((binding) => binding.config)).toEqual([
       { event: 'INSERT', schema: 'public', table: 'posts' },
-      { event: 'UPDATE', schema: 'public', table: 'posts', filter: 'status=neq.published' },
+      { event: 'UPDATE', schema: 'public', table: 'posts' },
       { event: 'DELETE', schema: 'public', table: 'posts' },
     ]);
-    // One table, bound three ways — and not one more. The feed fix must not widen
-    // what Realtime streams, so no private table may appear in a binding or a filter.
+    // One table, bound three ways — and not one more. No private table or extra
+    // channel appears; pin relevance is decided from old/new metadata below.
     const bound = bindings.map((binding) => binding.config.table);
     expect(bound).toEqual(['posts', 'posts', 'posts']);
     const tables = [...read('lib/social/realtime.js').matchAll(/table: '([a-z_]+)'/g)].map((m) => m[1]);
@@ -104,7 +104,10 @@ describe('the feed channel', () => {
         deleted_at: null,
       },
     });
-    update.handler({ new: { id: POST_ID, status: 'hidden' } });
+    update.handler({
+      old: { id: POST_ID, status: 'published', pinned: false },
+      new: { id: POST_ID, status: 'hidden', pinned: false },
+    });
     // A hard delete carries only the primary key, which is all an invalidation needs.
     removed.handler({ old: { id: POST_ID } });
 
@@ -116,6 +119,53 @@ describe('the feed channel', () => {
     // No row content crosses the boundary, so nothing can render an unaugmented
     // record and no field the reader could not have fetched arrives either.
     expect(JSON.stringify(changes)).not.toContain('private-ish text');
+  });
+
+  it('invalidates for both pin and unpin without rendering the raw row', () => {
+    const client = fakeClient();
+    const onPostChange = vi.fn();
+    subscribeToFeedPosts(client, PROFILE_ID, { onPostChange });
+    const update = client.channels[0].bindings[1];
+
+    update.handler({
+      old: { id: POST_ID, status: 'published', pinned: false },
+      new: { id: POST_ID, status: 'published', pinned: true, body: 'not forwarded' },
+    });
+    update.handler({
+      old: { id: POST_ID, status: 'published', pinned: true },
+      new: { id: POST_ID, status: 'published', pinned: false, body: 'not forwarded' },
+    });
+
+    expect(onPostChange).toHaveBeenCalledTimes(2);
+    expect(onPostChange).toHaveBeenNthCalledWith(1, { eventType: 'UPDATE', postId: POST_ID, status: 'published' });
+    expect(onPostChange).toHaveBeenNthCalledWith(2, { eventType: 'UPDATE', postId: POST_ID, status: 'published' });
+    expect(JSON.stringify(onPostChange.mock.calls)).not.toContain('not forwarded');
+  });
+
+  it('ignores counter and body updates when pin and publication state are unchanged', () => {
+    const client = fakeClient();
+    const onPostChange = vi.fn();
+    subscribeToFeedPosts(client, PROFILE_ID, { onPostChange });
+    const update = client.channels[0].bindings[1];
+
+    for (const next of [
+      { id: POST_ID, status: 'published', pinned: false, reaction_count: 8 },
+      { id: POST_ID, status: 'published', pinned: false, comment_count: 4 },
+      { id: POST_ID, status: 'published', pinned: false, body: 'Edited text' },
+    ]) {
+      update.handler({
+        old: { id: POST_ID, status: 'published', pinned: false },
+        new: next,
+      });
+    }
+    expect(onPostChange).not.toHaveBeenCalled();
+
+    // Before migration 038's old metadata is available, preserve the old safe
+    // fallback rather than re-reading for every published counter update.
+    update.handler({ new: { id: POST_ID, status: 'published', pinned: true } });
+    expect(onPostChange).not.toHaveBeenCalled();
+    update.handler({ new: { id: POST_ID, status: 'hidden', pinned: true } });
+    expect(onPostChange).toHaveBeenCalledTimes(1);
   });
 
   it('ignores an event with no id, rather than invalidating on a guess', () => {
@@ -135,7 +185,7 @@ describe('the feed channel', () => {
     subscribeToFeedPosts(client, PROFILE_ID, {});
 
     expect(client.channels[0].bindings[0].config.filter).toBeUndefined();
-    expect(client.channels[0].bindings[1].config.filter).toBe('status=neq.published');
+    expect(client.channels[0].bindings[1].config.filter).toBeUndefined();
   });
 
   it('reports status changes to the caller so a surface can degrade, not break', () => {

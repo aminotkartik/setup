@@ -189,7 +189,7 @@ export function GifPicker({ onPick, onRemove = null, value = null, label = 'GIF'
                       onPick(picked);
                       setOpen(false);
                     }}
-                    className="w-full overflow-hidden rounded-[var(--radius-sm)] border border-line text-left transition-all hover:border-accent/50 active:scale-[0.98]"
+                    className="motion-control w-full overflow-hidden rounded-[var(--radius-sm)] border border-line text-left hover:border-accent/50 active:scale-[0.98]"
                     aria-label={gif.title ? `Attach GIF: ${gif.title}` : 'Attach GIF'}
                   >
                     {/* Validated GIPHY preview (lib/giphy); the full GIF is only

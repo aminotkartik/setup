@@ -3,6 +3,7 @@ import { ROUTES } from '@/lib/constants';
 import { LinkButton } from '@/components/ui';
 import { Icon } from '@/components/ui/icons';
 import { SearchEntry } from '@/components/search/SearchEntry';
+import { HandWave } from '@/components/home/HandWave';
 
 /**
  * The threshold combines the personalized greeting with campus shortcuts.
@@ -23,36 +24,6 @@ const DISCOVERY = [
   { href: '/explore/projects', label: 'Projects', icon: 'grid' },
   { href: ROUTES.market, label: 'Marketplace', icon: 'tag' },
 ];
-
-/**
- * The greeting's gesture. An SVG rather than an emoji: emoji hands render as a
- * completely different illustration on every platform (and on some Linux
- * images as a colour square), whereas this one is drawn in the product's own
- * teal-to-sand light and reads as part of the identity. It is decorative, so
- * it is hidden from assistive technology; the greeting itself says "Hey".
- */
-function HandWave() {
-  return (
-    <span className="home-pulse__wave" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="0.72em" height="0.72em" fill="none" focusable="false">
-        <defs>
-          <linearGradient id="campus-wave-gradient" x1="4" y1="22" x2="20" y2="4" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" style={{ stopColor: 'var(--cp-bg-accent)' }} />
-            <stop offset="55%" style={{ stopColor: 'var(--cp-accent-highlight)' }} />
-            <stop offset="100%" style={{ stopColor: 'var(--brand-sand)' }} />
-          </linearGradient>
-        </defs>
-        <path
-          d="M7.2 11.3V5.4a1.6 1.6 0 0 1 3.2 0v5.1m0-.6V3.8a1.6 1.6 0 0 1 3.2 0v6.4m0-.5V4.9a1.6 1.6 0 0 1 3.2 0v6.2m0-.3V7.4a1.5 1.5 0 0 1 3 0v7.1c0 3.9-2.6 6.6-6.5 6.6-3.1 0-5-1.5-6.4-4.3l-2.5-5a1.6 1.6 0 0 1 2.8-1.5l1.9 3.2"
-          stroke="url(#campus-wave-gradient)"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
-  );
-}
 
 export function HomePulse({ user, stats = [], children }) {
   const name = (user.profile.display_name || user.profile.username).split(' ')[0];

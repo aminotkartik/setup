@@ -1,52 +1,56 @@
 import fs from 'node:fs';
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { DepthField, shouldUseStaticDepthField } from '@/components/atmosphere/DepthField';
+const read = (file) => fs.readFileSync(file, 'utf8');
 
-describe('Home depth-field device policy', () => {
-  it('stays mounted on Home and resolves its unchanged scene through Lumen colors', () => {
-    const page = fs.readFileSync('app/(app)/home/page.js', 'utf8');
-    const globals = fs.readFileSync('app/globals.css', 'utf8');
-    const lumen = fs.readFileSync('app/styles/lumen.css', 'utf8');
-    expect(page).toContain("import { DepthField } from '@/components/atmosphere/DepthField'");
-    expect(page).toContain('<DepthField />');
-    expect(lumen).not.toMatch(/:root \.depth-field\s*\{[^}]*display:\s*none/);
-    expect(globals).toContain('--cp-depth-base: var(--color-paper)');
-    expect(globals).toContain('--cp-depth-line-a: var(--color-accent)');
-    expect(globals).toContain('--cp-depth-line-b: var(--color-ink-2)');
+function sourceFiles(root) {
+  return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(root, entry.name);
+    if (entry.isDirectory()) return sourceFiles(target);
+    return /\.(?:js|css)$/.test(entry.name) ? [target] : [];
   });
+}
 
-  it('keeps the full scene only for a capable, unconstrained desktop path', () => {
-    expect(shouldUseStaticDepthField()).toBe(false);
-    expect(shouldUseStaticDepthField({ reducedMotion: false, coarse: false, narrow: false, saveData: false })).toBe(false);
-  });
-
-  it('uses the finished CSS composition for phone, reduced-motion, and data-saving paths', () => {
-    for (const input of [
-      { coarse: true },
-      { narrow: true },
-      { reducedMotion: true },
-      { saveData: true },
+describe('Home sea/depth-field removal', () => {
+  it('deletes the component, shader scene, render loop, and exclusive probe', () => {
+    for (const file of [
+      'components/atmosphere/DepthField.js',
+      'components/atmosphere/depth/createDepthField.js',
+      'scripts/dev/field-probe.mjs',
     ]) {
-      expect(shouldUseStaticDepthField(input)).toBe(true);
+      expect(fs.existsSync(file), file).toBe(false);
     }
   });
 
-  it('checks the static policy and WebGL capability before importing Three', () => {
-    const source = fs.readFileSync('components/atmosphere/DepthField.js', 'utf8');
-    const dynamicImport = source.indexOf("import('./depth/createDepthField')");
-    expect(source.indexOf('if (staticField || !webglAvailable()) return undefined;')).toBeLessThan(dynamicImport);
-    expect(source.indexOf('shouldUseStaticDepthField({')).toBeLessThan(dynamicImport);
+  it('has no mount, depth CSS, keyframes, tokens, or scene references anywhere in the app', () => {
+    const offenders = ['app', 'components']
+      .flatMap(sourceFiles)
+      .filter((file) => /DepthField|createDepthField|depth-field|depth-drift|--cp-depth-/i.test(read(file)));
+    expect(offenders).toEqual([]);
+
+    const home = read('app/(app)/home/page.js');
+    expect(home).toContain('<HomeFeedClient');
+    expect(home).not.toContain('<canvas');
   });
 
-  it('server-renders the CSS atmosphere instead of an empty loading band', () => {
-    const html = renderToStaticMarkup(React.createElement(DepthField));
-    expect(html).toContain('data-state="fallback"');
-    expect(html).toContain('depth-field__fallback');
-    expect(html).toContain('depth-field__ridge--far');
-    expect(html).toContain('depth-field__horizon');
-    expect(html).not.toContain('<canvas');
+  it('keeps the existing static paper stage without substituting another sea', () => {
+    expect(read('app/styles/lumen.css')).toMatch(/:root \.home-stage\s*\{\s*background: var\(--color-paper\);/);
+    const islands = read('app/styles/islands.css');
+    expect(islands).toContain('.home-stage {');
+    expect(islands).not.toMatch(/canvas|ridge|horizon|depth-drift/i);
+  });
+
+  it('preserves the independent Login ghost, intro, and unrelated Home motion', () => {
+    for (const file of [
+      'components/atmosphere/GhostScene.js',
+      'components/atmosphere/ghost/createGhostScene.js',
+      'components/layout/GalacticIntro.js',
+      'components/home/IslandMotion.js',
+    ]) {
+      expect(fs.existsSync(file), file).toBe(true);
+    }
+    expect(read('package.json')).toContain('"three"');
+    expect(read('app/styles/home.css')).toContain('@keyframes aurora-breathe');
   });
 });

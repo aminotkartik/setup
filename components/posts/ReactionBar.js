@@ -20,7 +20,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
       disabled={!canReact || pending}
       aria-pressed={state.reacted}
       aria-label={state.reacted ? 'Remove reaction' : 'React to this'}
-      className={cn('chip chip-toggle', !canReact ? 'cursor-default' : null, className)}
+      className={cn('chip chip-toggle reaction-control', !canReact ? 'cursor-default' : null, className)}
       onClick={() => {
         const next = { count: state.count + (state.reacted ? -1 : 1), reacted: !state.reacted };
         setState(next);
@@ -30,7 +30,7 @@ export function ReactionBar({ targetType, targetId, count = 0, reactedByMe = fal
         run(data);
       }}
     >
-      <Icon name="heart" size={13} className={cn('transition-transform', state.reacted ? 'scale-110' : null)} />
+      <Icon name="heart" size={13} className="reaction-icon" />
       {state.count > 0 ? compactNumber(state.count) : 'Like'}
     </button>
   );

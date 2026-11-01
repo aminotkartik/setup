@@ -82,6 +82,7 @@ export function PostCard({
         />
         <div className="flex shrink-0 items-center gap-1.5">
           {post.is_official ? <OfficialBadge /> : null}
+          {post.pinned ? <Badge tone="accent">Pinned</Badge> : null}
           {kindLabel ? (
             <Badge icon={post.kind === 'poll' ? 'trend' : 'comment'}>{kindLabel}</Badge>
           ) : null}

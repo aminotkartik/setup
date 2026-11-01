@@ -12,9 +12,8 @@
  * upper left, a broad teal field centre-right, a sunset bloom low on the right
  * and sand at the foot — a room with two light sources, not a gradient.
  *
- * It is deliberately not one of the canvases. The sign-in stage keeps its
- * ghost scene (`./GhostScene`) and Home mounts its own depth field
- * (`./DepthField`); this layer is the environment underneath everything, and
+ * It is deliberately not a canvas. The sign-in stage keeps its own ghost scene
+ * (`./GhostScene`); this layer is the environment underneath everything, and
  * stacking the two would double the cost for no gain.
  *
  * The tree is `pointer-events: none` and sits below the shell's stacking

@@ -608,7 +608,10 @@
       0 2px 1px rgba(0, 0, 0, 0.3),
       0 2px 1px rgba(255, 255, 255, 0.06);
     transform: perspective(70px) rotateX(5deg) rotateY(0deg);
-    transition: all 0.1s ease-in-out 0s;
+    transition:
+      transform 0.1s ease-in-out 0s,
+      border-color 0.1s ease-in-out 0s,
+      box-shadow 0.1s ease-in-out 0s;
   }
 
   /* The press flash: a highlight that sweeps in over the face for 100ms, the
@@ -709,7 +712,9 @@
     box-shadow:
       -4px -4px 6px rgba(255, 255, 255, 0.16),
       5px 3px 6px rgba(0, 0, 0, 0.16);
-    transition: all 0.1s ease-in-out;
+    transition:
+      transform 0.1s ease-in-out,
+      box-shadow 0.1s ease-in-out;
   }
 
   .keycap > * {
