@@ -105,14 +105,13 @@
   transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
 }
 
-:root a.card:hover,
-:root button.card:hover,
-:root .card-interactive:hover,
-:root .island[data-interactive='true']:hover,
-:root .rail-island:hover,
-:root .feature-tile:hover,
-:root .club-card:hover,
-:root .gig-card:hover {
+  :root a.card:hover,
+  :root button.card:hover,
+  :root .card-interactive:hover,
+  :root .island[data-interactive='true']:hover,
+  :root .rail-island:hover,
+  :root .club-card:hover,
+  :root .gig-card:hover {
   border-color: var(--color-rule-2);
   background-color: var(--color-paper-3);
   box-shadow: none;
@@ -121,7 +120,7 @@
 
 :root .card-feature,
 :root .card-official {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-text);
   background-image: none;
   box-shadow: none;
 }
@@ -139,10 +138,11 @@
   border-color: var(--color-rule);
 }
 
-/* The former utility meant light accent text on a dark surface. Keep that
-   compatibility without changing Lumen's dark-on-brass accent-ink token. */
+/* Text uses the darker semantic blue in light mode; filled accent surfaces
+   continue to use the exact requested ice-blue foundation. */
+:root .text-accent,
 :root .text-accent-ink {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 /* --------------------------------------------------------------------------
@@ -215,7 +215,7 @@
 
 :root .home-pulse__wave,
 :root .home-pulse__name .home-pulse__wave {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   filter: none;
   -webkit-text-fill-color: currentColor;
 }
@@ -526,7 +526,7 @@
 
 :root .switch-input:checked + .switch-track,
 :root .switch-input[aria-checked='true'] + .switch-track {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-text);
   background: var(--color-accent);
 }
 
@@ -563,7 +563,7 @@
 :root .badge-accent,
 :root .badge-warning,
 :root .tt-badge--next {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   box-shadow: inset 0 0 0 var(--rule-hair) var(--color-accent);
 }
 
@@ -604,7 +604,7 @@
 
 :root .notice-warning,
 :root .notice-accent {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-text);
 }
 
 :root .motion-control,
@@ -624,7 +624,7 @@
 }
 
 :root .reaction-control[aria-pressed='true'] {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   box-shadow: inset 0 0 0 var(--rule-hair) var(--color-accent);
 }
 
@@ -649,7 +649,7 @@
 
 :root .cp-poll-option--selected,
 :root .cp-poll-option[aria-pressed='true'] {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-text);
   background: var(--color-paper);
   color: var(--color-ink);
 }
@@ -701,7 +701,7 @@
 }
 
 :root .message-receipt__icon {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 :root .message-receipt__icon path {
@@ -1102,16 +1102,13 @@
 }
 
 :root .identity-mark-accent {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
-/* No load reveal, ambient pulse or pointer-depth choreography on app screens. */
-:root .island,
+/* Keep ambient motion out of app screens; Home owns a separate, one-shot
+   entrance grammar below. */
 :root .animate-rise,
-:root .cascade,
 :root .shell-main > *,
-:root .home-pulse__grid,
-:root .home-pulse__stats,
 :root .home-pulse__dot,
 :root .login-intro {
   opacity: 1;
@@ -1229,7 +1226,7 @@
 }
 
 :root .guide-strip__lead svg {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 :root .guide-strip__link {
@@ -1272,7 +1269,7 @@
 
 :root .feature-tile__icon {
   background: transparent;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -1285,6 +1282,14 @@
 
 :root .feature-tile__copy {
   color: var(--color-ink-2);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :root .feature-tile:hover {
+    border-color: var(--tile-accent);
+    background: var(--color-paper-3);
+    transform: translateY(-2px);
+  }
 }
 
 :root .home-discover__label {
@@ -1330,8 +1335,6 @@
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  transform: none;
-  animation: none;
 }
 
 :root .stream-card::before,
@@ -1404,7 +1407,7 @@
 :root .rail-event__num,
 :root .rail-market__price,
 :root .stream-stamp--price {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 :root .rail-activity__meter,
@@ -1420,6 +1423,68 @@
 :root .home-coda {
   border-color: var(--color-rule);
   color: var(--color-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Home's one-shot arrival and tactile responses. These rules intentionally
+   come after the legacy material resets above: light mode gets the same
+   readable, restrained movement as dark mode, never a looping background.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  :root .home-pulse__grid {
+    animation: campus-home-threshold 520ms var(--ease-out) both;
+  }
+
+  :root .home-pulse__stats {
+    animation: campus-home-threshold 420ms var(--ease-out) 70ms both;
+  }
+
+  :root .home-features__grid > .feature-tile {
+    animation: campus-home-tile-in 420ms var(--ease-out) both;
+    animation-delay: calc(100ms + var(--home-tile-order, 0) * 55ms);
+  }
+
+  :root .home-features__grid > .feature-tile:nth-child(2) { --home-tile-order: 1; }
+  :root .home-features__grid > .feature-tile:nth-child(3) { --home-tile-order: 2; }
+  :root .home-features__grid > .feature-tile:nth-child(4) { --home-tile-order: 3; }
+
+  :root .home-stream > .stream-slot {
+    animation: campus-home-stream-in 420ms var(--ease-out) both;
+    animation-delay: calc(var(--stream-order, 0) * 45ms);
+  }
+
+  :root .feature-tile:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  :root .stream-slot:active .stream-card {
+    transform: translateY(0) scale(0.995);
+  }
+}
+
+@keyframes campus-home-threshold {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes campus-home-tile-in {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes campus-home-stream-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .home-pulse__grid,
+  :root .home-pulse__stats,
+  :root .home-features__grid > .feature-tile,
+  :root .home-stream > .stream-slot {
+    animation: none;
+    transform: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1459,7 +1524,7 @@
 :root .tt-item--next,
 :root .tt-cell--flagged,
 :root .calendar-cell-today {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-text);
 }
 
 :root .tt-item--now {
@@ -1476,7 +1541,7 @@
 :root .tt-install__mark {
   border: 1px solid var(--color-rule);
   background: var(--color-paper-3);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -1548,7 +1613,7 @@
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-card);
   background: var(--color-paper-3);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -1695,7 +1760,7 @@
 :root .guide-step__number {
   border: 1px solid var(--color-rule-2);
   border-radius: var(--radius-pill);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-family: var(--font-outlier);
 }
 

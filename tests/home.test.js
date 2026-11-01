@@ -50,6 +50,24 @@ describe('home quick-access tiles', () => {
   });
 });
 
+describe('home essential loading lifecycle', () => {
+  const feedClient = read('components/home/HomeFeedClient.js');
+
+  it('retires both skeletons on readiness or a terminal error', () => {
+    expect(feedClient).toContain('const showInitialLoading = !snapshot && loading && !error;');
+    expect(feedClient).toContain('{showInitialLoading ? <FeedSkeleton /> : null}');
+    expect(feedClient).toMatch(/<HomeRail[\s\S]*?\/>\s*\) : showInitialLoading \? \(\s*<RailSkeleton \/>\s*\) : null/);
+  });
+
+  it('uses the authoritative payload and a visible retry path, not a completion timer', () => {
+    expect(feedClient).toContain("await fetchEssentialFeed('/api/home/feed'");
+    expect(feedClient).toContain('if (requestVersion === requestVersionRef.current) setLoading(false);');
+    expect(feedClient).toContain('The campus feed could not be loaded.');
+    expect(feedClient).toContain('onClick={() => { void refresh(true); }}');
+    expect(feedClient).not.toContain('setTimeout(() => setLoading(false)');
+  });
+});
+
 describe('shared Dropdown (Create menu)', () => {
   const overlays = read('components/ui/overlays.js');
   const feedback = read('app/styles/feedback.css');

@@ -17,6 +17,7 @@ import {
   writeDeviceColors,
 } from '@/lib/device-colors';
 import styles from './DeviceColorSettings.module.css';
+import { THEME_CHANGE_EVENT, THEME_STORAGE_KEY } from '@/lib/theme';
 
 const HEX_ERROR = 'Use three or six hex digits, with or without the leading #.';
 const DEFAULT_STATUS = 'Valid changes apply and save automatically on this device.';
@@ -35,34 +36,67 @@ export function DeviceColorSettings() {
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState(DEFAULT_STATUS);
   const [ready, setReady] = useState(false);
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
+    const activeTheme = () => document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const restoreForTheme = (nextTheme, message = null) => {
+      setTheme(nextTheme);
+      if (nextTheme === 'dark') {
+        clearDeviceColorOverrides(document.documentElement);
+        if (message) setStatus(message);
+        return;
+      }
+      const stored = readDeviceColors(browserStorage());
+      if (stored) applyDeviceColors(document.documentElement, stored);
+      else clearDeviceColorOverrides(document.documentElement);
+      if (message) setStatus(message);
+    };
+
     // The root's pre-paint script has already restored any saved colors. Read
     // the controls after the first stable render rather than cascading a
     // synchronous state update through the effect body.
     const frame = window.requestAnimationFrame(() => {
       const stored = readDeviceColors(browserStorage());
       const initial = stored || { ...DEFAULT_DEVICE_COLORS };
+      const currentTheme = activeTheme();
       setColors(initial);
       setDraft(initial);
-      if (stored) {
+      setTheme(currentTheme);
+      if (currentTheme === 'light' && stored) {
         applyDeviceColors(document.documentElement, stored);
-        setStatus('Saved colors loaded from this device.');
+        setStatus('Saved light colors loaded from this device.');
       } else {
         clearDeviceColorOverrides(document.documentElement);
+        if (currentTheme === 'dark') setStatus('Dark mode uses the canonical palette; your light colors are saved.');
       }
       setReady(true);
     });
 
+    const onThemeChange = (event) => {
+      const nextTheme = event.detail?.theme === 'dark' ? 'dark' : 'light';
+      restoreForTheme(
+        nextTheme,
+        nextTheme === 'dark'
+          ? 'Dark mode uses the canonical palette; your light colors are saved.'
+          : 'Your saved light colors are active again.',
+      );
+    };
     const onStorage = (event) => {
+      if (event.key === THEME_STORAGE_KEY) {
+        restoreForTheme(event.newValue === 'dark' ? 'dark' : 'light');
+        return;
+      }
       if (event.key !== DEVICE_COLOR_STORAGE_KEY) return;
       const next = readDeviceColors(browserStorage());
       if (next) {
         setColors(next);
         setDraft(next);
         setErrors({});
-        applyDeviceColors(document.documentElement, next);
-        setStatus('Colors updated from another tab on this device.');
+        if (activeTheme() === 'light') applyDeviceColors(document.documentElement, next);
+        setStatus(activeTheme() === 'dark'
+          ? 'Light colors updated from another tab; dark mode is unchanged.'
+          : 'Colors updated from another tab on this device.');
       } else {
         const defaults = { ...DEFAULT_DEVICE_COLORS };
         setColors(defaults);
@@ -71,14 +105,17 @@ export function DeviceColorSettings() {
         setStatus(DEFAULT_STATUS);
       }
     };
+    window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
     window.addEventListener('storage', onStorage);
     return () => {
       window.cancelAnimationFrame(frame);
+      window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
       window.removeEventListener('storage', onStorage);
     };
   }, []);
 
   function commit(next, nextDraft = next) {
+    if (theme === 'dark') return;
     const normalized = normalizeDeviceColors(next);
     if (!normalized) return;
     setColors(normalized);
@@ -134,14 +171,21 @@ export function DeviceColorSettings() {
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">Colors on this device</h2>
           <p className="mt-1 max-w-2xl text-[0.8125rem] leading-relaxed text-muted">
-            Choose background, section, theme and text colors for this browser. This is not an
-            account or site-wide setting: other devices and everyone else keep the original Campus+ palette.
+            Choose background, section, theme and text colors for light mode in this browser. This is not
+            an account or site-wide setting: other devices and everyone else keep the original Campus+ palette.
+            Dark mode always keeps its own calm, canonical colors.
           </p>
         </div>
         <Button type="button" size="sm" variant="secondary" icon="refresh" onClick={reset} disabled={!ready}>
           Reset to site colors
         </Button>
       </div>
+
+      {theme === 'dark' ? (
+        <Notice tone="neutral" icon="moon">
+          Custom colors are paused in dark mode. Your saved light palette is unchanged and will return when you switch back to light mode.
+        </Notice>
+      ) : null}
 
       <div className={styles.fields}>
         {DEVICE_COLOR_FIELDS.map(({ key, label }) => {
@@ -160,7 +204,7 @@ export function DeviceColorSettings() {
                   aria-label={`${label} picker`}
                   aria-labelledby={`${inputId}-label`}
                   onChange={(event) => updateColor(key, event.target.value)}
-                  disabled={!ready}
+                  disabled={!ready || theme === 'dark'}
                 />
                 <Input
                   id={hexId}
@@ -171,7 +215,7 @@ export function DeviceColorSettings() {
                   aria-invalid={Boolean(errors[key])}
                   aria-describedby={errors[key] ? errorId : undefined}
                   onChange={(event) => updateColor(key, event.target.value)}
-                  disabled={!ready}
+                  disabled={!ready || theme === 'dark'}
                   maxLength={7}
                   spellCheck={false}
                   autoComplete="off"

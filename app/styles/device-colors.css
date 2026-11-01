@@ -1,8 +1,9 @@
-/* Optional browser-local color override. Without data-device-colors the
-   canonical Lumen tokens are untouched. These derived roles keep custom
-   background/section/text choices usable across cards, rules, muted copy and
-   focus; the four primary values themselves are set inline by lib/device-colors.js. */
-:root[data-device-colors='custom'] {
+/* Optional browser-local light-mode color override. Without the explicit
+   light + custom pair the canonical theme tokens are untouched. These derived
+   roles keep custom background/section/text choices usable across cards,
+   rules, muted copy and focus; the four primary values themselves are set
+   inline by lib/device-colors.js. */
+:root[data-theme='light'][data-device-colors='custom'] {
   --color-paper-3: color-mix(in oklab, var(--color-paper-2) 88%, var(--color-ink));
   --color-ink-2: color-mix(in oklab, var(--color-ink) 88%, var(--color-paper));
   --color-muted: color-mix(in oklab, var(--color-ink) 68%, var(--color-paper));

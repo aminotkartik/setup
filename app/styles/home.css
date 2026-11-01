@@ -547,38 +547,34 @@
 }
 
 .feature-tile {
-  --tile-accent: #8bdde9;
+  --tile-accent: var(--color-accent-text);
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   padding: 1rem;
-  border: 1px solid rgba(174, 220, 232, 0.19);
-  border-radius: 1.125rem;
-  color: #f3f8fa;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  color: var(--color-ink);
   text-decoration: none;
-  background: radial-gradient(circle at 0% 0%, rgba(59, 177, 195, 0.15), transparent 65%),
-    linear-gradient(145deg, #152e46, #0d1c31);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 30px -22px rgba(0, 0, 0, 0.65);
-  transition: border-color 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+  background: var(--color-paper-2);
+  box-shadow: none;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
 }
 
 .feature-tile--events {
-  --tile-accent: #e7bb92;
-  background: radial-gradient(circle at 100% 0%, rgba(203, 153, 112, 0.13), transparent 65%),
-    linear-gradient(145deg, #202c49, #171b35);
+  --tile-accent: var(--color-accent-2);
 }
 
 .feature-tile--timetable {
-  --tile-accent: #8ddedb;
-  background: radial-gradient(circle at 0% 0%, rgba(69, 191, 181, 0.14), transparent 65%),
-    linear-gradient(145deg, #123941, #102335);
+  --tile-accent: var(--color-accent-text);
 }
 
 .feature-tile--clubs {
-  --tile-accent: #c7d99a;
-  background: radial-gradient(circle at 100% 0%, rgba(170, 190, 111, 0.13), transparent 65%),
-    linear-gradient(145deg, #183a39, #102332);
+  --tile-accent: var(--color-success);
 }
 
 .feature-tile__top {
@@ -616,17 +612,17 @@
   margin-top: 0.35rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: #c3d2db;
+  color: var(--color-ink-2);
   overflow-wrap: anywhere;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .feature-tile:hover {
-    color: #fff;
+    color: var(--color-ink);
     text-decoration: none;
-    border-color: color-mix(in oklab, var(--tile-accent) 55%, transparent);
-    filter: brightness(1.1);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 16px 32px -22px rgba(0, 0, 0, 0.8);
+    border-color: var(--tile-accent);
+    background: var(--color-paper-3);
+    transform: translateY(-2px);
   }
   .feature-tile:hover .feature-tile__arrow { transform: translate(2px, -2px); }
 }
@@ -791,6 +787,22 @@
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+}
+
+.home-feed-loading__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 5.5rem;
+  color: var(--color-muted);
+}
+
+.home-feed-loading__status .cascade {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+  transform: scale(0.72);
+  transform-origin: right center;
 }
 
 /* Entries are separated by their own lit edge, never by a box drawn around the

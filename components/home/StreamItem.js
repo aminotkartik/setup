@@ -177,9 +177,13 @@ export function StreamItem({ item, post, currentUserId, canModerate, onPollVote 
 
 /** The wrapper that gives each entry its kind — the marker colour and the type
  * scale are derived from it in CSS, so the components stay presentation-free. */
-export function StreamSlot({ kind, children }) {
+export function StreamSlot({ kind, children, order = 0 }) {
   return (
-    <div className="stream-slot" data-kind={kindOf(kind)}>
+    <div
+      className="stream-slot"
+      data-kind={kindOf(kind)}
+      style={{ '--stream-order': String(Math.min(order, 8)) }}
+    >
       {children}
     </div>
   );

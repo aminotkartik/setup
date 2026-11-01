@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HOME_FEED_PAGE_SIZE, HOME_FEED_RECONCILE_LIMIT, ROUTES } from '@/lib/constants';
-import { Button, EmptyState, Notice } from '@/components/ui';
+import { Button, CascadeLoader, EmptyState, Notice, WordLoader } from '@/components/ui';
 import { PostComposer } from '@/components/posts/PostComposer';
 import { IslandMotion } from '@/components/home/IslandMotion';
 import { HomePulse, HomeZone } from '@/components/home/HomePulse';
@@ -43,24 +43,43 @@ const LIVE_REFRESH_MS = 700;
  * cannot camp on screen: after this, the server page is the whole truth again.
  */
 const HELD_POST_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 20_000;
+
+/** A stalled request is an error, not evidence that content is ready. The
+ * timeout only releases the loader into the visible retry state below. */
+async function fetchEssentialFeed(input, options = {}) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...options, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
 
 function FeedSkeleton() {
   return (
-    <div className="home-stream" role="status" aria-label="Loading campus feed">
-      <span className="sr-only">Loading the latest campus posts.</span>
-      {[0, 1, 2].map((row) => (
-        <div key={row} className="stream-slot" aria-hidden="true">
-          <div className="stream-card stream-card--post p-4">
-            <div className="flex items-center gap-3">
-              <span className="h-8 w-8 rounded-full bg-surface-2" />
-              <span className="h-3 w-28 rounded bg-surface-2" />
+    <div className="home-feed-loading" aria-busy="true">
+      <div className="home-feed-loading__status">
+        <WordLoader words={['feed', 'posts', 'notices', 'campus']} />
+        <CascadeLoader label="Loading campus feed" />
+      </div>
+      <div className="home-stream" aria-label="Loading campus feed">
+        <span className="sr-only">Loading the latest campus posts and campus rail.</span>
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="stream-slot" aria-hidden="true">
+            <div className="stream-card stream-card--post p-4">
+              <div className="flex items-center gap-3">
+                <span className="h-8 w-8 rounded-full bg-surface-2" />
+                <span className="h-3 w-28 rounded bg-surface-2" />
+              </div>
+              <span className="mt-4 block h-3 w-full max-w-lg rounded bg-surface-2" />
+              <span className="mt-2 block h-3 w-3/4 rounded bg-surface-2" />
+              <span className="mt-5 block h-7 w-24 rounded-full bg-surface-2" />
             </div>
-            <span className="mt-4 block h-3 w-full max-w-lg rounded bg-surface-2" />
-            <span className="mt-2 block h-3 w-3/4 rounded bg-surface-2" />
-            <span className="mt-5 block h-7 w-24 rounded-full bg-surface-2" />
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -118,6 +137,9 @@ export function HomeFeedClient({
   // that. `revision()` is a getter over the same live counter either way.
   const { subscribe: subscribeToFeed, revision: feedRevision, invalidate: invalidateFeed } = useLiveFeed();
   const [snapshot, setSnapshot] = useState(null);
+  // Essential readiness, not a mount/timer flag: the feed and its rail arrive
+  // in one authoritative payload. It remains pending until that payload (or a
+  // terminal error) settles; cached real content may render during revalidation.
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
@@ -174,7 +196,7 @@ export function HomeFeedClient({
     const requestVersion = ++requestVersionRef.current;
     const task = (async () => {
       try {
-        const response = await fetch('/api/home/feed', {
+        const response = await fetchEssentialFeed('/api/home/feed', {
           method: requestedPostIds.length ? 'POST' : 'GET',
           cache: 'no-store',
           headers: {
@@ -423,6 +445,9 @@ export function HomeFeedClient({
     : [];
 
   const canPageBack = Boolean(snapshot?.page?.hasMore) && feed.length > 0 && !unavailable;
+  // Neither skeleton may outlive a terminal error. Cached content keeps its
+  // real rail during revalidation; an empty-cache error gets only retry UI.
+  const showInitialLoading = !snapshot && loading && !error;
 
   /**
    * One page older — another `HOME_FEED_PAGE_SIZE` entries — appended to what is on screen.
@@ -441,7 +466,7 @@ export function HomeFeedClient({
     setLoadingMore(true);
     setLoadMoreError(false);
     try {
-      const response = await fetch(`/api/home/feed?offset=${loaded.length}`, {
+      const response = await fetchEssentialFeed(`/api/home/feed?offset=${loaded.length}`, {
         cache: 'no-store',
         headers: { Accept: 'application/json' },
       });
@@ -502,7 +527,11 @@ export function HomeFeedClient({
               </div>
             ) : null}
 
-            <section className="flex flex-col gap-4" aria-labelledby="home-stream-title">
+            <section
+              className="flex flex-col gap-4"
+              aria-labelledby="home-stream-title"
+              aria-busy={!snapshot && loading}
+            >
               <HomeZone
                 id="home-stream-title"
                 eyebrow="Campus feed"
@@ -530,14 +559,14 @@ export function HomeFeedClient({
                 />
               ) : null}
 
-              {!snapshot && loading ? <FeedSkeleton /> : null}
+              {showInitialLoading ? <FeedSkeleton /> : null}
 
               {feed.length ? (
                 <div className="home-stream">
-                  {feed.map((item) => {
+                  {feed.map((item, index) => {
                     const post = item.post || null;
                     return (
-                      <StreamSlot key={`${item.type}-${item.id}`} kind={item.type}>
+                      <StreamSlot key={`${item.type}-${item.id}`} kind={item.type} order={index}>
                         <StreamItem
                           item={item}
                           post={post}
@@ -555,7 +584,7 @@ export function HomeFeedClient({
                 </div>
               ) : null}
 
-              {!snapshot && !loading && error ? (
+              {!snapshot && error ? (
                 <div className="flex flex-col items-start gap-2">
                   <Notice tone="warning" icon="flag">The campus feed could not be loaded.</Notice>
                   <Button variant="secondary" size="sm" onClick={() => { void refresh(true); }}>Try again</Button>
@@ -596,9 +625,9 @@ export function HomeFeedClient({
 
           {snapshot ? (
             <HomeRail events={events} notices={notices} trending={trending} marketplace={marketplace} quickLinks={quickLinks} />
-          ) : (
+          ) : showInitialLoading ? (
             <RailSkeleton />
-          )}
+          ) : null}
         </div>
       </IslandMotion>
     </>
