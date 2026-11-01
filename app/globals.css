@@ -1,7 +1,12 @@
-/* The shared shell stylesheet. Route-specific sheets are imported by the
-   layout that owns them (home.css, timetable.css, login.css, sections.css,
-   calendar.css), so they are downloaded only on the routes that use them. */
+/* Hallmark · shape: app screen · genre: atmospheric · theme: Lumen (by request) · redesign: full
+ * nav: kept shell, Lumen wells and hairlines · signature: none on app screens · states: loading, empty, error, success, offline, live, permission and moderation
+ * axes: dark/high-contrast-serif/warm · posture: restrained · contrast: pass · v2.0.0 */
 @import 'tailwindcss';
+@import './tokens.css';
+@import './base.css' layer(base);
+
+/* Route-specific sheets stay with their owning layouts. The semantic tokens
+   below are compatibility boundaries into Hallmark Lumen, not a second theme. */
 @import './styles/surfaces.css';
 @import './styles/controls.css';
 @import './styles/feedback.css';
@@ -11,248 +16,183 @@
 @import './styles/atmosphere.css';
 @import './styles/islands.css';
 @import './styles/night.css';
+@import './styles/lumen.css';
 
 /* ==========================================================================
-   Campus+ semantic color system
+   Campus+ semantic compatibility roles → Hallmark Lumen
    --------------------------------------------------------------------------
-   Campus+ has exactly one theme: dark. It is mandatory — never selected from
-   a cookie, a saved preference or the operating-system colour setting — and the root
-   layout always renders `data-theme="dark"`, so the first paint is already
-   the night palette and no legacy light preference can resurface. The
-   tokens below are that single designed palette ("the campus after dark").
-
-   --cp-* tokens are paired by role, not brightness. Text accents are NOT
-   button fills; input ink is NOT sky ink. All normal text (including muted,
-   placeholders and disabled labels) targets >= 4.5:1 on its named surface.
-   Meaningful control edges/icons and focus indicators target >= 3:1.
-   Subtle separators are decorative, never the sole boundary of a control.
-
-   --c-* are compatibility aliases for existing semantic Tailwind utilities.
-   New component CSS should consume the explicit --cp-* role pairs.
+   The product keeps its established role names; every visual value now comes
+   from app/tokens.css. Opaque wells, hairlines and state-only colour replace
+   the former glass, gradient and illumination treatments.
    ========================================================================== */
 
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Brand — TEAL SAND.
-     ------------------------------------------------------------------------
-     The three identity colours, declared once. Components never reach for
-     these directly: they consume the semantic roles below, which are derived
-     from them. The distribution is 65% midnight/deep-ocean surfaces, 20% teal
-     illumination, 10% sand warmth, 5% orange energy — a *lighting* ratio, not
-     a paint-by-percentages rule. Teal is the identity, orange is excitement,
-     sand stops the dark from going sterile. */
-  --brand-teal: #14b8a6;
-  --brand-teal-bright: #2dd4bf;
-  --brand-sand: #f4e3c1;
-  --brand-orange: #f97316;
+  --brand-teal: var(--color-accent);
+  --brand-teal-bright: var(--color-accent);
+  --brand-sand: var(--color-ink-2);
+  --brand-orange: var(--color-accent-2);
 
-  /* Reading surfaces — "the campus after dark", now lit by teal and sunset.
-     A midnight-navy canvas, a darker void beneath it for recesses, and a
-     stepped ladder of deep-ocean surfaces above. Each rung is deliberately
-     close to its neighbour so depth reads as lighting, not as a stack of
-     boxes. */
-  --cp-bg-page: #07151d;
-  --cp-bg-page-deep: #04101a;
-  --cp-bg-elevated: #10242d;
-  --cp-bg-subtle: #143039;
-  --cp-bg-strong: #1a3a44;
-  --cp-text-primary: #f8faf7;
-  --cp-text-secondary: #c8d8d4;
-  --cp-text-muted: #b7c8c6;
-  --cp-text-subtle: #b4c6c4;
-  --cp-text-inverse: #f4fbf8;
-  --cp-bg-inverse: #0c2029;
-  --cp-icon: #c8d8d4;
-  --cp-icon-muted: #b0c2c0;
-  --cp-border: #4e6a70;
-  --cp-border-subtle: #2a464e;
-  --cp-border-control: #75908f;
-  --cp-focus: #5eead4;
-  --cp-focus-gap: var(--cp-bg-elevated);
+  --cp-bg-page: var(--color-paper);
+  --cp-bg-page-deep: var(--color-paper);
+  --cp-bg-elevated: var(--color-paper-2);
+  --cp-bg-subtle: var(--color-paper-3);
+  --cp-bg-strong: var(--color-paper-3);
+  --cp-text-primary: var(--color-ink);
+  --cp-text-secondary: var(--color-ink-2);
+  --cp-text-muted: var(--color-muted);
+  --cp-text-subtle: var(--color-muted);
+  --cp-text-inverse: var(--color-ink);
+  --cp-bg-inverse: var(--color-paper);
+  --cp-icon: var(--color-ink-2);
+  --cp-icon-muted: var(--color-muted);
+  --cp-border: var(--color-rule-2);
+  --cp-border-subtle: var(--color-rule);
+  --cp-border-control: var(--color-muted);
+  --cp-focus: var(--color-focus);
+  --cp-focus-gap: var(--color-paper);
 
-  /* Accent text vs. accent fill, each with its own intentional ink: teal
-     carried as light (text) and as a solid (fill) never share one ink. */
-  --cp-text-accent: #2dd4bf;
-  --cp-text-on-accent-soft: #cdeee7;
-  --cp-bg-accent: #14b8a6;
-  --cp-text-on-accent: #04211d;
-  --cp-bg-accent-hover: #2dd4bf;
-  --cp-bg-accent-pressed: #0f9488;
-  --cp-bg-accent-deep: #0b6e66;
-  --cp-bg-accent-soft: #123a3a;
-  --cp-bg-accent-tint: #0e2e2e;
-  --cp-accent-pale: #1f4f4c;
-  --cp-accent-highlight: #7de8d8;
-  /* The one illuminated cyan-teal: illumination, not a second brand colour.
-     It appears in focus rings, the active-navigation indicator and
-     atmospheric light fields — never as a large fill. */
-  --cp-accent-cyan: #5eead4;
-  /* The warm partner. Sunset orange is reserved for energy: the primary
-     call-to-action, the next event, a live moment. `--cp-text-warm` is its
-     readable text tint (orange itself never carries body copy). */
-  --cp-accent-warm: #f97316;
-  --cp-text-warm: #fdba74;
+  --cp-text-accent: var(--color-accent);
+  --cp-text-on-accent-soft: var(--color-ink);
+  --cp-bg-accent: var(--color-accent);
+  --cp-text-on-accent: var(--color-accent-ink);
+  --cp-bg-accent-hover: color-mix(in oklab, var(--color-accent) 88%, var(--color-ink));
+  --cp-bg-accent-pressed: var(--color-accent);
+  --cp-bg-accent-deep: var(--color-paper-3);
+  --cp-bg-accent-soft: var(--color-paper-3);
+  --cp-bg-accent-tint: var(--color-paper-2);
+  --cp-accent-pale: var(--color-paper-3);
+  --cp-accent-highlight: var(--color-accent);
+  --cp-accent-cyan: var(--color-accent);
+  --cp-accent-warm: var(--color-accent);
+  --cp-text-warm: var(--color-accent-2);
 
-  /* Status text/icons and opaque tinted fills: safe even over glass/images. */
-  --cp-success-text: #6ee7b7;
-  --cp-success-bg: #0f3a33;
-  --cp-success-border: #2f7f6a;
-  --cp-warning-text: #fcd9a0;
-  --cp-warning-bg: #3a3220;
-  --cp-warning-border: #8f7a45;
-  --cp-danger-text: #ffb4a8;
-  --cp-danger-bg: #3e2029;
-  --cp-danger-border: #a4566a;
-  --cp-info-text: #8fe9df;
-  --cp-info-bg: #0e3238;
-  --cp-info-border: #3f8f8b;
+  /* Semantic feedback stays distinguishable without becoming decoration. */
+  --cp-success-text: var(--color-success);
+  --cp-success-bg: var(--color-paper-2);
+  --cp-success-border: var(--color-success);
+  --cp-warning-text: var(--color-accent);
+  --cp-warning-bg: var(--color-paper-2);
+  --cp-warning-border: var(--color-accent);
+  --cp-danger-text: var(--color-error);
+  --cp-danger-bg: var(--color-paper-2);
+  --cp-danger-border: var(--color-error);
+  --cp-info-text: var(--color-ink-2);
+  --cp-info-bg: var(--color-paper-2);
+  --cp-info-border: var(--color-rule-2);
 
-  /* Stateful controls: no whole-element opacity to fade their labels. */
-  --cp-hover-bg: #1b3b44;
-  --cp-hover-text: var(--cp-text-primary);
-  --cp-selected-bg: var(--cp-bg-accent-soft);
-  --cp-selected-text: var(--cp-text-on-accent-soft);
-  --cp-selected-border: #3fd0bd;
-  --cp-disabled-bg: #223c44;
-  --cp-disabled-text: #b7c8c6;
-  --cp-disabled-border: #6d888c;
-  --cp-disabled-selected-bg: #2b4f52;
-  --cp-disabled-selected-text: #cfeee7;
+  --cp-hover-bg: var(--color-paper-3);
+  --cp-hover-text: var(--color-ink);
+  --cp-selected-bg: var(--color-paper-3);
+  --cp-selected-text: var(--color-ink);
+  --cp-selected-border: var(--color-accent);
+  --cp-disabled-bg: var(--color-paper-2);
+  --cp-disabled-text: var(--color-muted);
+  --cp-disabled-border: var(--color-rule-2);
+  --cp-disabled-selected-bg: var(--color-paper-3);
+  --cp-disabled-selected-text: var(--color-muted);
 
-  /* Buttons: deep-ocean rest face, teal reveal, one readable light label.
-     Every reveal stop is dark enough for normal-size light text. */
-  --cp-button-bg: #0b2a2e;
-  --cp-button-text: #f5fbf8;
-  --cp-button-gradient-start: #157a72;
-  --cp-button-gradient-mid: #0f6159;
-  --cp-button-gradient-end: #0a6e66;
-  --cp-button-secondary-bg: var(--cp-bg-elevated);
-  --cp-button-secondary-text: var(--cp-text-primary);
-  /* The sheen button is sand: warm light with deep ink on it. */
-  --cp-button-sheen-bg: #f4e3c1;
-  --cp-button-sheen-text: #16241f;
-  --cp-button-sheen-backing: rgba(244, 227, 193, 0.94);
-  --cp-button-delete-bg: #3a1f28;
-  --cp-button-delete-text: #ffdfe2;
-  --cp-button-delete-border: #b57e8d;
-  --cp-keycap-bg: #1b3b44;
-  --cp-keycap-face: #275257;
-  --cp-keycap-text: #eaf6f2;
+  --cp-button-bg: var(--color-paper-3);
+  --cp-button-text: var(--color-ink);
+  --cp-button-gradient-start: var(--color-paper-3);
+  --cp-button-gradient-mid: var(--color-paper-3);
+  --cp-button-gradient-end: var(--color-paper-3);
+  --cp-button-secondary-bg: var(--color-paper-2);
+  --cp-button-secondary-text: var(--color-ink);
+  --cp-button-sheen-bg: var(--color-accent);
+  --cp-button-sheen-text: var(--color-accent-ink);
+  --cp-button-sheen-backing: var(--color-accent);
+  --cp-button-delete-bg: var(--color-paper-2);
+  --cp-button-delete-text: var(--color-error);
+  --cp-button-delete-border: var(--color-error);
+  --cp-keycap-bg: var(--color-paper-2);
+  --cp-keycap-face: var(--color-paper-3);
+  --cp-keycap-text: var(--color-ink-2);
 
-  /* Fields own their foregrounds; a field on a sky is still a field. */
-  --cp-input-bg: #0e2630;
-  --cp-input-text: #f8faf7;
-  --cp-input-placeholder: #b7c8c6;
-  --cp-input-focus-bg: #11303a;
-  --cp-search-bg-start: #123039;
-  --cp-search-bg-end: #0e2730;
-  --cp-search-glow: rgba(20, 184, 166, 0.12);
-  --cp-search-glow-soft: rgba(45, 212, 191, 0.07);
-  --cp-input-icon: #7fe3d4;
-  --cp-check-bg: var(--cp-bg-accent);
-  --cp-check-mark: var(--cp-text-on-accent);
-  --cp-switch-thumb: #d7ece5;
-  --cp-switch-thumb-checked: #04211d;
-  --cp-switch-track: #2c4a50;
+  --cp-input-bg: var(--color-paper);
+  --cp-input-text: var(--color-ink);
+  --cp-input-placeholder: var(--color-muted);
+  --cp-input-focus-bg: var(--color-paper-2);
+  --cp-search-bg-start: var(--color-paper);
+  --cp-search-bg-end: var(--color-paper);
+  --cp-search-glow: transparent;
+  --cp-search-glow-soft: transparent;
+  --cp-input-icon: var(--color-muted);
+  --cp-check-bg: var(--color-accent);
+  --cp-check-mark: var(--color-accent-ink);
+  --cp-switch-thumb: var(--color-ink-2);
+  --cp-switch-thumb-checked: var(--color-accent-ink);
+  --cp-switch-track: var(--color-rule-2);
 
-  /* Glass is backed, not merely blurred.
-     ------------------------------------------------------------------------
-     The contrast suite composites every glass token over pure black AND pure
-     white and requires 4.5:1 for every text tier, so the *backing* keeps a
-     high base opacity while these surfaces are far more translucent than a
-     card (14–20% of the environment shows through). Believable glass then
-     comes from light rather than from transparency: a top-edge highlight, a
-     teal rim, a specular gradient wash, a blurred and saturated backdrop, and
-     a deep, soft falloff shadow. */
-  --cp-bg-glass: rgba(13, 34, 41, 0.86);
-  --cp-bg-glass-soft: rgba(12, 31, 38, 0.84);
-  --cp-bg-glass-strong: rgba(11, 29, 36, 0.9);
-  --cp-glass-tint: rgba(45, 212, 191, 0.055);
-  --cp-glass-border: rgba(190, 245, 235, 0.2);
-  --cp-glass-reflection: rgba(233, 255, 250, 0.1);
-  --cp-glass-warmth: rgba(249, 115, 22, 0.06);
-  --cp-scrim: rgba(3, 10, 14, 0.72);
-  --cp-toast-bg: #0d2029;
-  --cp-toast-text: #f8faf7;
-  --cp-toast-border: #6f8d90;
+  /* Legacy glass names now mean opaque Lumen wells. */
+  --cp-bg-glass: var(--color-paper-2);
+  --cp-bg-glass-soft: var(--color-paper-2);
+  --cp-bg-glass-strong: var(--color-paper-3);
+  --cp-glass-tint: transparent;
+  --cp-glass-border: var(--color-rule);
+  --cp-glass-reflection: transparent;
+  --cp-glass-warmth: transparent;
+  --cp-scrim: color-mix(in oklab, var(--color-accent-ink) 72%, transparent);
+  --cp-toast-bg: var(--color-paper-3);
+  --cp-toast-text: var(--color-ink);
+  --cp-toast-border: var(--color-rule-2);
 
-  /* Cinematic contexts use named inverse pairings (never descendant overrides
-     of .text-* utilities) so entry screens can keep their own deeper sky. */
-  --cp-sky-bg: #061218;
-  --cp-sky-text: #f4fbf8;
-  --cp-sky-secondary: #cbe0db;
-  --cp-sky-muted: #b7c8c6;
-  --cp-sky-icon-bg: #16333c;
-  --cp-sky-border: #7f9a9c;
-  --cp-sky-wash: rgba(4, 16, 22, 0.38);
-  /* The Home depth field: the environment the Campus Islands float over —
-     near-black teal with the accent lines carrying the only light. The canvas
-     reads these, and the ridge/vignette fallbacks paint with them, so the
-     WebGL scene and the no-WebGL composition can never disagree. */
-  --cp-depth-base: #04101a;
-  --cp-depth-line-a: #2dd4bf;
-  --cp-depth-line-b: #f4e3c1;
-  --cp-bg-cinematic-glass: rgba(9, 26, 33, 0.92);
-  --cp-cinematic-border: #6f8d90;
+  --cp-sky-bg: var(--color-paper);
+  --cp-sky-text: var(--color-ink);
+  --cp-sky-secondary: var(--color-ink-2);
+  --cp-sky-muted: var(--color-muted);
+  --cp-sky-icon-bg: var(--color-paper-3);
+  --cp-sky-border: var(--color-rule-2);
+  --cp-sky-wash: color-mix(in oklab, var(--color-paper) 72%, transparent);
+  --cp-depth-base: var(--color-paper);
+  --cp-depth-line-a: var(--color-accent);
+  --cp-depth-line-b: var(--color-ink-2);
+  --cp-bg-cinematic-glass: var(--color-paper-2);
+  --cp-cinematic-border: var(--color-rule-2);
+  /* Original institutional crest asset: retain its white contrast plate. */
   --cp-brand-plate: #fffdf9;
-  --cp-brand-bg: #2dd4bf;
-  --cp-brand-bg-end: #14b8a6;
-  --cp-brand-mark: #04211d;
+  --cp-brand-bg: var(--color-accent);
+  --cp-brand-bg-end: var(--color-accent);
+  --cp-brand-mark: var(--color-accent-ink);
 
-  --cp-loader-track: #2a464e;
-  --cp-loader-active: var(--cp-text-accent);
-  --cp-poll-track: #22404a;
-  --cp-poll-fill: #7de8d8;
+  --cp-loader-track: var(--color-rule);
+  --cp-loader-active: var(--color-accent);
+  --cp-poll-track: var(--color-paper-3);
+  --cp-poll-fill: var(--color-accent);
+  --cp-highlight: var(--color-ink);
+  --cp-highlight-soft: transparent;
+  --cp-shade: color-mix(in oklab, var(--color-accent-ink) 30%, transparent);
 
-  /* Material highlights/shading are decorative, never foreground ink. */
-  --cp-highlight: #ffffff;
-  --cp-highlight-soft: rgba(255, 255, 255, 0.08);
-  --cp-shade: rgba(0, 0, 0, 0.3);
+  /* Shared surfaces stay free of ambient illumination. The restored Home
+     depth field and Login ghost opt into their own scoped scene tokens. */
+  --cp-illum-core: transparent;
+  --cp-illum-cyan: transparent;
+  --cp-illum-warm: transparent;
+  --cp-illum-sand: transparent;
+  --cp-illum-deep: transparent;
+  --cp-glow-accent: transparent;
+  --cp-glow-cyan: transparent;
+  --cp-glow-warm: transparent;
+  --cp-glow-soft: transparent;
+  --cp-edge-light: var(--color-rule);
+  --cp-edge-accent: var(--color-accent);
+  --cp-grain: transparent;
+  --cp-scanline: transparent;
 
-  /* ------------------------------------------------------------------------
-     Lighting language — teal sand
-     ------------------------------------------------------------------------
-     Colour is used as light, never as a background wash. Three kinds of value
-     live here, all decorative (none of them is ever foreground ink):
+  --ambient-base: var(--color-paper);
+  --ambient-elevated: var(--color-paper-2);
+  --glass-base: var(--color-paper-2);
+  --glass-elevated: var(--color-paper-2);
+  --glass-strong: var(--color-paper-3);
+  --glass-border: var(--color-rule);
+  --glass-highlight: transparent;
+  --glow-teal: transparent;
+  --glow-orange: transparent;
+  --glow-sand: transparent;
+  --radius-glass: var(--radius-card);
 
-       illum-*  wide, low-alpha radial fields that suggest space behind the
-                shell. They are composited by app/styles/night.css.
-       glow-*   tight, localised emission for the few things that are allowed
-                to emit: the active nav indicator, focus rings, featured edges.
-       edge-*   hairline highlights that catch the "light from above" on the
-                top edge of a raised surface. */
-  --cp-illum-core: rgba(20, 184, 166, 0.2);
-  --cp-illum-cyan: rgba(45, 212, 191, 0.12);
-  --cp-illum-warm: rgba(249, 115, 22, 0.1);
-  --cp-illum-sand: rgba(244, 227, 193, 0.08);
-  --cp-illum-deep: rgba(2, 10, 14, 0.6);
-  --cp-glow-accent: rgba(20, 184, 166, 0.4);
-  --cp-glow-cyan: rgba(94, 234, 212, 0.3);
-  --cp-glow-warm: rgba(249, 115, 22, 0.26);
-  --cp-glow-soft: rgba(20, 184, 166, 0.18);
-  --cp-edge-light: rgba(198, 255, 246, 0.1);
-  --cp-edge-accent: rgba(45, 212, 191, 0.32);
-  --cp-grain: rgba(190, 230, 225, 0.022);
-  --cp-scanline: rgba(190, 230, 225, 0.018);
-
-  /* Brand-level material names. These are the spec's semantic layer over the
-     audited --cp-* backing above; components may use either, never a literal.
-     `--radius-glass` is the large, soft corner of a suspended sheet. */
-  --ambient-base: var(--cp-bg-page);
-  --ambient-elevated: var(--cp-bg-elevated);
-  --glass-base: var(--cp-bg-glass);
-  --glass-elevated: var(--cp-bg-glass-soft);
-  --glass-strong: var(--cp-bg-glass-strong);
-  --glass-border: var(--cp-glass-border);
-  --glass-highlight: var(--cp-glass-reflection);
-  --glow-teal: var(--cp-glow-accent);
-  --glow-orange: var(--cp-glow-warm);
-  --glow-sand: var(--cp-illum-sand);
-  --radius-glass: 1.375rem;
-
-  /* Compatibility bridge — existing semantic utilities remain supported. */
   --c-canvas: var(--cp-bg-page);
   --c-canvas-deep: var(--cp-bg-page-deep);
   --c-surface: var(--cp-bg-elevated);
@@ -295,8 +235,6 @@
   --c-glass-tint: var(--cp-glass-tint);
   --c-glass-border: var(--cp-glass-border);
   --c-scrim: var(--cp-scrim);
-
-  /* Night/lighting bridge — short names for component CSS. */
   --c-illum-core: var(--cp-illum-core);
   --c-illum-cyan: var(--cp-illum-cyan);
   --c-illum-deep: var(--cp-illum-deep);
@@ -309,21 +247,13 @@
   --c-scanline: var(--cp-scanline);
   --c-cyan: var(--cp-accent-cyan);
 
-  /* ------------------------------------------------------------------------
-     Elevation — five rungs, each with its own depth and light response
-     ------------------------------------------------------------------------
-     Depth comes from three things at once: a tight contact shadow, a long
-     soft fall-off, and a hairline of light on the top edge. The glow rungs
-     are the only ones allowed to emit, and they are reserved for the active
-     navigation indicator, featured edges and focus. */
-  --shadow-card: 0 1px 1px var(--cp-shade), 0 12px 28px -24px var(--cp-scrim);
-  --shadow-raised: 0 2px 4px -2px var(--cp-shade), 0 18px 40px -28px var(--cp-scrim);
-  --shadow-float: 0 6px 16px -8px var(--cp-shade), 0 32px 64px -40px var(--cp-scrim);
-  --shadow-veil: 0 18px 50px -20px var(--cp-scrim), 0 2px 8px -2px var(--cp-shade);
-  --shadow-inset-top: inset 0 1px 0 var(--cp-edge-light);
-  --shadow-inset-glow: inset 0 1px 0 var(--cp-edge-light), inset 0 0 0 1px var(--cp-glow-soft);
-  --shadow-glow-accent: 0 0 0 1px var(--cp-edge-accent), 0 8px 28px -12px var(--cp-glow-accent);
-  --shadow-glow-cyan: 0 0 0 1px var(--cp-edge-accent), 0 6px 22px -10px var(--cp-glow-cyan);
+  --shadow-raised: var(--shadow-card);
+  --shadow-float: var(--shadow-card);
+  --shadow-veil: var(--shadow-card);
+  --shadow-inset-top: inset 0 1px 0 var(--color-rule);
+  --shadow-inset-glow: inset 0 0 0 1px var(--color-rule);
+  --shadow-glow-accent: 0 0 0 1px var(--color-accent);
+  --shadow-glow-cyan: 0 0 0 1px var(--color-accent);
 }
 
 /* --------------------------------------------------------------------------
@@ -336,17 +266,13 @@
   --color-surface: var(--c-surface);
   --color-surface-2: var(--c-surface-2);
   --color-surface-3: var(--c-surface-3);
-  --color-ink: var(--c-ink);
   --color-ink-soft: var(--c-ink-soft);
-  --color-muted: var(--c-muted);
   --color-muted-soft: var(--c-muted-soft);
   --color-line: var(--c-line);
   --color-line-strong: var(--c-line-strong);
-  --color-accent: var(--cp-text-accent);
   --color-accent-hover: var(--c-accent-hover);
   --color-accent-soft: var(--c-accent-soft);
   --color-accent-tint: var(--c-accent-tint);
-  --color-accent-ink: var(--c-accent-ink);
   --color-accent-deep: var(--c-accent-deep);
   --color-accent-pale: var(--c-accent-pale);
   --color-accent-highlight: var(--c-accent-highlight);
@@ -355,7 +281,6 @@
   --color-on-accent: var(--c-on-accent);
   --color-danger: var(--c-danger);
   --color-danger-soft: var(--c-danger-soft);
-  --color-success: var(--c-success);
   --color-success-soft: var(--c-success-soft);
   --color-warning: var(--c-warning);
   --color-warning-soft: var(--c-warning-soft);
@@ -363,7 +288,6 @@
   --color-info-soft: var(--c-info-soft);
   --color-unread: var(--c-unread);
   --color-ink-surface: var(--c-ink-surface);
-
   --color-brand: var(--brand-teal);
   --color-brand-teal: var(--brand-teal);
   --color-brand-sand: var(--brand-sand);
@@ -372,7 +296,6 @@
   --color-icon: var(--cp-icon);
   --color-icon-muted: var(--cp-icon-muted);
   --color-control-border: var(--cp-border-control);
-  --color-focus: var(--cp-focus);
   --color-hover: var(--cp-hover-bg);
   --color-selected: var(--cp-selected-bg);
   --color-on-selected: var(--cp-selected-text);
@@ -380,48 +303,37 @@
   --color-on-disabled: var(--cp-disabled-text);
   --color-glass-border: var(--cp-glass-border);
   --color-accent-fill: var(--cp-bg-accent);
-  --font-sans: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-outlier);
 
-  /* Shape scale — cards, buttons and inputs all draw from these. */
-  --radius-xs: 0.375rem;
-  --radius-sm: 0.625rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.125rem;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 1.75rem;
-  --radius-glass: 1.375rem;
+  /* Lumen has two radii: 10px cards and pill controls. */
+  --radius-xs: 10px;
+  --radius-sm: 10px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --radius-xl: 10px;
+  --radius-2xl: 10px;
+  --radius-glass: 10px;
+  --radius-full: 999px;
 
-  --text-3xs: 0.625rem;
-  --text-3xs--line-height: 0.875rem;
-  --text-2xs: 0.6875rem;
+  --text-3xs: 0.75rem;
+  --text-3xs--line-height: 1rem;
+  --text-2xs: 0.75rem;
   --text-2xs--line-height: 1rem;
-  --text-xs: 0.75rem;
-  --text-xs--line-height: 1.05rem;
 
-  --shadow-card: var(--shadow-card);
-  --shadow-raised: var(--shadow-raised);
-  --shadow-float: var(--shadow-float);
+  --shadow-raised: var(--shadow-card);
+  --shadow-float: var(--shadow-card);
 
-  /* ------------------------------------------------------------------------
-     Motion tokens — one choreography, not per-component improvisation
-     ------------------------------------------------------------------------
-     Durations are deliberately short: this is a tool students use all day, so
-     a transition must never be the reason a click feels slow. `--ease-glide`
-     is the reference's curve (aminotkartik/loginpage) and is the house curve
-     for anything that travels; `--ease-out-soft` stays for state changes that
-     only change colour. Ambient loops are the only long values, and every one
-     of them is disabled under prefers-reduced-motion. */
-  --dur-instant: 90ms;
-  --dur-fast: 150ms;
+  --dur-instant: 120ms;
+  --dur-fast: 120ms;
   --dur-base: 220ms;
-  --dur-slow: 380ms;
-  --dur-enter: 460ms;
-  --dur-ambient: 24s;
-  --ease-out-soft: cubic-bezier(0.22, 0.68, 0, 1);
-  --ease-spring: cubic-bezier(0.34, 1.32, 0.5, 1);
-  --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-settle: cubic-bezier(0.33, 1, 0.68, 1);
+  --dur-slow: 420ms;
+  --dur-enter: 420ms;
+  --dur-ambient: 0ms;
+  --ease-out-soft: var(--ease-out);
+  --ease-spring: var(--ease-out);
+  --ease-glide: var(--ease-out);
+  --ease-settle: var(--ease-out);
 }
 
 /* Direct CSS-variable consumers (inline styles, legacy component styles). */
@@ -429,21 +341,16 @@
 [data-theme='dark'] {
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
-  --color-ink: var(--c-ink);
-  --color-muted: var(--c-muted);
   --color-line: var(--c-line);
-  --color-accent: var(--cp-text-accent);
   --color-accent-soft: var(--c-accent-soft);
   --color-danger: var(--c-danger);
-  --color-success: var(--c-success);
   --color-warning: var(--c-warning);
   --color-info: var(--c-info);
   --color-warm: var(--cp-accent-warm);
   --color-brand-teal: var(--brand-teal);
   --color-brand-sand: var(--brand-sand);
   --color-brand-orange: var(--brand-orange);
-  --radius-card: var(--radius-lg);
-  --radius-glass: 1.375rem;
+  --radius-glass: var(--radius-card);
 }
 
 /* --------------------------------------------------------------------------
@@ -488,44 +395,45 @@
 
   body {
     overflow-x: clip;
-    background-color: var(--c-canvas);
-    /* Two whisper-soft washes at the top of the canvas — teal from the left,
-       warm sand from the right. They are the first painted suggestion of the
-       environment behind the shell, never a "gradient background". */
-    background-image:
-      radial-gradient(95% 48% at 18% -10%, color-mix(in oklab, var(--cp-bg-accent) 9%, transparent), transparent 72%),
-      radial-gradient(70% 42% at 88% -14%, color-mix(in oklab, var(--cp-accent-warm) 6%, transparent), transparent 70%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: var(--c-ink);
-    font-family: var(--font-sans);
-    font-size: 0.9375rem;
-    line-height: 1.6;
-    font-feature-settings: 'cv05' 1, 'ss01' 1;
+    background-color: var(--color-paper);
+    background-image: none;
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: 1.55;
+    font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   h1,
-  h2,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
   h3,
   h4 {
-    font-weight: 620;
-    letter-spacing: -0.018em;
-    line-height: 1.22;
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.3;
     text-wrap: balance;
   }
 
   h1 {
-    font-size: 1.375rem;
+    font-size: var(--text-display);
   }
 
   h2 {
-    font-size: 1.0625rem;
+    font-size: var(--text-section);
   }
 
   h3 {
-    font-size: 0.9375rem;
+    font-size: var(--text-title);
   }
 
   p {
@@ -545,9 +453,8 @@
 
   /* Keyboard users always get a visible, high-contrast focus ring. */
   :focus-visible {
-    outline: 2px solid var(--cp-focus);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
-    border-radius: var(--radius-sm);
   }
 
   input,
@@ -601,91 +508,71 @@
    -------------------------------------------------------------------------- */
 
 @layer components {
-  /* ------------------------------------------------------------------------
-     Typography
-     ------------------------------------------------------------------------
-     One reading hierarchy, plus two rationed atmospheric faces. The display
-     face and the monospace micro face are for entry points and short
-     technical labels; neither is ever used at reading size, and neither is
-     ever applied to long user-authored text. */
-
-  .t-display {
-    font-size: clamp(1.625rem, 1.35rem + 1.1vw, 2.125rem);
-    font-weight: 660;
-    letter-spacing: -0.032em;
-    line-height: 1.1;
+  /* Lumen's app scale: fixed steps, Geist for interface copy, Instrument
+     Serif for page and section headings, and Mono for figures/readouts. */
+  .t-display,
+  .t-page,
+  .t-section {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.05;
+    text-transform: lowercase;
   }
 
-  /* Technical micro-labels: the monospace face, short strings only. */
-  .t-eyebrow {
-    font-family: var(--font-micro), ui-monospace, monospace;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--cp-text-subtle);
-  }
-
+  .t-display,
   .t-page {
-    font-size: 1.375rem;
-    font-weight: 650;
-    letter-spacing: -0.024em;
-    line-height: 1.18;
+    font-size: var(--text-3xl);
   }
 
   .t-section {
-    font-size: 1.0625rem;
-    font-weight: 620;
-    letter-spacing: -0.018em;
+    font-size: var(--text-display-s);
+  }
+
+  .t-eyebrow,
+  .t-label {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.4;
+    text-transform: lowercase;
+    color: var(--color-muted);
   }
 
   .t-card {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    letter-spacing: -0.012em;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 500;
+    letter-spacing: 0;
   }
 
   .t-body {
-    font-size: 0.9375rem;
-    line-height: 1.62;
+    font-size: var(--text-md);
+    line-height: 1.55;
   }
 
   .t-secondary {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     line-height: 1.5;
-    color: var(--c-muted);
+    color: var(--color-ink-2);
   }
 
-  .t-meta {
-    font-size: 0.75rem;
-    line-height: 1.4;
-    color: var(--c-muted);
-  }
-
-  /* The workhorse micro-label. It takes the monospace face because it is
-     always a short uppercase tag — a section name, a field label, a status. */
-  .t-label {
-    font-family: var(--font-micro), ui-monospace, monospace;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-muted);
-  }
-
+  .t-meta,
   .t-caption {
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     line-height: 1.45;
-    color: var(--c-muted);
+    color: var(--color-muted);
   }
 
   .t-utility {
-    font-size: 0.75rem;
-    font-weight: 550;
-    letter-spacing: 0.01em;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    letter-spacing: 0;
   }
 
   .t-numeric {
+    font-family: var(--font-outlier);
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
   }

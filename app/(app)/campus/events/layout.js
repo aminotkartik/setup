@@ -5,6 +5,7 @@
  * exists on `/campus/events`.
  */
 import '@/app/styles/calendar.css';
+import '@/app/styles/lumen.css';
 
 export default function EventsLayout({ children }) {
   return children;

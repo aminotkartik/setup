@@ -6,6 +6,7 @@
  * neither ships it to the rest of the app.
  */
 import '@/app/styles/sections.css';
+import '@/app/styles/lumen.css';
 
 export default function ClubsLayout({ children }) {
   return children;

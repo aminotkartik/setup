@@ -17,11 +17,27 @@
    right. The sign-in screen is the front door to the Glass Universe, not a
    separate visual world. */
 .login-stage {
+  /* The original sign-in atmosphere is retained only on this route. The
+     foreground controls and type still come from the Lumen material layer. */
+  --cp-sky-bg: #061218;
+  --cp-sky-wash: rgba(4, 16, 22, 0.38);
+  --cp-bg-page-deep: #04101a;
+
   background-color: var(--cp-sky-bg);
   background-image:
     radial-gradient(circle at 50% 46%, rgba(20, 184, 166, 0.18) 0%, rgba(9, 58, 60, 0.1) 38%, transparent 70%),
     radial-gradient(circle at 50% 10%, rgba(45, 212, 191, 0.09) 0%, transparent 45%),
     radial-gradient(circle at 88% 92%, rgba(249, 115, 22, 0.1) 0%, transparent 52%);
+}
+
+/* Third-party brand asset colors, scoped to the inline Google mark. Keeping
+   them here preserves the component/design-token boundary and prevents these
+   fixed logo colors from becoming product accents. */
+.login-google-mark {
+  --google-blue: #4285f4;
+  --google-green: #34a853;
+  --google-yellow: #fbbc05;
+  --google-red: #ea4335;
 }
 
 /* Decorative layers: the ghost canvas and the scanline/vignette overlay. */

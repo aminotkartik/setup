@@ -9,6 +9,7 @@
  * navigation inside a page whose whole job is to point at it.
  */
 import '@/app/styles/guide.css';
+import '@/app/styles/lumen.css';
 
 export default function GuideLayout({ children }) {
   return children;

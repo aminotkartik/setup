@@ -1,0 +1,1597 @@
+/* Hallmark Lumen application materials.
+   Existing component names and layout hooks are retained; only their visual
+   treatment changes. Specificity includes :root so route sheets loaded before
+   this file cannot reintroduce the former glass/gradient system. */
+
+/* --------------------------------------------------------------------------
+   Wells, cards and hairlines
+   -------------------------------------------------------------------------- */
+:root .card,
+:root .card-elevated,
+:root .card-glass,
+:root .glass,
+:root .glass-soft,
+:root .glass-strong,
+:root .glass-floating,
+:root .glass-featured,
+:root .glass-premium,
+:root .glass-cinematic,
+:root .glass-read,
+:root .island,
+:root .rail-island,
+:root .home-composer,
+:root .club-card,
+:root .club-hero,
+:root .gig-card,
+:root .tt-shell__panel,
+:root .tt-tile,
+:root .tt-install,
+:root .tt-offer,
+:root .tt-verify,
+:root .tt-help,
+:root .state-block {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper-2);
+  background-image: none;
+  color: var(--color-ink);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .glass-floating,
+:root .glass-strong,
+:root .dialog,
+:root .toast,
+:root .command-palette,
+:root .navigation-tour-dialog,
+:root .navigation-tour-offer {
+  box-shadow: var(--shadow-card);
+}
+
+:root .tilt__card,
+:root .tt-clock,
+:root .tt-scroll {
+  background-image: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
+}
+
+:root .tilt:hover .tilt__card,
+:root .tilt:focus-within .tilt__card,
+:root .tilt__canvas > *:hover ~ .tilt__card {
+  box-shadow: none;
+  transform: none;
+}
+
+:root .card-flush {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: none;
+}
+
+:root .glass-featured::before,
+:root .glass-featured::after,
+:root .glass-premium::before,
+:root .glass-premium::after,
+:root .glass-sheen::before,
+:root .glass-sheen::after,
+:root .glass-sweep::before,
+:root .glass-sweep::after,
+:root .island::before,
+:root .card-official::before,
+:root .side-panel__glow,
+:root .home-pulse__aurora,
+:root .home-pulse__spark,
+:root .home-pulse__horizon,
+:root .night-sky {
+  display: none;
+  content: none;
+  background: none;
+  animation: none;
+}
+
+:root a.card,
+:root button.card,
+:root .card-interactive,
+:root .island,
+:root .feature-tile,
+:root .club-card,
+:root .gig-card {
+  transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
+}
+
+:root a.card:hover,
+:root button.card:hover,
+:root .card-interactive:hover,
+:root .island[data-interactive='true']:hover,
+:root .rail-island:hover,
+:root .feature-tile:hover,
+:root .club-card:hover,
+:root .gig-card:hover {
+  border-color: var(--color-rule-2);
+  background-color: var(--color-paper-3);
+  box-shadow: none;
+  transform: none;
+}
+
+:root .card-feature,
+:root .card-official {
+  border-color: var(--color-accent);
+  background-image: none;
+  box-shadow: none;
+}
+
+:root .lit-rule,
+:root .side-panel__rule,
+:root .shell-header__divider,
+:root .login-rule {
+  background: var(--color-rule);
+  background-image: none;
+  box-shadow: none;
+}
+
+:root .page-head {
+  border-color: var(--color-rule);
+}
+
+/* The former utility meant light accent text on a dark surface. Keep that
+   compatibility without changing Lumen's dark-on-brass accent-ink token. */
+:root .text-accent-ink {
+  color: var(--color-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Type, labels and readouts
+   -------------------------------------------------------------------------- */
+:root .brand-word,
+:root .login-title,
+:root .home-pulse__name,
+:root .home-zone__title,
+:root .island__title,
+:root .tt-dayhead__title,
+:root .tt-head__intro {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+}
+
+:root .brand-word,
+:root .home-zone__title,
+:root .island__title,
+:root .tt-dayhead__title,
+:root .tt-head__intro {
+  text-transform: lowercase;
+}
+
+:root .brand-word {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+:root .brand-sub,
+:root .nav-group-label,
+:root .island__eyebrow,
+:root .home-pulse__eyebrow,
+:root .home-discover__label,
+:root .home-zone__eyebrow,
+:root .home-composer__label,
+:root .home-features__title,
+:root .login-intro .t-label,
+:root .field-label,
+:root .stream-stamp__label,
+:root .rail-notice__label,
+:root .tt-item__subject--label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: lowercase;
+  color: var(--color-muted);
+}
+
+:root .home-pulse__title,
+:root .home-pulse__lead,
+:root .home-zone__note,
+:root .island__note {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  color: var(--color-ink-2);
+}
+
+:root .home-pulse__name {
+  margin-top: var(--space-xs);
+  background: none;
+  color: var(--color-ink);
+  font-size: var(--text-3xl);
+  line-height: 1.05;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root .home-pulse__wave,
+:root .home-pulse__name .home-pulse__wave {
+  color: var(--color-accent);
+  filter: none;
+  animation: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root .home-zone__title,
+:root .island__title {
+  font-size: var(--text-display-s);
+  line-height: 1.1;
+}
+
+:root .t-numeric,
+:root .home-pulse__stat dd,
+:root .stream-stamp__value,
+:root .rail-market__price,
+:root .rail-event__num,
+:root .tt-clock,
+:root .tt-item__time,
+:root .tt-item__from,
+:root .tt-item__to,
+:root code,
+:root pre,
+:root kbd {
+  font-family: var(--font-outlier);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons and controls — all states, no ambient animation
+   -------------------------------------------------------------------------- */
+:root .btn,
+:root .btn-delete,
+:root .icon-btn {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  background-image: none;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+  text-shadow: none;
+  animation: none;
+  transform: none;
+  transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+}
+
+:root .btn-sm {
+  height: 44px;
+  min-height: 44px;
+  padding-inline: var(--space-md);
+  font-size: var(--text-sm);
+}
+
+:root .btn-md,
+:root .btn-lg {
+  height: 48px;
+  min-height: 48px;
+  padding-inline: var(--space-lg);
+}
+
+:root .btn-icon,
+:root .btn-icon.btn-sm,
+:root .btn-icon.btn-md,
+:root .btn-icon.btn-lg,
+:root .icon-btn {
+  width: 48px;
+  min-width: 48px;
+  padding-inline: 0;
+}
+
+:root .btn-icon.btn-sm,
+:root .icon-btn.btn-sm {
+  width: 44px;
+  min-width: 44px;
+}
+
+:root .btn.cp-btn,
+:root .btn-warm,
+:root .btn-sheen {
+  border: 0;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  box-shadow: none;
+  animation: none;
+}
+
+:root .btn.cp-btn {
+  padding: 0 var(--space-lg);
+}
+
+:root .btn.cp-btn.btn-icon {
+  padding: 0;
+}
+
+:root .btn.cp-btn .cp-btn-face {
+  min-height: inherit;
+  padding: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  transition: none;
+}
+
+:root .btn.cp-btn:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn.cp-btn:focus-visible:not(:disabled):not([aria-disabled='true']),
+:root .btn-warm:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-sheen:hover:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in oklab, var(--color-accent) 88%, var(--color-ink));
+  color: var(--color-accent-ink);
+  box-shadow: none;
+  transform: none;
+}
+
+:root .btn.cp-btn:hover .cp-btn-face,
+:root .btn.cp-btn:focus-visible .cp-btn-face {
+  background: transparent;
+}
+
+:root .btn-sheen-layer,
+:root .btn-sheen .btn-light,
+:root .btn-sheen::after,
+:root .btn-delete::before,
+:root .btn-delete::after,
+:root .keycap::before {
+  display: none;
+  content: none;
+  animation: none;
+}
+
+:root .btn-secondary,
+:root .btn-subtle,
+:root .btn-glass,
+:root .btn-delete,
+:root .btn-danger {
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+}
+
+:root .btn-quiet,
+:root .icon-btn {
+  background: transparent;
+  color: var(--color-ink-2);
+  box-shadow: none;
+}
+
+:root .btn-delete,
+:root .btn-danger {
+  color: var(--color-error);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-error);
+}
+
+:root .btn-secondary:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-subtle:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-glass:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-quiet:hover:not(:disabled):not([aria-disabled='true']),
+:root .icon-btn:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-delete:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-danger:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+  transform: none;
+}
+
+:root .btn-delete:hover:not(:disabled):not([aria-disabled='true']),
+:root .btn-danger:hover:not(:disabled):not([aria-disabled='true']) {
+  color: var(--color-error);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-error);
+}
+
+:root .btn:active:not(:disabled):not([aria-disabled='true']),
+:root .btn-delete:active:not(:disabled):not([aria-disabled='true']),
+:root .icon-btn:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(0.98);
+}
+
+:root .btn:disabled,
+:root .btn[aria-disabled='true'],
+:root .btn-delete:disabled,
+:root .btn-delete[aria-disabled='true'],
+:root .icon-btn:disabled,
+:root .icon-btn[aria-disabled='true'] {
+  opacity: 1;
+  background: var(--color-paper-2);
+  color: var(--color-muted);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule);
+  cursor: not-allowed;
+  transform: none;
+}
+
+:root .btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+:root .keycap,
+:root .command-kbd,
+:root .search-pill__kbd {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-muted);
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Fields, search, checks and switches
+   -------------------------------------------------------------------------- */
+:root .control-input,
+:root .control-search,
+:root .control-select,
+:root .control-textarea,
+:root .cp-composer-input,
+:root .search-pill__shell,
+:root input:where(:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden'])),
+:root textarea,
+:root select {
+  border: 1px solid var(--color-muted);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+  background-image: none;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root input:where(:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden'])),
+:root select,
+:root .search-pill__shell {
+  border-radius: var(--radius-pill);
+}
+
+:root input::placeholder,
+:root textarea::placeholder,
+:root .control-input::placeholder,
+:root .search-pill__input::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+:root input:focus-visible,
+:root textarea:focus-visible,
+:root select:focus-visible,
+:root .control-input:focus-visible,
+:root .control-search:focus-visible,
+:root .control-select:focus-visible,
+:root .control-textarea:focus-visible,
+:root .search-pill__shell:focus-within {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+:root input:disabled,
+:root textarea:disabled,
+:root select:disabled {
+  opacity: 1;
+  border-color: var(--color-rule);
+  background: var(--color-paper-2);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+:root input[type='checkbox'],
+:root input[type='radio'],
+:root .check-input {
+  accent-color: var(--color-accent);
+}
+
+:root .search-pill__shell::before,
+:root .search-pill__shell::after {
+  display: none;
+  content: none;
+}
+
+:root .search-pill__input,
+:root .search-pill__input:focus {
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  outline: 0;
+  box-shadow: none;
+}
+
+:root .search-pill__icon,
+:root .search-pill__icon:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
+  transform: none;
+}
+
+:root .switch-track {
+  border: 1px solid var(--color-rule-2);
+  background: var(--color-paper-3);
+  box-shadow: none;
+}
+
+:root .switch-input:checked + .switch-track,
+:root .switch-input[aria-checked='true'] + .switch-track {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+:root .switch-thumb {
+  background: var(--color-ink-2);
+  box-shadow: none;
+}
+
+:root .switch-input:checked + .switch-track .switch-thumb,
+:root .switch-input[aria-checked='true'] + .switch-track .switch-thumb {
+  background: var(--color-accent-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Badges, notices, polls and messages
+   -------------------------------------------------------------------------- */
+:root .badge,
+:root .chip,
+:root .gig-skill,
+:root .tt-badge,
+:root .tt-tag {
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-2);
+  font-family: var(--font-outlier);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+}
+
+:root .badge-accent,
+:root .badge-warning,
+:root .tt-badge--next {
+  color: var(--color-accent);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-accent);
+}
+
+:root .badge-danger {
+  color: var(--color-error);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-error);
+}
+
+:root .badge-success,
+:root .badge-live,
+:root .tt-badge--now {
+  color: var(--color-success);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-success);
+}
+
+:root .badge-info {
+  color: var(--color-ink-2);
+}
+
+:root .notice,
+:root .error-block,
+:root .lf-banner {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  box-shadow: none;
+}
+
+:root .notice-danger,
+:root .error-block {
+  border-color: var(--color-error);
+}
+
+:root .notice-success {
+  border-color: var(--color-success);
+}
+
+:root .notice-warning,
+:root .notice-accent {
+  border-color: var(--color-accent);
+}
+
+:root .cp-poll-option {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  color: var(--color-ink-2);
+  box-shadow: none;
+}
+
+:root .cp-poll-option:hover:not(:disabled) {
+  border-color: var(--color-rule-2);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+
+:root .cp-poll-option--selected,
+:root .cp-poll-option[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+:root .cp-poll-track {
+  background: var(--color-paper-3);
+}
+
+:root .cp-poll-fill,
+:root .cp-poll-fill--selected {
+  background: var(--color-accent);
+  box-shadow: none;
+}
+
+:root .cp-chat-bubble,
+:root .cp-chat-bubble--mine {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: none;
+}
+
+:root .cp-chat-bubble--mine {
+  border-color: var(--color-rule-2);
+  background: var(--color-paper-3);
+}
+
+:root .unread-dot,
+:root .gig-live-dot,
+:root .home-pulse__dot {
+  background: var(--color-live);
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation — kept shell, Lumen materials
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  :root .side-panel {
+    inset: 0 auto 0 0;
+    width: 16rem;
+    padding: var(--space-md) var(--space-sm);
+    border: 0;
+    border-right: var(--rule-hair) solid var(--color-rule);
+    border-radius: 0;
+    background: var(--color-paper);
+    box-shadow: none;
+  }
+
+  :root .shell-root {
+    padding-left: 16rem;
+  }
+}
+
+:root .shell-header {
+  padding: 0;
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+  background: var(--color-paper);
+  background-image: none;
+}
+
+:root .shell-header__bar {
+  border: 0;
+  border-radius: 0;
+  background: var(--color-paper);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .side-panel__account {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  box-shadow: none;
+}
+
+:root .brand,
+:root .brand:hover {
+  color: var(--color-ink);
+  filter: none;
+  transform: none;
+  text-decoration: none;
+}
+
+:root .brand-mark,
+:root .brand-mark-img,
+:root .brand-crest {
+  filter: none;
+  box-shadow: none;
+}
+
+:root .nav-item,
+:root .sheet-destination,
+:root .tab-item {
+  border-radius: var(--radius-card);
+  background: transparent;
+  background-image: none;
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  box-shadow: none;
+  transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+}
+
+:root .nav-item {
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-sm);
+}
+
+:root .nav-item:hover,
+:root .nav-item:active,
+:root .sheet-destination:hover,
+:root .tab-item:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  box-shadow: none;
+  transform: none;
+  text-decoration: none;
+}
+
+:root .nav-item[aria-current='page'],
+:root .tab-item[aria-current='page'] {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  font-weight: 500;
+  box-shadow: none;
+  transform: none;
+}
+
+:root .nav-item[aria-current='page']::before,
+:root .tab-item[aria-current='page']::before {
+  display: none;
+  content: none;
+  background: none;
+  box-shadow: none;
+}
+
+:root .nav-item .nav-icon,
+:root .nav-item:hover .nav-icon,
+:root .nav-item[aria-current='page'] .nav-icon,
+:root .tab-item[aria-current='page'] .tab-icon {
+  color: currentColor;
+  filter: none;
+  transform: none;
+}
+
+:root .nav-count,
+:root .notification-badge {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-outlier);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  box-shadow: none;
+}
+
+:root .bottom-dock__bar {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper-2);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .tab-item {
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+}
+
+:root .tab-item[aria-current='page'] {
+  color: var(--color-ink);
+}
+
+:root .nav-help__icon,
+:root .navigation-tour-offer__icon,
+:root .navigation-tour-step__icon {
+  background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
+}
+
+:root .nav-help__popover {
+  width: 18rem;
+  max-width: calc(100vw - 2rem);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-3);
+  box-shadow: var(--shadow-card);
+}
+
+:root .skip-link {
+  top: -96px;
+  right: auto;
+  left: var(--space-md);
+  z-index: var(--z-toast);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  box-shadow: none;
+}
+
+:root .skip-link:focus,
+:root .skip-link:focus-visible {
+  top: var(--space-md);
+}
+
+/* --------------------------------------------------------------------------
+   Menus, dialogs, loading and feedback
+   -------------------------------------------------------------------------- */
+:root .cp-menu,
+:root .dialog,
+:root .toast,
+:root .command-palette,
+:root .navigation-tour-dialog,
+:root .navigation-tour-offer,
+:root .navigation-tour-step {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-3);
+  background-image: none;
+  color: var(--color-ink);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .cp-menu-item,
+:root .command-option {
+  border-radius: var(--radius-card);
+  color: var(--color-ink-2);
+}
+
+:root .cp-menu-item:hover,
+:root .cp-menu-item[aria-selected='true'],
+:root .command-option[aria-selected='true'],
+:root .command-option:hover {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+
+:root .scrim {
+  background: var(--cp-scrim);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .skeleton,
+:root .skeleton-line,
+:root .skeleton-title {
+  border-radius: var(--radius-card);
+  background: var(--color-paper-3);
+  background-image: none;
+  animation: none;
+}
+
+:root .state-icon {
+  background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
+}
+
+:root .identity-mark,
+:root .identity-mark-accent {
+  border: 1px solid var(--color-rule);
+  background-color: var(--color-paper-3);
+  background-image: none;
+  color: var(--color-ink);
+  box-shadow: none;
+}
+
+:root .identity-mark-accent {
+  color: var(--color-accent);
+}
+
+/* No load reveal, ambient pulse or pointer-depth choreography on app screens. */
+:root .island,
+:root .animate-rise,
+:root .cascade,
+:root .shell-main > *,
+:root .home-pulse__grid,
+:root .home-pulse__stats,
+:root .home-pulse__dot,
+:root .login-intro {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   Home — compact application greeting, figures well, feed and rail
+   -------------------------------------------------------------------------- */
+:root .home-stage {
+  background: var(--color-paper);
+}
+
+:root .home-pulse {
+  min-height: 0;
+  gap: var(--space-lg);
+  padding-block: var(--space-lg) var(--space-xl);
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+}
+
+:root .home-pulse__grid {
+  gap: var(--space-lg);
+}
+
+:root .home-pulse__title {
+  margin-top: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+:root .home-pulse__greet {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  letter-spacing: 0;
+  line-height: 1.55;
+}
+
+:root .home-pulse__lead {
+  margin-top: var(--space-sm);
+  font-size: var(--text-md);
+  line-height: 1.55;
+}
+
+:root .home-pulse__actions {
+  margin-top: var(--space-lg);
+}
+
+:root .home-pulse__stats {
+  gap: 0;
+  margin-top: var(--space-md);
+  padding: var(--space-xs);
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper-2);
+  /* Hallmark waive 47c: Lumen's declared blueprint texture, confined to the
+     real figures well; never used behind running prose. */
+  background-image: linear-gradient(var(--rule-blueprint) 1px, transparent 1px), linear-gradient(90deg, var(--rule-blueprint) 1px, transparent 1px);
+  background-size: 48px 48px;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .home-pulse__stat {
+  padding: var(--space-sm) var(--space-md);
+  border-left: var(--rule-hair) solid var(--color-rule);
+  border-radius: 0;
+  background: color-mix(in oklab, var(--color-paper-2) 88%, transparent);
+}
+
+:root .home-pulse__stat:first-child {
+  border-left: 0;
+}
+
+:root .home-pulse__stat dt {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  text-transform: lowercase;
+  color: var(--color-muted);
+}
+
+:root .home-pulse__stat dd,
+:root .home-pulse__stat[data-empty='true'] dd {
+  color: var(--color-ink);
+  font-size: var(--text-lg);
+  font-weight: 400;
+}
+
+:root .guide-strip {
+  gap: var(--space-xs) var(--space-sm);
+  margin-block-end: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  box-shadow: none;
+  animation: none;
+}
+
+:root .guide-strip__tape {
+  display: none;
+}
+
+:root .guide-strip__lead {
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+:root .guide-strip__lead svg {
+  color: var(--color-accent);
+}
+
+:root .guide-strip__link {
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+:root .guide-strip__link:hover {
+  background: color-mix(in oklab, var(--color-accent) 88%, var(--color-ink));
+  color: var(--color-accent-ink);
+}
+
+:root .guide-strip__dismiss {
+  min-height: 44px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+:root .guide-strip__dismiss:hover {
+  color: var(--color-ink);
+}
+
+:root .feature-tile {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .feature-tile__icon {
+  background: transparent;
+  color: var(--color-accent);
+  box-shadow: none;
+}
+
+:root .feature-tile__title {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+:root .feature-tile__copy {
+  color: var(--color-ink-2);
+}
+
+:root .home-discover__label {
+  flex-basis: 100%;
+}
+
+:root .discover-chip {
+  min-height: 44px;
+  padding-inline: var(--space-md);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root .discover-chip:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+  transform: none;
+}
+
+:root .home-stream {
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
+:root .stream-slot {
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+}
+
+:root .stream-card,
+:root .stream-card--post,
+:root .stream-card--row {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
+  animation: none;
+}
+
+:root .stream-card::before,
+:root .stream-card::after,
+:root .home-composer::before,
+:root .home-pulse__horizon::after,
+:root .home-coda::before,
+:root .home-coda::after {
+  display: none;
+  content: none;
+  background: none;
+  filter: none;
+  animation: none;
+}
+
+:root .stream-slot .stream-card {
+  background-image: none;
+}
+
+:root .home-composer__label::before,
+:root .rail-event::before {
+  box-shadow: none;
+}
+
+:root .rail-timeline::before {
+  background: var(--color-rule);
+  background-image: none;
+}
+
+:root .rail-activity__bar span {
+  background: var(--color-accent);
+  background-image: none;
+}
+
+:root .stream-card__title {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+:root .stream-card__body {
+  color: var(--color-ink-2);
+}
+
+:root .stream-stamp {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
+}
+
+:root .rail-event,
+:root .rail-market__item,
+:root .rail-notice__item,
+:root .rail-activity__row {
+  border-color: var(--color-rule);
+  background: transparent;
+  box-shadow: none;
+}
+
+:root .rail-event__day,
+:root .rail-event__month,
+:root .rail-event__meta,
+:root .rail-market__title,
+:root .rail-notice__date {
+  color: var(--color-muted);
+}
+
+:root .rail-event__num,
+:root .rail-market__price,
+:root .stream-stamp--price {
+  color: var(--color-accent);
+}
+
+:root .rail-activity__meter,
+:root .rail-activity__bar {
+  background: var(--color-paper-3);
+  box-shadow: none;
+}
+
+:root .rail-activity__bar {
+  background: var(--color-accent);
+}
+
+:root .home-coda {
+  border-color: var(--color-rule);
+  color: var(--color-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Timetable, calendar, clubs and gigs
+   -------------------------------------------------------------------------- */
+:root .tt-shell {
+  background: var(--color-paper);
+  background-image: none;
+  color: var(--color-ink);
+}
+
+:root .tt-item,
+:root .tt-sheet__block,
+:root .tt-offline,
+:root .tt-jump,
+:root .tt-legend,
+:root .calendar-cell,
+:root .calendar-day {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: none;
+}
+
+:root .tt-item--next,
+:root .tt-cell--flagged,
+:root .calendar-cell-today {
+  border-color: var(--color-accent);
+}
+
+:root .tt-item--now {
+  border-color: var(--color-success);
+}
+
+:root .tt-item__subject,
+:root .tt-tile__friendly,
+:root .tt-tile__letter {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+:root .tt-install__mark {
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper-3);
+  color: var(--color-accent);
+  box-shadow: none;
+}
+
+:root .tt-item__meta,
+:root .tt-line--meta,
+:root .tt-clock__zone,
+:root .tt-chip-age {
+  color: var(--color-muted);
+}
+
+:root .tt-tab,
+:root .tt-chip,
+:root .tt-shell__chip,
+:root .tt-jump,
+:root .calendar-chip {
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-2);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+}
+
+:root .tt-tab[aria-selected='true'],
+:root .tt-tab[aria-current='page'],
+:root .tt-shell__chip--active,
+:root .tt-chip--ready {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-accent);
+}
+
+:root .tt-table,
+:root .tt-day,
+:root .tt-week,
+:root .calendar-grid,
+:root .calendar-row,
+:root .calendar-head-cell {
+  border-color: var(--color-rule);
+  background-image: none;
+}
+
+:root .calendar-cell,
+:root .calendar-day {
+  border-radius: var(--radius-card);
+}
+
+:root .gig-card::before,
+:root .gig-card:hover::before {
+  background: var(--color-accent-2);
+}
+
+:root .gig-live-dot {
+  animation: none;
+}
+
+:root .club-monogram,
+:root .gig-card__glyph,
+:root .gig-stat__icon {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-3);
+  color: var(--color-accent);
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Public guide — a Lumen document flow, not a marketing or notebook hero
+   -------------------------------------------------------------------------- */
+:root .guide::before,
+:root .guide-hero__fold,
+:root .guide-hero__underline,
+:root .guide-hero__time svg,
+:root .guide-tape::before,
+:root .guide-tape::after,
+:root .guide-step__number svg {
+  display: none;
+  content: none;
+  background: none;
+}
+
+:root .guide-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: 0;
+}
+
+:root .guide-hero__title {
+  max-width: 30ch;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+:root .guide-hero__ink {
+  color: inherit;
+  text-decoration: none;
+}
+
+:root .guide-hero__opening {
+  max-width: 68ch;
+}
+
+:root .guide-hero__time {
+  color: var(--color-muted);
+  font-family: var(--font-outlier);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+:root .guide-tape {
+  max-width: 68ch;
+  margin: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  box-shadow: none;
+  transform: none;
+}
+
+:root .guide-jump {
+  margin: 0;
+}
+
+:root .guide-jump ul {
+  flex-direction: row;
+  gap: var(--space-xs);
+}
+
+:root .guide-jump a {
+  min-height: 44px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-2);
+}
+
+:root .guide-jump a:hover {
+  border-color: var(--color-rule-2);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+
+:root .guide-section {
+  gap: var(--space-md);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+:root .guide-section__head h2,
+:root .guide-exit h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-display-s);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+:root .guide-card,
+:root .guide-card:nth-child(2),
+:root .guide-quiet,
+:root .guide-step,
+:root .guide-formula,
+:root .guide-exit {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+  background-image: none;
+  box-shadow: none;
+  transform: none;
+}
+
+:root .guide-card__number {
+  inline-size: auto;
+  border: 0;
+  border-radius: 0;
+  color: var(--color-muted);
+  font-family: var(--font-outlier);
+  font-size: 13px;
+  letter-spacing: 0;
+  transform: none;
+}
+
+:root .guide-link,
+:root .guide-row {
+  border-radius: var(--radius-card);
+}
+
+:root .guide-row,
+:root .guide-footnote {
+  border-color: var(--color-rule);
+  border-style: solid;
+}
+
+:root .guide-quiet {
+  color: var(--color-ink-2);
+}
+
+:root .guide-step__number {
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  font-family: var(--font-outlier);
+}
+
+:root .guide-notes svg {
+  color: var(--color-muted);
+}
+
+:root .guide-diff > div {
+  border-inline-start: 1px solid var(--color-rule);
+}
+
+/* --------------------------------------------------------------------------
+   Sign-in — Lumen foreground over the retained original ghost atmosphere
+   -------------------------------------------------------------------------- */
+:root .login-google-button .btn-label > span {
+  /* The shared button truncates its direct label wrapper. This compound label
+     contains artwork as well as text, so never clip the mark during font or
+     WebGL readiness changes. */
+  overflow: visible;
+  text-overflow: clip;
+}
+
+:root .login-google-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  isolation: isolate;
+}
+
+:root .login-google-mark {
+  position: relative;
+  z-index: 1;
+  order: 0;
+  display: block;
+  flex: 0 0 17px;
+  opacity: 1;
+  /* Keep the small SVG on its own paint layer when the WebGL canvas mounts. */
+  transform: translateZ(0);
+}
+
+:root .login-google-label > span {
+  order: 1;
+  min-width: 0;
+}
+
+:root .login-title {
+  background: none;
+  color: var(--color-ink);
+  font-size: var(--text-3xl);
+  line-height: 1.05;
+  text-transform: lowercase;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root .login-title,
+:root .login-title-accent {
+  background: none;
+  color: var(--color-ink);
+  text-shadow: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root .login-intro,
+:root .login-fact {
+  color: var(--color-ink-2);
+}
+
+:root .login-halo::before {
+  display: none;
+  content: none;
+  background: none;
+  animation: none;
+}
+
+:root .login-sky .login-halo {
+  filter: none;
+}
+
+/* Final reduced-motion guard for any functional transition left in a route. */
+@media (prefers-reduced-motion: reduce) {
+  :root *,
+  :root *::before,
+  :root *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :root .home-pulse {
+    padding-block: var(--space-md) var(--space-lg);
+  }
+
+  :root .home-pulse__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :root .home-pulse__stat,
+  :root .home-pulse__stat:first-child {
+    padding: var(--space-sm);
+    border-left: 0;
+    border-top: var(--rule-hair) solid var(--color-rule);
+  }
+
+  :root .home-pulse__stat:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  :root .home-pulse__stat:nth-child(even) {
+    border-left: var(--rule-hair) solid var(--color-rule);
+  }
+
+  :root .brand-word {
+    font-size: var(--text-display-s);
+  }
+}

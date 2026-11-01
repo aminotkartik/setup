@@ -6,6 +6,18 @@ import { describe, expect, it } from 'vitest';
 import { DepthField, shouldUseStaticDepthField } from '@/components/atmosphere/DepthField';
 
 describe('Home depth-field device policy', () => {
+  it('stays mounted on Home and resolves its unchanged scene through Lumen colors', () => {
+    const page = fs.readFileSync('app/(app)/home/page.js', 'utf8');
+    const globals = fs.readFileSync('app/globals.css', 'utf8');
+    const lumen = fs.readFileSync('app/styles/lumen.css', 'utf8');
+    expect(page).toContain("import { DepthField } from '@/components/atmosphere/DepthField'");
+    expect(page).toContain('<DepthField />');
+    expect(lumen).not.toMatch(/:root \.depth-field\s*\{[^}]*display:\s*none/);
+    expect(globals).toContain('--cp-depth-base: var(--color-paper)');
+    expect(globals).toContain('--cp-depth-line-a: var(--color-accent)');
+    expect(globals).toContain('--cp-depth-line-b: var(--color-ink-2)');
+  });
+
   it('keeps the full scene only for a capable, unconstrained desktop path', () => {
     expect(shouldUseStaticDepthField()).toBe(false);
     expect(shouldUseStaticDepthField({ reducedMotion: false, coarse: false, narrow: false, saveData: false })).toBe(false);
