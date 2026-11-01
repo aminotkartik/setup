@@ -205,18 +205,48 @@
   text-wrap: balance;
 }
 
-/* The gesture: a drawn hand in the brand's own teal-to-sand light. It waves
-   twice on arrival and then rests — a greeting, not a loop competing with the
-   feed. */
+/* The greeting is a real, compact button with a stable 44px target. Only the
+   artwork moves: one short wave on arrival, replayed by remounting that artwork
+   on click/Enter/Space. It never loops or changes the headline's layout. */
 .home-pulse__wave {
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: inherit;
   font-size: 0.78em;
   line-height: 1;
-  padding-bottom: 0.04em;
-  transform-origin: 72% 84%;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   filter: drop-shadow(0 4px 14px var(--cp-glow-accent));
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.home-pulse__wave:hover {
+  background: color-mix(in oklab, currentColor 8%, transparent);
+}
+
+.home-pulse__wave:active {
+  transform: scale(0.96);
+}
+
+.home-pulse__wave:focus-visible {
+  outline: 2px solid var(--color-focus, var(--cp-focus));
+  outline-offset: 1px;
+}
+
+.home-pulse__wave-art {
+  display: inline-flex;
+  transform-origin: 72% 84%;
 }
 
 .home-pulse__wave svg {
@@ -230,8 +260,8 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .home-pulse__wave {
-    animation: pulse-wave 1.6s var(--ease-spring) 0.35s 2;
+  .home-pulse__wave-art {
+    animation: pulse-wave var(--dur-gesture) var(--ease-out) both;
   }
 }
 
@@ -240,14 +270,14 @@
   100% {
     transform: rotate(0deg);
   }
-  25% {
-    transform: rotate(14deg);
+  20% {
+    transform: rotate(12deg);
   }
-  55% {
-    transform: rotate(-6deg);
+  45% {
+    transform: rotate(-8deg);
   }
-  80% {
-    transform: rotate(8deg);
+  70% {
+    transform: rotate(6deg);
   }
 }
 

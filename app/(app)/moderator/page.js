@@ -13,7 +13,7 @@ import {
 } from '@/lib/data/moderation';
 import { ROUTES, UUID_REGEX, PAGE_SIZE } from '@/lib/constants';
 import { Badge, Button, Card, EmptyState, LinkButton, Notice, PageHeader } from '@/components/ui';
-import { ModerationActions, ResolveReportForm, MarketplaceReviewActions, RandomReportActions } from '@/components/moderation/ModerationPanels';
+import { ModerationActions, PostPinControl, ResolveReportForm, MarketplaceReviewActions, RandomReportActions } from '@/components/moderation/ModerationPanels';
 import { formatDateTime, relativeTime } from '@/lib/utils';
 import { LinkifiedText } from '@/components/content/LinkifiedText';
 
@@ -66,13 +66,17 @@ export default async function ModeratorPage({ searchParams }) {
 
   const counts = canReview || canRandom ? await getReportCounts(supabase) : { pending: 0, reviewing: 0, resolved: 0, random: 0 };
 
-  const [reports, marketplace, randomReports, history, focused] = await Promise.all([
+  const [reports, marketplace, randomReports, history, focused, focusedPostResult] = await Promise.all([
     activeTab === 'reports' && canReview ? listReports(supabase, { status: ['pending', 'reviewing'], limit: PAGE_SIZE.admin }) : Promise.resolve({ items: [], unavailable: false }),
     activeTab === 'marketplace' && canMarketplace ? listMarketplaceQueue(supabase) : Promise.resolve({ pending: [], flagged: [] }),
     activeTab === 'random' && canRandom ? listRandomReports(supabase) : Promise.resolve([]),
     activeTab === 'audit' && canLogs ? listModerationHistory(supabase, { limit: 40 }) : Promise.resolve([]),
     activeTab === 'content' && targetType && targetId && canReview ? getReport(supabase, targetId) : Promise.resolve(null),
+    activeTab === 'content' && targetType === 'post' && targetId
+      ? supabase.from('posts').select('id, pinned, status').eq('id', targetId).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const focusedPost = focusedPostResult?.data || null;
 
   return (
     <div className="page-grid">
@@ -234,6 +238,13 @@ export default async function ModeratorPage({ searchParams }) {
               <h2 className="text-sm font-semibold">Moderate {targetType.replace(/_/g, ' ')}</h2>
               <p className="text-2xs text-muted">Target {targetId}</p>
               <ModerationActions targetType={targetType} targetRef={targetId} allowed={['hide', 'remove', 'restore']} />
+              {focusedPost?.status === 'published' ? (
+                <PostPinControl
+                  key={`${focusedPost.id}:${focusedPost.pinned}`}
+                  targetRef={focusedPost.id}
+                  currentPinned={focusedPost.pinned}
+                />
+              ) : null}
               {moderatorTargetUrl(targetType, targetId) ? (
                 <Link href={moderatorTargetUrl(targetType, targetId)} className="text-2xs underline hover:text-ink">
                   Open in the app

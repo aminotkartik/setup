@@ -506,21 +506,16 @@ async function main() {
       await page.waitForTimeout(500);
       const out = await page.evaluate(() => {
         const island = document.querySelector('.island');
-        const field = document.querySelector('.depth-field');
         return {
           islandAnimation: getComputedStyle(island).animationName,
           islandDepth: getComputedStyle(island).getPropertyValue('--island-depth').trim(),
-          ridgeAnimation: field
-            ? getComputedStyle(field.querySelector('.depth-field__ridge') || island).animationName
-            : 'no-field',
-          fieldState: field?.dataset.state || null,
-          canvas: Boolean(field?.querySelector('canvas')),
+          seaNodes: document.querySelectorAll('.home-stage canvas, .depth-field, [class*="depth-field"]').length,
         };
       });
-      const ok = out.islandAnimation === 'none' && out.fieldState !== null;
+      const ok = out.islandAnimation === 'none' && out.seaNodes === 0;
       return {
         status: ok ? 'ok' : 'fail',
-        detail: `island animation=${out.islandAnimation}, depth=${out.islandDepth}, field=${out.fieldState} (canvas ${out.canvas}, CSS ridge animation ${out.ridgeAnimation})`,
+        detail: `island animation=${out.islandAnimation}, depth=${out.islandDepth}, sea/depth nodes=${out.seaNodes}`,
         evidence: out,
       };
     });
@@ -536,8 +531,6 @@ async function main() {
     await page.waitForTimeout(1200);
     await check('legacy-light-cookie-ignored', async () => {
       const out = await page.evaluate(() => {
-        const field = document.querySelector('.depth-field');
-        const canvas = field?.querySelector('canvas');
         const computed = (selector, prop) => {
           const el = document.querySelector(selector);
           return el ? getComputedStyle(el)[prop] : null;
@@ -546,22 +539,21 @@ async function main() {
           datasetTheme: document.documentElement.dataset.theme,
           colorScheme: getComputedStyle(document.documentElement).colorScheme,
           pageBg: computed('body', 'backgroundColor'),
-          depthBase: getComputedStyle(document.documentElement).getPropertyValue('--cp-depth-base').trim(),
-          canvas: Boolean(canvas),
-          fieldState: field?.dataset.state || null,
+          stageBg: computed('.home-stage', 'backgroundColor'),
+          seaNodes: document.querySelectorAll('.home-stage canvas, .depth-field, [class*="depth-field"]').length,
         };
       });
-      const ok = out.datasetTheme === 'dark' && out.colorScheme === 'dark' && out.canvas;
+      const ok = out.datasetTheme === 'dark' && out.colorScheme === 'dark' && out.seaNodes === 0;
       return {
         status: ok ? 'ok' : 'warn',
-        detail: `legacy light cookie present, app still dark: data-theme=${out.datasetTheme}, color-scheme=${out.colorScheme}, depth-field=${out.fieldState}, --cp-depth-base=${out.depthBase}`,
+        detail: `legacy light cookie present, app still dark: data-theme=${out.datasetTheme}, color-scheme=${out.colorScheme}, static-stage=${out.stageBg}, sea/depth nodes=${out.seaNodes}`,
         evidence: out,
       };
     });
     await context.close();
   }
 
-  /* ── 8. No WebGL: the CSS fallback must be a finished composition ───── */
+  /* ── 8. No WebGL: Home remains a complete static composition ───────── */
   if (want('webgl')) {
     const context = await newContext(browser, 'desktop');
     const page = await context.newPage();
@@ -576,25 +568,21 @@ async function main() {
     });
     await page.goto(`${BASE}/home`, { waitUntil: 'networkidle', timeout: 60_000 });
     await page.waitForTimeout(900);
-    await check('webgl-fallback-renders', async () => {
+    await check('home-static-without-webgl', async () => {
       const out = await page.evaluate(() => {
-        const field = document.querySelector('.depth-field');
-        const fallback = document.querySelector('.depth-field__fallback');
+        const stage = document.querySelector('.home-stage');
+        const rect = stage?.getBoundingClientRect();
         return {
-          state: field?.dataset.state || null,
-          canvases: field?.querySelectorAll('canvas').length ?? -1,
-          ridges: document.querySelectorAll('.depth-field__ridge').length,
-          horizon: Boolean(document.querySelector('.depth-field__horizon')),
-          fallbackBox: fallback
-            ? { w: Math.round(fallback.getBoundingClientRect().width), h: Math.round(fallback.getBoundingClientRect().height) }
-            : null,
+          seaNodes: document.querySelectorAll('.home-stage canvas, .depth-field, [class*="depth-field"]').length,
+          stageBox: rect ? { w: Math.round(rect.width), h: Math.round(rect.height) } : null,
+          stageBg: stage ? getComputedStyle(stage).backgroundColor : null,
           islands: document.querySelectorAll('.island').length,
         };
       });
-      const ok = out.state === 'fallback' && out.canvases === 0 && out.ridges >= 3 && out.horizon;
+      const ok = out.seaNodes === 0 && out.stageBox?.w > 0 && out.stageBox?.h > 0 && out.islands > 0;
       return {
         status: ok ? 'ok' : 'fail',
-        detail: `no-WebGL: state=${out.state}, canvases=${out.canvases}, ridges=${out.ridges}, horizon=${out.horizon}, ${out.islands} islands still composed`,
+        detail: `no-WebGL: sea/depth nodes=${out.seaNodes}, static-stage=${out.stageBg}, ${out.islands} islands still composed`,
         evidence: out,
       };
     });

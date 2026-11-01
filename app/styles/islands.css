@@ -1,16 +1,11 @@
 /* ==========================================================================
    Campus Islands — the environment and the island primitive
    --------------------------------------------------------------------------
-   Two things live here, and neither of them is the Home page composition
-   (that is app/styles/home.css):
-
-     1. THE ENVIRONMENT — the shared depth field: one fixed canvas, its CSS
-        fallback, and the wash that separates it from the interface, plus the
-        page element that hosts them (`.home-stage`).
-     2. THE ISLAND — the surface primitive the Home rail's small destinations
-        and the feed's entries are built on: one ordered elevation scale that
-        drives surface mix, blur, shadow and pointer-depth together, so two
-        islands can never disagree about how far away they are.
+   The Home page composition lives in app/styles/home.css. This file owns the
+   island surface primitive used by the Home rail and feed: one ordered
+   elevation scale drives surface mix, blur, shadow and pointer-depth together,
+   so two islands cannot disagree about how far away they are. The stage itself
+   retains the shell's static paper background.
 
    Depth is lighting and material, not decoration: an island is the design
    system's elevated surface with a little of the environment showing through
@@ -33,176 +28,12 @@
 }
 
 /* --------------------------------------------------------------------------
-   The stage: one shared canvas behind the whole page
+   The stage: a static surface behind the whole page
    -------------------------------------------------------------------------- */
 
 .home-stage {
   position: relative;
   isolation: isolate;
-}
-
-/* The page element itself does not animate.
-   `.shell-main > *` (night.css) animates every route wrapper with `both` fill,
-   and a filled transform animation makes that wrapper the containing block for
-   fixed-position descendants — which silently pinned the depth-field canvas to
-   the page box (1120 x 3681) instead of the viewport, so the camera framed
-   empty sky and the whole environment rendered black. Two classes beat one
-   class + universal selector, so this wins without `!important`. */
-.shell-main > .home-stage {
-  animation: none;
-}
-
-.depth-field {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  background-color: var(--depth-base);
-}
-
-.depth-field__canvas,
-.depth-field__fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-
-.depth-field__canvas {
-  display: block;
-}
-
-/* The scene reads the theme's resolved colours through these: a custom property
-   echoes its own token stream, so the palette is read from painted properties
-   instead. They occupy no space and are never seen or announced. */
-.depth-field__probe {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* The wash that separates the environment from the interface. It is the reason
-   the depth field never has to be dimmed by the content: it hands the very top
-   of the page back to the shell's own background so the sticky glass header
-   sits on a compatible surface, and it retires the field at the bottom so the
-   stream always has a calm ground. */
-.depth-field__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--cp-bg-page) 58%, transparent) 0%,
-      color-mix(in oklab, var(--cp-bg-page) 22%, transparent) 18%,
-      transparent 36%
-    ),
-    linear-gradient(
-      0deg,
-      color-mix(in oklab, var(--cp-bg-page) 58%, transparent) 0%,
-      transparent 24%
-    ),
-    radial-gradient(
-      130% 80% at 50% 118%,
-      color-mix(in oklab, var(--cp-bg-page-deep) 62%, transparent) 0%,
-      transparent 58%
-    );
-}
-
-/* The static atmosphere: three ridges at three distances plus a low horizon
-   glow. Deliberately the same picture as the WebGL scene, drawn with
-   gradients, so a browser without WebGL loses movement and nothing else. */
-.depth-field__fallback {
-  overflow: hidden;
-}
-
-.depth-field__ridge,
-.depth-field__horizon {
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  display: block;
-}
-
-.depth-field__ridge {
-  border-radius: 50% 50% 0 0 / 12rem 12rem 0 0;
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--depth-line-b) 12%, transparent) 0%,
-    transparent 55%
-  );
-}
-
-.depth-field__ridge--far {
-  bottom: 34%;
-  height: 22rem;
-  opacity: 0.55;
-}
-
-.depth-field__ridge--mid {
-  bottom: 20%;
-  height: 18rem;
-  opacity: 0.4;
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--depth-line-a) 10%, transparent) 0%,
-    transparent 60%
-  );
-}
-
-.depth-field__ridge--near {
-  bottom: 2%;
-  height: 14rem;
-  opacity: 0.3;
-}
-
-.depth-field__horizon {
-  bottom: 38%;
-  height: 1px;
-  border: 0;
-  background-image: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, var(--depth-line-a) 42%, transparent) 30%,
-    color-mix(in oklab, var(--depth-line-a) 42%, transparent) 70%,
-    transparent
-  );
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* Only the fallback breathes, and only barely: the WebGL field carries the
-     movement when it is available. */
-  .depth-field__fallback .depth-field__ridge {
-    animation: depth-drift 46s ease-in-out infinite alternate;
-  }
-
-  .depth-field__fallback .depth-field__ridge--mid {
-    animation-duration: 64s;
-    animation-direction: alternate-reverse;
-  }
-}
-
-@keyframes depth-drift {
-  from {
-    transform: translate3d(-1.5%, 0.75rem, 0);
-  }
-  to {
-    transform: translate3d(1.5%, -0.75rem, 0);
-  }
-}
-
-/* Field palette — the semantic tokens the shader reads (see
-   createDepthField.js). Declared here so the canvas inherits them exactly like
-   the CSS fallback beside it does; both come from the same --cp-depth-* pair. */
-.depth-field {
-  --depth-base: var(--cp-depth-base);
-  --depth-line-a: var(--cp-depth-line-a);
-  --depth-line-b: var(--cp-depth-line-b);
 }
 
 /* --------------------------------------------------------------------------
@@ -385,9 +216,9 @@
     box-shadow 520ms var(--ease-out-soft);
 }
 
-/* Phones and other constrained devices: blurring a live WebGL canvas is the
-   most expensive thing this page could do, so the islands become more opaque
-   instead of more blurred. The depth reading survives; the cost does not. */
+/* Phones and other constrained devices: backdrop sampling is an unnecessary
+   scrolling cost, so the islands become more opaque instead of more blurred.
+   The surface hierarchy survives; the cost does not. */
 @media (pointer: coarse), (max-width: 767px) {
   .island {
     -webkit-backdrop-filter: none;
@@ -466,17 +297,10 @@
     --island-depth: 0px;
   }
 
-  .depth-field__fallback .depth-field__ridge {
-    animation: none;
-  }
 }
 
 /* Print: the environment is a screen effect; islands become plain panels. */
 @media print {
-  .depth-field {
-    display: none;
-  }
-
   .island {
     box-shadow: none;
     backdrop-filter: none;

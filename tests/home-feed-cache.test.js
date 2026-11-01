@@ -66,6 +66,19 @@ describe('Home feed cache', () => {
     expect(stored.at(-1).id).toBe('p29');
   });
 
+  it('preserves pin priority and regular chronology across a cache write and remount read', () => {
+    const source = items(4).map((item, index) => ({
+      ...item,
+      meta: { pinned: index === 3 },
+      post: { id: item.id, pinned: index === 3 },
+    }));
+    writeHomeFeedCache('cache-test-a', { feed: source, events: [], notices: [] });
+
+    const stored = readHomeFeedCache('cache-test-a').payload.feed;
+    expect(stored[0].id).toBe('post-4');
+    expect(stored.slice(1).map((item) => item.id)).toEqual(['post-1', 'post-2', 'post-3']);
+  });
+
   it('scopes cached data by user and marks entries stale after the short TTL', () => {
     writeHomeFeedCache('cache-test-a', { feed: items(12), events: [], notices: [] });
     writeHomeFeedCache('cache-test-b', { feed: items(3), events: [], notices: [] });

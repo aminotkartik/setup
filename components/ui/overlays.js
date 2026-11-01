@@ -28,6 +28,41 @@ function useMounted() {
   );
 }
 
+/**
+ * Keep only the outgoing visual mounted for a short exit transition. The
+ * product's open state, close callback, focus restoration and data actions are
+ * never delayed; a closing surface is immediately non-interactive in CSS.
+ */
+function usePresence(open, exitDuration = 220) {
+  const [rendered, setRendered] = useState(open);
+  const [visible, setVisible] = useState(false);
+  const renderedRef = useRef(open);
+
+  useEffect(() => {
+    let frame = 0;
+    let timer = 0;
+    if (open) {
+      frame = window.requestAnimationFrame(() => {
+        renderedRef.current = true;
+        setRendered(true);
+        setVisible(true);
+      });
+    } else if (renderedRef.current) {
+      frame = window.requestAnimationFrame(() => setVisible(false));
+      timer = window.setTimeout(() => {
+        renderedRef.current = false;
+        setRendered(false);
+      }, exitDuration);
+    }
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [open, exitDuration]);
+
+  return { rendered: rendered || open, visible: visible && open };
+}
+
 export function Modal({
   open,
   onClose,
@@ -40,6 +75,7 @@ export function Modal({
   className = '',
 }) {
   const mounted = useMounted();
+  const presence = usePresence(open);
   const ref = useRef(null);
   const titleId = useId();
   const descriptionId = useId();
@@ -68,14 +104,14 @@ export function Modal({
     };
   }, [open, onClose]);
 
-  if (!mounted || !open) return null;
+  if (!mounted || !presence.rendered) return null;
 
   const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl' };
 
   return createPortal(
     <>
-      <div className="scrim" onClick={onClose} aria-hidden="true" />
-      <div className="dialog-centred" role="presentation" onClick={(event) => event.target === event.currentTarget && onClose()}>
+      <div className="scrim" data-state={presence.visible ? 'open' : 'closed'} onClick={onClose} aria-hidden="true" />
+      <div className="dialog-centred" data-state={presence.visible ? 'open' : 'closed'} role="presentation" onClick={(event) => event.target === event.currentTarget && onClose()}>
         <div
           ref={ref}
           role="dialog"
@@ -143,6 +179,7 @@ export function Sheet(props) {
 export function Dropdown({ label, trigger, children, align = 'right', className = '', menuClassName = '', matchTriggerWidth = false }) {
   const mounted = useMounted();
   const [open, setOpen] = useState(false);
+  const presence = usePresence(open);
   /* 'first' | 'last' when the pending open came from the keyboard, so focus
      lands in the menu; null for pointer opens, which never steal focus. */
   const [pendingFocus, setPendingFocus] = useState(null);
@@ -187,8 +224,8 @@ export function Dropdown({ label, trigger, children, align = 'right', className 
   /* First placement runs with the menu mounted but hidden, so its real width
      can be measured before anything paints in the wrong place. */
   useEffect(() => {
-    if (open) place();
-  }, [open, place]);
+    if (open && presence.rendered) place();
+  }, [open, presence.rendered, place]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -282,12 +319,13 @@ export function Dropdown({ label, trigger, children, align = 'right', className 
           {trigger}
         </button>
       )}
-      {mounted && open
+      {mounted && presence.rendered
         ? createPortal(
             <div
               ref={menuRef}
               role="menu"
               aria-label={label}
+              data-state={presence.visible ? 'open' : 'closed'}
               onClick={close}
               onKeyDown={onMenuKeyDown}
               className={cn('cp-menu fixed z-[80] min-w-52 overflow-y-auto rounded-[var(--radius-lg)] py-1', menuClassName)}

@@ -39,7 +39,7 @@ The fixed app type scale, spacing scale, easings and durations live in `app/toke
 - Actual font binaries are self-hosted through `next/font/local` in `app/layout.js`
 
 ## Motion
-The signed-in product otherwise stays at rest: state-only color/background transitions and a 0.98 active press, without new load reveals or pointer-depth movement. Two existing scenes are preserved by explicit user request. Login retains its mouse/touch-interactive ghost; it stops when hidden, cleans up on unmount, has a static no-WebGL fallback, and renders one still frame under reduced motion. Home retains its original depth-field animation and one-time, route-gated Campus+ landing sequence, with only their colors mapped to Lumen tokens. The original device policy, timing, Skip intro/Escape exits, once-per-document behavior, cleanup, and reduced-motion fallbacks remain intact.
+The signed-in product otherwise stays at rest: state-only color/background transitions and a 0.98 active press, without new load reveals or pointer-depth movement. Login retains its mouse/touch-interactive ghost; it stops when hidden, cleans up on unmount, has a static no-WebGL fallback, and renders one still frame under reduced motion. Home keeps its static paper background and one-time, route-gated Campus+ landing sequence; the former sea/depth-field canvas, fallback ridges, and continuous animation are removed. The intro's original timing, Skip intro/Escape exits, once-per-document behavior, cleanup, and reduced-motion fallbacks remain intact.
 
 ## Imagery and texture
 Keep existing brand and content imagery. Use the blueprint grid only inside a real diagram/chart/figures well, never behind running prose. Home’s live statistics are its single figures-well use.

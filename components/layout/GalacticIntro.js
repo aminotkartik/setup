@@ -205,6 +205,9 @@ export default function GalacticIntro({ children, enabled = true }) {
     focusOnReveal.current = document.activeElement === skip.current;
     completed = true;
     setPhase('done');
+    // The greeting's one-shot hand wave replays only now, when a first-visit
+    // intro has actually revealed it. This does not alter the intro timeline.
+    window.dispatchEvent(new Event('campus:home-intro-complete'));
   }
 
   useEffect(() => {

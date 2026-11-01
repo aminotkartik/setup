@@ -389,7 +389,7 @@ export default function TimetableLive({
       ) : null}
 
       {day && entries.length ? (
-        <ol className="tt-day" aria-label={`${selected} timetable for Division ${division}`}>
+        <ol key={`${division}-${selected}`} className="tt-day" aria-label={`${selected} timetable for Division ${division}`}>
           {entries.map((entry) =>
             entry.event ? (
               <EventRow

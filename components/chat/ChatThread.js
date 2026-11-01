@@ -10,6 +10,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, DeleteButton, GlassSurface, Notice, OrbLoader, Textarea } from '@/components/ui';
+import { Icon } from '@/components/ui/icons';
 import { GifAttachment, GifPicker } from '@/components/media/GifPicker';
 import { useFormAction } from '@/lib/forms';
 import { getBrowserClient, isBrowserConfigured } from '@/lib/supabase/client';
@@ -46,7 +47,7 @@ const MessageItem = memo(function MessageItem({
   const isEditing = editing === message.id;
 
   return (
-    <article className={cn('flex flex-col gap-1', mine ? 'items-end' : 'items-start')}>
+    <article className={cn('chat-message flex flex-col gap-1', mine ? 'items-end' : 'items-start')}>
       <div className="flex items-center gap-2 text-2xs text-muted">
         <span className="font-medium text-ink">
           {mine ? 'You' : author?.display_name || (author?.username ? `@${author.username}` : 'Student')}
@@ -552,7 +553,10 @@ export function ChatThread({
       ) : null}
 
       <p className="text-2xs text-muted" role="status">
-        {seen ? 'Seen' : myLastMessage ? 'Sent' : ''}
+        <span className="message-receipt">
+          {seen || myLastMessage ? <Icon key={seen ? 'seen' : 'sent'} name="check" size={12} className="message-receipt__icon" /> : null}
+          {seen ? 'Seen' : myLastMessage ? 'Sent' : ''}
+        </span>
         {connectionStatus === 'reconnecting' ? ' · reconnecting for live updates…' : ''}
         {connectionStatus === 'unconfigured' ? ' · live updates unavailable' : ''}
       </p>

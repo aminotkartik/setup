@@ -119,7 +119,7 @@ export function PollBlock({ postId, poll, canVote = true, onVoteChange = null })
                 disabled={!canVote || Boolean(myOption) || closed || pending || !option.id}
                 onClick={() => { void castVote(option.id); }}
                 className={cn(
-                  'cp-poll-option group w-full overflow-hidden rounded-[var(--radius-sm)] border px-3 py-2 text-left transition-all',
+                  'cp-poll-option motion-control group w-full overflow-hidden rounded-[var(--radius-sm)] border px-3 py-2 text-left',
                   mine ? 'cp-poll-option--selected' : null,
                   !canVote || myOption || closed ? 'cursor-default' : 'cursor-pointer active:scale-[0.995]',
                 )}
@@ -128,7 +128,7 @@ export function PollBlock({ postId, poll, canVote = true, onVoteChange = null })
                 <span className="flex items-center justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span className="min-w-0 truncate text-[0.8125rem] font-medium">{option.label}</span>
-                    {mine ? <Icon name="check" size={13} className="shrink-0 text-accent" /> : null}
+                    {mine ? <Icon name="check" size={13} className="poll-check shrink-0 text-accent" /> : null}
                   </span>
                   {showResults ? (
                     <span className="shrink-0 text-2xs font-semibold text-muted t-numeric">
@@ -139,8 +139,8 @@ export function PollBlock({ postId, poll, canVote = true, onVoteChange = null })
                 {showResults ? (
                   <span className="cp-poll-track mt-2 block h-1.5 w-full overflow-hidden rounded-full">
                     <span
-                      className={cn('cp-poll-fill block h-full rounded-full transition-[width] duration-500', mine ? 'cp-poll-fill--selected' : null)}
-                      style={{ width: `${share}%` }}
+                      className={cn('cp-poll-fill block h-full w-full rounded-full', mine ? 'cp-poll-fill--selected' : null)}
+                      style={{ '--poll-share': share / 100 }}
                     />
                   </span>
                 ) : null}

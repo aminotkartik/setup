@@ -217,7 +217,6 @@
 :root .home-pulse__name .home-pulse__wave {
   color: var(--color-accent);
   filter: none;
-  animation: none;
   -webkit-text-fill-color: currentColor;
 }
 
@@ -444,6 +443,10 @@
   font-family: var(--font-body);
   font-size: var(--text-md);
   box-shadow: none;
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -604,6 +607,32 @@
   border-color: var(--color-accent);
 }
 
+:root .motion-control,
+:root .reaction-control {
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+:root .reaction-icon {
+  transform-origin: center;
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+:root .reaction-control[aria-pressed='true'] {
+  color: var(--color-accent);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-accent);
+}
+
+:root .reaction-control[aria-pressed='true'] .reaction-icon {
+  fill: currentColor;
+  transform: scale(1.08);
+}
+
 :root .cp-poll-option {
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-card);
@@ -635,6 +664,18 @@
   box-shadow: none;
 }
 
+:root .cp-poll-fill {
+  width: 100%;
+  transform: scaleX(var(--poll-share, 0));
+  transform-origin: left center;
+  transition: transform var(--dur-panel) var(--ease-out);
+}
+
+:root .poll-check path {
+  stroke-dasharray: 20;
+  animation: lumen-check-draw var(--dur-short) var(--ease-out) both;
+}
+
 :root .cp-chat-bubble,
 :root .cp-chat-bubble--mine {
   border: 1px solid var(--color-rule);
@@ -647,6 +688,36 @@
 :root .cp-chat-bubble--mine {
   border-color: var(--color-rule-2);
   background: var(--color-paper-3);
+}
+
+:root .chat-message {
+  animation: lumen-message-in var(--dur-short) var(--ease-out) both;
+}
+
+:root .message-receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+:root .message-receipt__icon {
+  color: var(--color-accent);
+}
+
+:root .message-receipt__icon path {
+  stroke-dasharray: 20;
+  animation: lumen-check-draw var(--dur-short) var(--ease-out) both;
+}
+
+:root .comment-composer--compact,
+:root .field-error,
+:root .notice,
+:root .error-block {
+  animation: lumen-content-in var(--dur-short) var(--ease-out) both;
+}
+
+:root .toast {
+  animation: lumen-toast-in var(--dur-short) var(--ease-out) both;
 }
 
 :root .unread-dot,
@@ -755,12 +826,34 @@
   transform: none;
 }
 
-:root .nav-item[aria-current='page']::before,
-:root .tab-item[aria-current='page']::before {
-  display: none;
-  content: none;
-  background: none;
+:root .nav-item[aria-current='page']::before {
+  display: block;
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+  width: 2px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
   box-shadow: none;
+  animation: lumen-nav-indicator var(--dur-short) var(--ease-out) both;
+}
+
+:root .tab-item[aria-current='page']::before {
+  display: block;
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  translate: -50% 0;
+  width: 20px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  box-shadow: none;
+  animation: lumen-tab-indicator var(--dur-short) var(--ease-out) both;
 }
 
 :root .nav-item .nav-icon,
@@ -770,6 +863,21 @@
   color: currentColor;
   filter: none;
   transform: none;
+}
+
+:root .nav-item .nav-icon,
+:root .tab-item .tab-icon {
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+:root .nav-item:hover .nav-icon {
+  transform: translateX(1px);
+}
+
+:root .nav-item:active .nav-icon {
+  transform: scale(0.94);
 }
 
 :root .nav-count,
@@ -872,6 +980,49 @@
   background: var(--cp-scrim);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  animation: none;
+  opacity: 1;
+  transition: opacity var(--dur-short) var(--ease-out);
+}
+
+:root .scrim[data-state='closed'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:root .cp-menu {
+  animation: none;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: top center;
+  transition:
+    opacity var(--dur-short) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+
+:root .cp-menu[data-state='closed'] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.99);
+  pointer-events: none;
+}
+
+:root .dialog-centred > .dialog {
+  animation: none;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity var(--dur-short) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+
+:root .dialog-centred[data-state='closed'] {
+  pointer-events: none;
+}
+
+:root .dialog-centred[data-state='closed'] > .dialog {
+  opacity: 0;
+  transform: translateY(8px) scale(0.99);
+  pointer-events: none;
 }
 
 :root .skeleton,
@@ -887,6 +1038,58 @@
   background: transparent;
   color: var(--color-muted);
   box-shadow: none;
+}
+
+/* Contextual empty-state drawings: one optical grid, no filters or gradients. */
+:root .state-icon.empty-art {
+  display: block;
+  width: 7.5rem;
+  height: 6rem;
+  margin: 0 0 var(--space-xs);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+:root .empty-art path,
+:root .empty-art rect,
+:root .empty-art circle {
+  vector-effect: non-scaling-stroke;
+}
+
+:root .empty-art__paper {
+  fill: var(--color-paper-3);
+  stroke: var(--color-rule-2);
+}
+
+:root .empty-art__lens {
+  fill: var(--color-paper);
+  stroke: var(--color-accent);
+}
+
+:root .empty-art__ink {
+  stroke: var(--color-muted);
+}
+
+:root .empty-art__accent {
+  stroke: var(--color-accent);
+}
+
+:root .empty-art__accent-soft {
+  fill: var(--color-paper-2);
+  stroke: var(--color-accent);
+}
+
+:root .empty-art__accent-fill {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+:root .empty-art__ground {
+  stroke: var(--color-rule);
 }
 
 :root .identity-mark,
@@ -1242,6 +1445,17 @@
   box-shadow: none;
 }
 
+:root .tt-item {
+  transition:
+    border-color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+
+:root .tt-day {
+  animation: lumen-content-in var(--dur-panel) var(--ease-out) both;
+}
+
 :root .tt-item--next,
 :root .tt-cell--flagged,
 :root .calendar-cell-today {
@@ -1284,7 +1498,18 @@
   box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
 }
 
+:root .tt-tab,
+:root .tt-jump,
+:root .calendar-chip {
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
 :root .tt-tab[aria-selected='true'],
+:root .tt-tab[aria-pressed='true'],
 :root .tt-tab[aria-current='page'],
 :root .tt-shell__chip--active,
 :root .tt-chip--ready {
@@ -1555,8 +1780,63 @@
   filter: none;
 }
 
+@keyframes lumen-check-draw {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes lumen-nav-indicator {
+  from { opacity: 0; scale: 1 0.35; }
+  to { opacity: 1; scale: 1 1; }
+}
+
+@keyframes lumen-tab-indicator {
+  from { opacity: 0; scale: 0.35 1; }
+  to { opacity: 1; scale: 1 1; }
+}
+
+@keyframes lumen-content-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lumen-message-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lumen-toast-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* Final reduced-motion guard for any functional transition left in a route. */
 @media (prefers-reduced-motion: reduce) {
+  :root .home-pulse__wave-art,
+  :root .chat-message,
+  :root .comment-composer--compact,
+  :root .field-error,
+  :root .notice,
+  :root .error-block,
+  :root .toast,
+  :root .tt-day,
+  :root .poll-check path,
+  :root .message-receipt__icon path,
+  :root .nav-item[aria-current='page']::before,
+  :root .tab-item[aria-current='page']::before {
+    animation: none !important;
+  }
+
+  :root .cp-menu,
+  :root .scrim,
+  :root .dialog-centred > .dialog,
+  :root .cp-poll-fill,
+  :root .motion-control,
+  :root .reaction-control,
+  :root .reaction-icon {
+    transition: none !important;
+  }
+
   :root *,
   :root *::before,
   :root *::after {

@@ -19,6 +19,7 @@ import {
   limitFeed,
   placeFeedItem,
   placePostInFeed,
+  mergeFeedPages,
   postToFeedItem,
   reconcileFeed,
   removePostFromFeed,
@@ -52,6 +53,7 @@ function hydratedPost(overrides = {}) {
     community_id: null,
     status: 'published',
     is_official: false,
+    pinned: false,
     comment_count: 0,
     reaction_count: 0,
     created_at: at(0),
@@ -143,6 +145,62 @@ describe('placement follows the server sort order', () => {
     const same = [serverItem('b', 1), serverItem('a', 1)];
     expect(sortFeed(same).map((item) => item.id)).toEqual(['a', 'b']);
     expect(sortFeed([...same].reverse()).map((item) => item.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('post pin priority survives every client ordering path', () => {
+  it('places an older pinned post ahead of a newer regular post', () => {
+    const regular = postToFeedItem(hydratedPost({ id: 'regular-new', created_at: at(0) }));
+    const pinned = postToFeedItem(hydratedPost({ id: 'pinned-old', created_at: at(8), pinned: true }));
+
+    expect(sortFeed([regular, pinned]).map((item) => item.id)).toEqual(['pinned-old', 'regular-new']);
+    expect(placePostInFeed([regular], hydratedPost({ id: 'pinned-old', created_at: at(8), pinned: true }))[0].id)
+      .toBe('pinned-old');
+  });
+
+  it('orders multiple pins by creation time and leaves regular posts chronological', () => {
+    const posts = [
+      hydratedPost({ id: 'regular-new', created_at: at(0) }),
+      hydratedPost({ id: 'pin-new', created_at: at(2), pinned: true }),
+      hydratedPost({ id: 'regular-mid', created_at: at(3) }),
+      hydratedPost({ id: 'pin-old', created_at: at(5), pinned: true }),
+      hydratedPost({ id: 'regular-old', created_at: at(7) }),
+    ];
+
+    expect(sortFeed(posts.map(postToFeedItem)).map((item) => item.id)).toEqual([
+      'pin-new', 'pin-old', 'regular-new', 'regular-mid', 'regular-old',
+    ]);
+  });
+
+  it('keeps pinned notices in the same priority group and preserves their server lead', () => {
+    const notice = serverItem('notice', 1, {
+      type: 'notice',
+      sortAt: at(-24),
+      meta: { pinned: true },
+    });
+    const post = postToFeedItem(hydratedPost({ id: 'pinned-post', created_at: at(0), pinned: true }));
+
+    expect(sortFeed([post, notice]).map((item) => item.id)).toEqual(['notice', 'pinned-post']);
+  });
+
+  it('an authoritative unpin removes priority without duplicating the post', () => {
+    const regular = serverItem('regular', 0);
+    const pinned = serverItem('changing', 4, {
+      meta: { kind: 'post', pinned: true },
+      post: { id: 'changing', created_at: at(4), status: 'published', pinned: true },
+    });
+    const older = serverItem('older', 6);
+    const unpinned = serverItem('changing', 4, {
+      meta: { kind: 'post', pinned: false },
+      post: { id: 'changing', created_at: at(4), status: 'published', pinned: false },
+    });
+
+    expect(mergeFeedPages([pinned, regular], [older]).map((item) => item.id))
+      .toEqual(['changing', 'regular', 'older']);
+    const reconciled = mergeFeedPages([regular, unpinned], [pinned, older]);
+    expect(reconciled.map((item) => item.id)).toEqual(['regular', 'changing', 'older']);
+    expect(reconciled.filter((item) => item.id === 'changing')).toHaveLength(1);
+    expect(reconciled[1].post.pinned).toBe(false);
   });
 });
 

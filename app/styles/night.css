@@ -37,9 +37,8 @@
        without the cost.
 
    It is deliberately NOT a second atmosphere canvas. The sign-in stage keeps
-   its ghost scene and Home mounts its own depth field
-   (components/atmosphere/DepthField.js); this layer is the calm, always-present
-   sky underneath every screen, and it costs no animation frame at all.
+   its ghost scene; this layer is the calm, always-present sky underneath every
+   screen, and it costs no animation frame at all.
    ========================================================================== */
 
 /* The environment itself. Fixed so it never scrolls, and behind everything. */

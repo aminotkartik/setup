@@ -3,8 +3,8 @@ import { dedupeFeed, sortFeed } from '@/lib/social/feed-state';
 /**
  * Small, browser-memory-only cache for the signed-in student's Home feed.
  *
- * It holds the page (or pages) the surface actually has, deduplicated and
- * newest-first, so a remount inside the TTL window paints the same list the reader
+ * It holds the page (or pages) the surface actually has, deduplicated and in
+ * database feed order, so a remount inside the TTL window paints the same list the reader
  * was looking at. It is deliberately not localStorage/sessionStorage and must only be
  * imported by client modules.
  */
@@ -55,7 +55,7 @@ export function readHomeFeedCache(userId) {
 }
 
 /**
- * Store the authoritative newest-first response — every page the surface holds.
+ * Store the authoritative feed response — every page the surface holds.
  *
  * `revision` is the live-feed revision this page reflects, so a later change
  * anywhere in the app can mark it stale without deleting it (a stale page is still
